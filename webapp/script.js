@@ -1,39 +1,28 @@
-// ১. টেলিগ্রাম ওয়েব অ্যাপ অবজেক্ট ইনিশিয়ালাইজ করা
 const tg = window.Telegram.WebApp;
-
-// অ্যাপটি স্ক্রিনে বড় করে দেখানোর জন্য
 tg.expand();
 
-// ২. টেলিগ্রাম থেকে ইউজারের ডাটা সংগ্রহ করা
 const user = tg.initDataUnsafe.user;
 
-// ৩. ইউজারের নাম পেজে প্রদর্শন করা
+// ইউজারের নাম সেট করা
 if (user) {
-    const nameSpan = document.getElementById('userName');
-    if (nameSpan) {
-        // যদি ফার্স্ট নেম না থাকে তবে ইউজারনেম দেখাবে
-        nameSpan.innerText = user.first_name || user.username || "ইউজার";
-    }
+    document.getElementById('userName').innerText = user.first_name || "ইউজার";
 }
 
-// ৪. "Join Telegram Channel" বাটনের কাজ
-document.getElementById('btnTelegram').addEventListener('click', () => {
-    // এখানে আপনার চ্যানেলের সঠিক ইউজারনেম দিন (বিনা @ এ)
-    const channelLink = "https://t.me/EarnBD_Pro"; 
-    tg.openTelegramLink(channelLink);
+// Facebook Page Button লজিক
+document.getElementById('btnFacebook').addEventListener('click', () => {
+    // এখানে আপনার ফেসবুক পেজের আসল লিঙ্কটি দিন
+    const facebookUrl = "https://www.facebook.com/YourPageID"; 
+    tg.openLink(facebookUrl); 
 });
 
-// ৫. "ভেরিফাই করুন ও শুরু করুন" বাটনের কাজ
+// Verify Button লজিক
 document.getElementById('btnVerify').addEventListener('click', () => {
-    // এখানে চাইলে আপনি বাটন ক্লিক করার পর একটি ছোট লোডিং ইফেক্ট দিতে পারেন
     const btn = document.getElementById('btnVerify');
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ভেরিফাই হচ্ছে...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...';
     
-    // ২ সেকেন্ড পর ড্যাশবোর্ডে নিয়ে যাবে
     setTimeout(() => {
         window.location.href = 'dashboard.html';
     }, 1500);
 });
 
-// ব্যাক বাটন বা ক্লোজ কনফার্মেশন (ঐচ্ছিক)
 tg.enableClosingConfirmation();
