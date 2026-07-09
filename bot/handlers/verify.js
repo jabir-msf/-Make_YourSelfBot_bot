@@ -4,6 +4,7 @@ module.exports = (bot) => {
     bot.on("callback_query", async (query) => {
 
         if (query.data !== "verify_join") return;
+        console.log("VERIFY BUTTON CLICKED", query.from.id);
 
         const chatId = query.message.chat.id;
         const userId = query.from.id;
