@@ -11,6 +11,7 @@ module.exports = (bot) => {
 
         try {
             const member = await bot.getChatMember(CHANNEL_USERNAME, userId);
+            console.log("MEMBER STATUS:", member);
 
             if (["creator", "administrator", "member"].includes(member.status)) {
 
