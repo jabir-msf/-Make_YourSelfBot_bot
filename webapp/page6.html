@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdrawal History - EarnBD Pro</title>
+    <title>Withdrawal History - Make Your Self</title>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link rel="stylesheet" href="page6.css">
     <!-- Google Fonts for Bengali -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,108 +23,20 @@
                 <i class="fa-solid fa-arrow-left"></i>
             </button>
             <div class="header-content">
-                <i class="fa-solid fa-square-arrow-down header-icon"></i>
-                <span class="header-title">উত্তোলন করুন</span>
+                <i class="fa-solid fa-clock-rotate-left header-icon"></i>
+                <span class="header-title">উত্তোলন ইতিহাস</span>
             </div>
         </header>
 
-        <main class="history-list">
-            
-            <!-- Item 1: Cancelled -->
-            <div class="history-card border-red">
-                <div class="card-left">
-                    <div class="icon-box-red">
-                        <i class="fa-solid fa-arrow-down"></i>
-                    </div>
-                </div>
-                <div class="card-center">
-                    <h4 class="req-title">উত্তোলন অনুরোধ</h4>
-                    <p class="details">বিকাশ • 01765861989</p>
-                    <span class="status-badge badge-red">
-                        <i class="fa-solid fa-xmark"></i> বাতিল
-                    </span>
-                    <div class="date-time">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        ২৭/৬/২০২৬, ৩:৫৪:০৪ PM
-                    </div>
-                </div>
-                <div class="card-right">
-                    <span class="amount">-৳৫০</span>
-                </div>
+        <!-- এই কন্টেইনারে ডাটাবেস থেকে আসা লিস্টটি দেখাবে -->
+        <main class="history-list" id="historyContainer">
+            <div style="text-align: center; color: #777; margin-top: 50px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> তথ্য লোড হচ্ছে...
             </div>
-
-            <!-- Item 2: Approved -->
-            <div class="history-card border-green">
-                <div class="card-left">
-                    <div class="icon-box-blue">
-                        <i class="fa-solid fa-arrow-down"></i>
-                    </div>
-                </div>
-                <div class="card-center">
-                    <h4 class="req-title">উত্তোলন অনুরোধ</h4>
-                    <p class="details">বিকাশ • 0178943864899</p>
-                    <span class="status-badge badge-green">
-                        <i class="fa-solid fa-check"></i> অনুমোদিত
-                    </span>
-                    <div class="date-time">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        ২৭/৬/২০২৬, ৩:৫৩:৩৪ PM
-                    </div>
-                </div>
-                <div class="card-right">
-                    <span class="amount">-৳৫০</span>
-                </div>
-            </div>
-
-            <!-- Item 3: Approved -->
-            <div class="history-card border-green">
-                <div class="card-left">
-                    <div class="icon-box-blue">
-                        <i class="fa-solid fa-arrow-down"></i>
-                    </div>
-                </div>
-                <div class="card-center">
-                    <h4 class="req-title">উত্তোলন অনুরোধ</h4>
-                    <p class="details">বিকাশ • 01789433515</p>
-                    <span class="status-badge badge-green">
-                        <i class="fa-solid fa-check"></i> অনুমোদিত
-                    </span>
-                    <div class="date-time">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        ২৬/৬/২০২৬, ৪:৫০:৫৩ PM
-                    </div>
-                </div>
-                <div class="card-right">
-                    <span class="amount">-৳১০০</span>
-                </div>
-            </div>
-
-            <!-- Item 4: Approved (Nagad) -->
-            <div class="history-card border-green">
-                <div class="card-left">
-                    <div class="icon-box-blue">
-                        <i class="fa-solid fa-arrow-down"></i>
-                    </div>
-                </div>
-                <div class="card-center">
-                    <h4 class="req-title">উত্তোলন অনুরোধ</h4>
-                    <p class="details">নগদ • 01789344517</p>
-                    <span class="status-badge badge-green">
-                        <i class="fa-solid fa-check"></i> অনুমোদিত
-                    </span>
-                    <div class="date-time">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        ২৪/৬/২০২৬, ৫:১৮:৩৫ AM
-                    </div>
-                </div>
-                <div class="card-right">
-                    <span class="amount">-৳১০০</span>
-                </div>
-            </div>
-
         </main>
     </div>
 
+    <!-- জাভাস্ক্রিপ্ট ফাইল কানেক্ট করা হলো -->
     <script src="page6.js"></script>
 </body>
-                                                       </html>
+    </html>
