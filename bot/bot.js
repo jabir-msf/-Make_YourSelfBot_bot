@@ -1,6 +1,9 @@
 const TelegramBot = require("node-telegram-bot-api");
 const { BOT_TOKEN } = require("./config");
 
+// Handlers
+const startHandler = require("./handlers/start");
+
 if (!BOT_TOKEN) {
     throw new Error("BOT_TOKEN is missing. Add it to your .env file.");
 }
@@ -9,11 +12,7 @@ const bot = new TelegramBot(BOT_TOKEN, {
     polling: true
 });
 
-bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(
-        msg.chat.id,
-        "🎉 Welcome to EarnBD Pro!\n\nপ্রথমে আমাদের অফিসিয়াল চ্যানেলে যোগ দিন।"
-    );
-});
+// Register Handlers
+startHandler(bot);
 
-console.log("🤖 Bot Started");
+console.log("🤖 EarnBD Pro Bot Started Successfully!");
