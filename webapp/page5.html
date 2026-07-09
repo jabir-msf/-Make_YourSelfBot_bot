@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdraw - EarnBD Pro</title>
+    <title>Withdraw - Make Your Self</title>
+    
+    <!-- Telegram SDK (এটি ছাড়া ব্যালেন্স আসবে না) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link rel="stylesheet" href="page5.css">
-    <!-- Google Fonts for Bengali -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -28,10 +30,8 @@
             <!-- Balance Card -->
             <div class="balance-card">
                 <p class="balance-label">উত্তোলনযোগ্য ব্যালেন্স</p>
-                <h1 class="balance-amount">৳৮৬৪</h1>
-                <!-- আগের কোডের মতো সব ঠিক থাকবে, শুধু ব্যালেন্সের জায়গায় আইডি দিন -->
-<h1 class="balance-amount" id="withdrawBalanceDisplay">৳০</h1>
-<!-- বাকি ফর্ম কোড একই থাকবে -->
+                <!-- এখানে আইডিটি রাখা হয়েছে যা dashboard.js থেকে ব্যালেন্স আনবে -->
+                <h1 class="balance-amount" id="withdrawBalanceDisplay">৳০.০০</h1>
             </div>
 
             <!-- Form Card -->
@@ -87,8 +87,8 @@
                 </button>
             </div>
 
-            <!-- History Link -->
-            <div class="history-link">
+            <!-- History Link (এটিতে ক্লিক করলে হিস্ট্রি পেজে যাবে) -->
+            <div class="history-link" onclick="window.location.href='page6.html'" style="cursor: pointer;">
                 <div class="blue-bar"></div>
                 <i class="fa-regular fa-clipboard"></i>
                 <span>উত্তোলন ইতিহাস</span>
@@ -97,6 +97,7 @@
         </main>
     </div>
 
+    <!-- জাভাস্ক্রিপ্ট ফাইল কানেক্ট করা হলো -->
     <script src="page5.js"></script>
 </body>
-              </html>
+                        </html>
