@@ -1,4 +1,3 @@
-
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
 
@@ -6,32 +5,26 @@ async function loadWorkHistory() {
     if (!user) return;
 
     try {
-        // সার্ভার থেকে কাজের ডাটা আনা (আপনার API অনুযায়ী)
+        // API থেকে ডাটা আনা
         const response = await fetch(`/api/tasks/history/${user.id}`);
         const tasks = await response.json();
         
         const container = document.getElementById('taskHistoryContainer');
         container.innerHTML = ''; 
 
-        if (tasks.length === 0) {
+        if (!tasks || tasks.length === 0) {
             container.innerHTML = `<div style="text-align: center; color: #777; margin-top: 50px;">
                 <p>আপনি এখনো কোনো কাজ সম্পন্ন করেননি।</p></div>`;
             return;
         }
 
         tasks.forEach(task => {
-            let statusText = "পেন্ডিং";
-            let statusClass = "badge-blue"; 
-            let borderClass = "border-blue";
+            let statusText = "পেন্ডিং", statusClass = "badge-blue", borderClass = "border-blue";
 
             if (task.status === 'approved') {
-                statusText = "সম্পন্ন";
-                statusClass = "badge-green";
-                borderClass = "border-green";
+                statusText = "সম্পন্ন"; statusClass = "badge-green"; borderClass = "border-green";
             } else if (task.status === 'rejected') {
-                statusText = "বাতিল";
-                statusClass = "badge-red";
-                borderClass = "border-red";
+                statusText = "বাতিল"; statusClass = "badge-red"; borderClass = "border-red";
             }
 
             const cardHTML = `
