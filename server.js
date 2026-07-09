@@ -109,6 +109,21 @@ app.post("/api/daily-bonus", async (req, res) => {
     }
 });
 
+// ৫. উইথড্র হিস্ট্রি দেখার API
+app.get("/api/withdrawals/:id", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('withdrawals')
+            .select('*')
+            .eq('user_id', req.params.id)
+            .order('created_at', { ascending: false }); // নতুনগুলো আগে দেখাবে
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: "Data fetch failed" });
+    }
+});
 // --- Pages ---
 
 // Home Page
