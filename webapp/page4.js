@@ -1,13 +1,10 @@
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
-
-// আপনার বটের ইউজারনেম (বিনা @ এ)
-const botUsername = "Make_Your_SelfBot"; 
+const botUsername = "Make_Your_SelfBot"; // আপনার বটের নাম @ ছাড়া
 
 async function loadReferralData() {
     if (!user) return;
 
-    // ১. রেফারেল কোড ও লিঙ্ক জেনারেট
     const refCode = `MYS-${user.id}`;
     const refLink = `https://t.me/${botUsername}?start=${user.id}`;
 
@@ -15,43 +12,39 @@ async function loadReferralData() {
     document.getElementById('refLinkDisplay').innerText = refLink;
 
     try {
-        // ২. ডাটাবেস থেকে ব্যালেন্স ও রেফারেল পরিসংখ্যান আনা
-        const response = await fetch(`/api/user/${user.id}`);
-        const data = await response.json();
-
-        if (data) {
-            document.getElementById('refPageBalance').innerText = `৳${parseFloat(data.balance).toFixed(0)}`;
-            // এখানে আপনি ডাটাবেস থেকে রেফার সংখ্যা আনবেন, আপাতত ০ দেখাচ্ছি
-            // ডাটাবেসে রেফার ট্র্যাকিং যোগ করলে এগুলো আপডেট হবে
+        // ১. ব্যালেন্স আপডেট করা
+        const responseUser = await fetch(`/api/user/${user.id}`);
+        const dataUser = await responseUser.json();
+        if (dataUser) {
+            document.getElementById('refPageBalance').innerText = `৳${parseFloat(dataUser.balance).toFixed(0)}`;
         }
+
+        // ২. মোট রেফারেল সংখ্যা আনা (নতুন API থেকে)
+        const responseRefs = await fetch(`/api/referrals/${user.id}`);
+        const dataRefs = await responseRefs.json();
+        document.getElementById('totalRefs').innerText = dataRefs.total_refs || 0;
+        
+        // সফল রেফারের ইনকাম হিসাব (যদি প্রতি রেফারে ২০ টাকা হয়)
+        // নোট: এটি লজিক অনুযায়ী ডাটাবেস থেকেও আনা যেতে পারে
+        // document.getElementById('refIncome').innerText = `৳${dataRefs.total_refs * 20}`;
+
     } catch (err) {
-        console.error("Referral data load error:", err);
+        console.error("Referral Data Error:", err);
     }
 
-    // ৩. কপি বাটন লজিক
+    // কপি বাটন
     document.getElementById('copyCodeBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText(refLink); // সাধারণত লিঙ্ক কপি করা বেশি কার্যকর
-        tg.showScanQrPopup({ text: "লিঙ্ক কপি হয়েছে!" }); // ছোট পপআপ
-        setTimeout(() => tg.closeScanQrPopup(), 1000);
+        navigator.clipboard.writeText(refLink);
+        tg.showAlert("লিঙ্ক কপি করা হয়েছে!");
     });
 
-    // ৪. টেলিগ্রাম শেয়ার বাটন
+    // শেয়ার বাটন
     document.getElementById('shareTG').addEventListener('click', () => {
-        const text = `Make Your Self অ্যাপে জয়েন করে প্রতিদিন ঘরে বসে আয় করুন! আমার রেফারেল লিঙ্ক:`;
+        const text = `Make Your Self অ্যাপে জয়েন করুন এবং আয় করুন!`;
         tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
-    });
-
-    // ৫. হোয়াটসঅ্যাপ শেয়ার বাটন
-    document.getElementById('shareWA').addEventListener('click', () => {
-        const text = `Make Your Self অ্যাপে জয়েন করুন: ${refLink}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     });
 }
 
-// টেলিগ্রামের ব্যাক বাটন সচল করা
 tg.BackButton.show();
-tg.BackButton.onClick(() => {
-    history.back();
-});
-
+tg.BackButton.onClick(() => history.back());
 loadReferralData();
