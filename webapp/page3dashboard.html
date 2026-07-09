@@ -1,14 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnBD Pro Page 3</title>
+    <title>Make Your Self - Services</title>
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link rel="stylesheet" href="page3dashboard.css">
-    <!-- Google Fonts for Bengali -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -19,18 +20,19 @@
             <header class="status-bar">
                 <div class="status-left">
                     <i class="fa-regular fa-square-check"></i>
-                    <span>EarnBD Pro - ঘরে বসে আয় করুন</span>
+                    <span>Make Your Self - ঘরে বসে আয় করুন</span>
                 </div>
-                <i class="fa-solid fa-rotate-right refresh-btn" id="refreshBtn"></i>
+                <i class="fa-solid fa-rotate-right refresh-btn" id="refreshBtn" onclick="window.location.reload()"></i>
             </header>
 
             <nav class="nav-bar">
-                <i class="fa-solid fa-bars menu-icon"></i>
-                <h2 class="logo-text">EarnBD Pro</h2>
+                <!-- ব্যাক বাটন হিসেবে মেনু আইকন ব্যবহার করা হয়েছে -->
+                <i class="fa-solid fa-arrow-left menu-icon" onclick="history.back()"></i>
+                <h2 class="logo-text">Make Your Self</h2>
                 <div class="nav-right">
                     <div class="balance-pill">
                         <span class="p-label">ব্যালেন্স</span>
-                        <span class="p-amount">৳৮৬৪</span>
+                        <span class="p-amount" id="servicePageBalance">৳০.০০</span>
                     </div>
                     <div class="notif-box">
                         <i class="fa-solid fa-bell"></i>
@@ -41,7 +43,7 @@
 
             <!-- Horizontal White Cards Section -->
             <div class="quick-contact">
-                <div class="q-card">ইনকাম রিভিউ</div>
+                <div class="q-card" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/EarnBD_Pro')">ইনকাম রিভিউ</div>
                 <div class="q-card">ফেসবুক</div>
                 <div class="q-card">টেলিগ্রাম</div>
                 <div class="q-card">ইউটিউব</div>
@@ -56,81 +58,41 @@
             </div>
 
             <div class="services-grid">
-                <!-- Row 1 -->
-                <div class="service-item">
+                <!-- প্রতিটি সার্ভিস আইটেমে একটি ক্লিক মেসেজ দেওয়া হয়েছে -->
+                <div class="service-item" onclick="comingSoon()">
                     <span class="tag-hot">HOT</span>
                     <div class="icon-bg"><i class="fa-solid fa-tv" style="color: #4a90e2;"></i></div>
                     <p>ভিডিও ইনকাম</p>
                 </div>
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <div class="icon-bg"><i class="fa-solid fa-brain" style="color: #ff6b6b;"></i></div>
                     <p>কুইজ ইনকাম</p>
                 </div>
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <div class="icon-bg"><i class="fa-solid fa-keyboard" style="color: #34495e;"></i></div>
                     <p>টাইপিং জব</p>
                 </div>
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <div class="icon-bg"><i class="fa-solid fa-bullseye" style="color: #e74c3c;"></i></div>
                     <p>মাইক্রো টাস্ক</p>
                 </div>
 
-                <!-- Row 2 -->
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <span class="tag-new">NEW</span>
                     <div class="icon-bg"><i class="fa-solid fa-sack-dollar" style="color: #f1c40f;"></i></div>
                     <p>অ্যাড আর্নিং</p>
                 </div>
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <div class="icon-bg"><i class="fa-solid fa-mobile-screen-button" style="color: #2c3e50;"></i></div>
                     <p>মোবাইল রিচার্জ</p>
                 </div>
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <div class="icon-bg"><i class="fa-solid fa-briefcase" style="color: #8d6e63;"></i></div>
                     <p>জব পোস্ট</p>
                 </div>
-                <div class="service-item">
+                <div class="service-item" onclick="comingSoon()">
                     <div class="icon-bg"><i class="fa-solid fa-cart-shopping" style="color: #90a4ae;"></i></div>
                     <p>রেসেলিং</p>
-                </div>
-
-                <!-- Row 3 -->
-                <div class="service-item">
-                    <div class="icon-bg"><i class="fa-solid fa-money-bill-wave" style="color: #4caf50;"></i></div>
-                    <p>মাসিক বেতন</p>
-                </div>
-                <div class="service-item">
-                    <div class="icon-bg"><i class="fa-solid fa-trophy" style="color: #ffa000;"></i></div>
-                    <p>লিডারশিপ</p>
-                </div>
-                <div class="service-item">
-                    <div class="icon-bg"><i class="fa-solid fa-star" style="color: #fdd835;"></i></div>
-                    <p>টার্গেট বোনাস</p>
-                </div>
-                <div class="service-item">
-                    <div class="icon-bg"><i class="fa-solid fa-id-card" style="color: #1e88e5;"></i></div>
-                    <p>একাউন্ট সেল</p>
-                </div>
-
-                <!-- Row 4 -->
-                <div class="service-item">
-                    <div class="icon-bg"><i class="fa-solid fa-camera-retro" style="color: #546e7a;"></i></div>
-                    <p>সোশ্যাল সেল</p>
-                </div>
-                <div class="service-item">
-                    <span class="tag-new">NEW</span>
-                    <div class="icon-bg icon-blue-bg"><i class="fa-brands fa-facebook" style="color: #ffffff;"></i></div>
-                    <p>Facebook সেল</p>
-                </div>
-                <div class="service-item">
-                    <span class="tag-new">NEW</span>
-                    <div class="icon-bg icon-red-bg"><i class="fa-solid fa-envelope" style="color: #ffffff;"></i></div>
-                    <p>Gmail সেল</p>
-                </div>
-                <div class="service-item">
-                    <span class="tag-new">NEW</span>
-                    <div class="icon-bg icon-insta-bg"><i class="fa-brands fa-instagram" style="color: #ffffff;"></i></div>
-                    <p>Insta সেল</p>
                 </div>
             </div>
         </main>
@@ -138,4 +100,4 @@
 
     <script src="page3dashboard.js"></script>
 </body>
-  </html>
+                    </html>
