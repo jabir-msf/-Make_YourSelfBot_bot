@@ -1,38 +1,60 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const withdrawBtn = document.getElementById('withdrawBtn');
-    const amountInput = document.getElementById('amount');
-    const accountInput = document.getElementById('accountNo');
+const tg = window.Telegram.WebApp;
+const user = tg.initDataUnsafe.user;
 
-    withdrawBtn.addEventListener('click', () => {
-        const amount = amountInput.value;
-        const account = accountInput.value;
+async function loadWithdrawPage() {
+    if (!user) return;
 
-        if (!account) {
-            alert('অনুগ্রহ করে একাউন্ট নম্বর দিন');
-            return;
+    try {
+        const response = await fetch(`/api/user/${user.id}`);
+        const data = await response.json();
+        if (data) {
+            document.getElementById('withdrawBalanceDisplay').innerText = `৳${parseFloat(data.balance).toFixed(2)}`;
         }
+    } catch (err) { console.error(err); }
+}
 
-        if (amount < 100) {
-            alert('ন্যূনতম উত্তোলনের পরিমাণ ১০০ টাকা');
-            return;
+document.getElementById('withdrawBtn').addEventListener('click', async () => {
+    const method = document.getElementById('paymentMethod').value;
+    const account = document.getElementById('accountNo').value;
+    const amount = document.getElementById('amount').value;
+
+    if (!account || amount < 100) {
+        return tg.showAlert("সঠিক নম্বর এবং ন্যূনতম ১০০ টাকা দিন।");
+    }
+
+    // কনফার্মেশন চাওয়া
+    tg.showConfirm(`আপনি কি নিশ্চিত যে ৳${amount} (${method}) উত্তোলন করতে চান?`, async (confirmed) => {
+        if (confirmed) {
+            const btn = document.getElementById('withdrawBtn');
+            btn.disabled = true;
+            btn.innerText = "প্রসেসিং...";
+
+            try {
+                const res = await fetch('/api/withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, method, accountNo: account, amount })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    tg.showAlert(result.message);
+                    window.location.href = 'page6.html'; // হিস্ট্রিতে নিয়ে যাবে
+                } else {
+                    tg.showAlert(result.message);
+                    btn.disabled = false;
+                    btn.innerText = "✅ উত্তোলন করুন";
+                }
+            } catch (err) {
+                tg.showAlert("একটি ত্রুটি হয়েছে!");
+                btn.disabled = false;
+            }
         }
-
-        // Logic for withdrawal
-        alert('আপনার উত্তোলনের অনুরোধটি গ্রহণ করা হয়েছে। ১-২৪ ঘণ্টার মধ্যে পেমেন্ট পেয়ে যাবেন।');
-        
-        // Reset fields
-        amountInput.value = '';
-        accountInput.value = '';
-    });
-
-    // Simple interaction for input background change on focus
-    const inputs = document.querySelectorAll('input, select');
-    inputs.forEach(input => {
-        input.addEventListener('focus', () => {
-            input.parentElement.style.background = '#e8eeff';
-        });
-        input.addEventListener('blur', () => {
-            input.parentElement.style.background = '#f1f4ff';
-        });
     });
 });
+
+loadWithdrawPage();
+
+// ব্যাক বাটন সচল করা
+tg.BackButton.show();
+tg.BackButton.onClick(() => history.back());
