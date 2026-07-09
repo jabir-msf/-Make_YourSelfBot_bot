@@ -1,1 +1,181 @@
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Hind Siliguri', sans-serif;
+}
+
+body {
+    background-color: #f4f7ff;
+}
+
+.app-shell {
+    max-width: 450px;
+    margin: 0 auto;
+    background: #f4f7ff;
+    min-height: 100vh;
+}
+
+/* Header & Nav Styling */
+.header-region {
+    background: #14287a;
+    padding-bottom: 15px;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    font-size: 13px;
+    color: white;
+    background: #0b1c5a;
+}
+
+.nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    color: white;
+}
+
+.logo-text { font-size: 20px; font-weight: 700; }
+
+.balance-pill {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 15px;
+    border-radius: 20px;
+    text-align: center;
+}
+.p-label { display: block; font-size: 9px; opacity: 0.8; }
+.p-amount { font-size: 14px; font-weight: 600; }
+
+.notif-box {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    border-radius: 12px;
+    color: #ffc107;
+    position: relative;
+}
+.red-dot {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: #ff3b30;
+    border-radius: 50%;
+    top: 8px; right: 8px;
+    border: 1px solid #14287a;
+}
+
+/* Quick Contact Row */
+.quick-contact {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 0 15px;
+}
+
+.q-card {
+    background: white;
+    padding: 10px 2px;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #333;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Content Body */
+.main-body {
+    padding: 20px 15px;
+}
+
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.bar-orange {
+    width: 4px;
+    height: 20px;
+    background: #f39c12;
+    border-radius: 2px;
+}
+
+.section-head h3 {
+    font-size: 18px;
+    color: #0b1c5a;
+    font-weight: 700;
+}
+
+/* Service Grid */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.service-item {
+    background: white;
+    border-radius: 15px;
+    padding: 18px 5px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-bg {
+    width: 45px;
+    height: 45px;
+    background: #f8f9ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+/* Specific BG for Socials */
+.icon-blue-bg { background: #1877f2; }
+.icon-red-bg { background: #ea4335; }
+.icon-insta-bg { background: #e4405f; }
+
+.service-item p {
+    font-size: 10px;
+    font-weight: 700;
+    color: #444;
+    line-height: 1.2;
+}
+
+/* Badges */
+.tag-hot {
+    position: absolute;
+    top: -6px;
+    right: -4px;
+    background: #f39c12;
+    color: white;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 800;
+}
+
+.tag-new {
+    position: absolute;
+    top: -6px;
+    right: -4px;
+    background: #ff3b30;
+    color: white;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 800;
+  }
