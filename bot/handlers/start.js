@@ -1,8 +1,17 @@
-const { CHANNEL_USERNAME } = require("../config");
+const config = require("../config");
 
 module.exports = (bot) => {
     bot.onText(/\/start/, async (msg) => {
         const chatId = msg.chat.id;
+
+        // সুরক্ষার জন্য চেক করা হচ্ছে ইউজারনেম আছে কিনা
+        const channelUsername = config.CHANNEL_USERNAME || "";
+        const cleanUsername = channelUsername.replace("@", "");
+
+        // যদি ইউজারনেম সেট করা না থাকে তবে এরর মেসেজ দেবে, ক্র্যাশ করবে না
+        if (!cleanUsername) {
+            return bot.sendMessage(chatId, "⚠️ কনফিগারেশনে সমস্যা! চ্যানেল ইউজারনেম পাওয়া যায়নি।");
+        }
 
         await bot.sendMessage(
             chatId,
@@ -13,7 +22,7 @@ module.exports = (bot) => {
                         [
                             {
                                 text: "📢 Join Channel",
-                                url: `https://t.me/${CHANNEL_USERNAME.replace("@", "")}`
+                                url: `https://t.me/${cleanUsername}`
                             }
                         ],
                         [
