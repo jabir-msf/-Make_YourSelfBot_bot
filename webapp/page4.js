@@ -1,37 +1,57 @@
+const tg = window.Telegram.WebApp;
+const user = tg.initDataUnsafe.user;
 
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Copy Referral Code
-    const copyBtn = document.getElementById('copyCode');
-    const refCode = document.getElementById('refCode').innerText;
+// আপনার বটের ইউজারনেম (বিনা @ এ)
+const botUsername = "Make_Your_SelfBot"; 
 
-    copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(refCode).then(() => {
-            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> কপিড';
-            copyBtn.style.background = '#2ecc71';
-            
-            setTimeout(() => {
-                copyBtn.innerHTML = '<i class="fa-solid fa-paste"></i> কপি';
-                copyBtn.style.background = '#0d3b94';
-            }, 2000);
-        });
+async function loadReferralData() {
+    if (!user) return;
+
+    // ১. রেফারেল কোড ও লিঙ্ক জেনারেট
+    const refCode = `MYS-${user.id}`;
+    const refLink = `https://t.me/${botUsername}?start=${user.id}`;
+
+    document.getElementById('refCodeDisplay').innerText = refCode;
+    document.getElementById('refLinkDisplay').innerText = refLink;
+
+    try {
+        // ২. ডাটাবেস থেকে ব্যালেন্স ও রেফারেল পরিসংখ্যান আনা
+        const response = await fetch(`/api/user/${user.id}`);
+        const data = await response.json();
+
+        if (data) {
+            document.getElementById('refPageBalance').innerText = `৳${parseFloat(data.balance).toFixed(0)}`;
+            // এখানে আপনি ডাটাবেস থেকে রেফার সংখ্যা আনবেন, আপাতত ০ দেখাচ্ছি
+            // ডাটাবেসে রেফার ট্র্যাকিং যোগ করলে এগুলো আপডেট হবে
+        }
+    } catch (err) {
+        console.error("Referral data load error:", err);
+    }
+
+    // ৩. কপি বাটন লজিক
+    document.getElementById('copyCodeBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(refLink); // সাধারণত লিঙ্ক কপি করা বেশি কার্যকর
+        tg.showScanQrPopup({ text: "লিঙ্ক কপি হয়েছে!" }); // ছোট পপআপ
+        setTimeout(() => tg.closeScanQrPopup(), 1000);
     });
 
-    // Navigation Active Switch
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', function() {
-            navItems.forEach(i => i.classList.remove('active-nav'));
-            this.classList.add('active-nav');
-        });
+    // ৪. টেলিগ্রাম শেয়ার বাটন
+    document.getElementById('shareTG').addEventListener('click', () => {
+        const text = `Make Your Self অ্যাপে জয়েন করে প্রতিদিন ঘরে বসে আয় করুন! আমার রেফারেল লিঙ্ক:`;
+        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
     });
 
-    // Social Share Mockup
-    const shareBtns = document.querySelectorAll('.btn-share');
-    shareBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const platform = this.innerText;
-            alert(platform + ' শেয়ার অপশন ওপেন হচ্ছে...');
-        });
+    // ৫. হোয়াটসঅ্যাপ শেয়ার বাটন
+    document.getElementById('shareWA').addEventListener('click', () => {
+        const text = `Make Your Self অ্যাপে জয়েন করুন: ${refLink}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     });
+}
+
+// টেলিগ্রামের ব্যাক বাটন সচল করা
+tg.BackButton.show();
+tg.BackButton.onClick(() => {
+    history.back();
 });
+
+loadReferralData();
