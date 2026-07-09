@@ -1,1 +1,98 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw - EarnBD Pro</title>
+    <link rel="stylesheet" href="page5.css">
+    <!-- Google Fonts for Bengali -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
 
+    <div class="app-container">
+        <!-- Top Blue Header -->
+        <header class="page-header">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="header-title">
+                <i class="fa-solid fa-square-arrow-down"></i>
+                <span>উত্তোলন করুন</span>
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <p class="balance-label">উত্তোলনযোগ্য ব্যালেন্স</p>
+                <h1 class="balance-amount">৳৮৬৪</h1>
+            </div>
+
+            <!-- Form Card -->
+            <div class="form-card">
+                <!-- Payment Method -->
+                <div class="input-group">
+                    <label>পেমেন্ট পদ্ধতি</label>
+                    <div class="select-wrapper">
+                        <select id="paymentMethod">
+                            <option value="bkash">বিকাশ</option>
+                            <option value="nagad">নগদ</option>
+                            <option value="rocket">রকেট</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <!-- Account Number -->
+                <div class="input-group">
+                    <label>একাউন্ট নম্বর</label>
+                    <input type="text" placeholder="01XXXXXXXXX" id="accountNo">
+                </div>
+
+                <!-- Amount -->
+                <div class="input-group">
+                    <label>পরিমাণ (৳)</label>
+                    <input type="number" placeholder="ন্যূনতম ৳১০০" id="amount">
+                </div>
+
+                <!-- Info Table -->
+                <div class="info-table">
+                    <div class="info-row">
+                        <span>সার্ভিস চার্জ</span>
+                        <span class="val">২%</span>
+                    </div>
+                    <div class="info-row">
+                        <span>ন্যূনতম</span>
+                        <span class="val">৳১০০</span>
+                    </div>
+                    <div class="info-row">
+                        <span>সর্বোচ্চ/দিন</span>
+                        <span class="val">৳১০,০০০</span>
+                    </div>
+                    <div class="info-row">
+                        <span>প্রক্রিয়ার সময়</span>
+                        <span class="val">১-২৪ ঘণ্টা</span>
+                    </div>
+                </div>
+
+                <!-- Withdraw Button -->
+                <button class="submit-btn" id="withdrawBtn">
+                    ✅ উত্তোলন করুন
+                </button>
+            </div>
+
+            <!-- History Link -->
+            <div class="history-link">
+                <div class="blue-bar"></div>
+                <i class="fa-regular fa-clipboard"></i>
+                <span>উত্তোলন ইতিহাস</span>
+            </div>
+        </main>
+    </div>
+
+    <script src="page5.js"></script>
+</body>
+              </html>
