@@ -115,6 +115,43 @@ app.post("/api/daily-bonus", async (req, res) => {
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "webapp", "index.html"));
 });
+// ৪. উইথড্র রিকোয়েস্ট API
+app.post("/api/withdraw", async (req, res) => {
+    const { userId, method, accountNo, amount } = req.body;
+    const withdrawAmount = parseFloat(amount);
+
+    try {
+        // ১. ইউজারের ব্যালেন্স চেক করা
+        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        
+        if (!user || user.balance < withdrawAmount) {
+            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
+        }
+
+        if (withdrawAmount < 100) {
+            return res.json({ success: false, message: "ন্যূনতম ১০০ টাকা উত্তোলন করতে হবে।" });
+        }
+
+        // ২. ব্যালেন্স কাটা এবং রিকোয়েস্ট সেভ করা (Transaction)
+        await supabase.from('profiles').update({ balance: user.balance - withdrawAmount }).eq('id', userId);
+        
+        const { error } = await supabase.from('withdrawals').insert({
+            user_id: userId,
+            amount: withdrawAmount,
+            method: method,
+            account_no: accountNo,
+            status: 'pending'
+        });
+
+        if (error) throw error;
+
+        res.json({ success: true, message: "আপনার উত্তোলনের অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে।" });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" });
+    }
+});
 
 // Health Check
 app.get("/health", (req, res) => {
