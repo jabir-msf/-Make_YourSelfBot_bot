@@ -4,9 +4,9 @@ module.exports = (bot) => {
     bot.onText(/\/start/, async (msg) => {
         const chatId = msg.chat.id;
 
-        bot.sendMessage(
+        await bot.sendMessage(
             chatId,
-            "🎉 Welcome to EarnBD Pro!\n\nপ্রথমে আমাদের অফিসিয়াল চ্যানেলে Join করুন।",
+            "🎉 Welcome to EarnBD Pro!\n\nপ্রথমে আমাদের অফিসিয়াল Telegram Channel-এ Join করুন।",
             {
                 reply_markup: {
                     inline_keyboard: [
