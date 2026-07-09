@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -17,31 +18,20 @@
     <div class="app-shell">
         <!-- Top Blue Header Section -->
         <div class="header-region">
-            <header class="status-bar">
-                <div class="status-left">
-                    <i class="fa-regular fa-square-check"></i>
-                    <span>Make Your Self - ঘরে বসে আয় করুন</span>
-                </div>
-                <i class="fa-solid fa-rotate-right refresh-btn" id="refreshBtn" onclick="window.location.reload()"></i>
-            </header>
-
+            <!-- শুধুমাত্র অ্যারো, নাম এবং ব্যালেন্স রাখা হয়েছে (স্ট্যাটাস বার রিমুভড) -->
             <nav class="nav-bar">
-                <!-- ব্যাক বাটন হিসেবে মেনু আইকন ব্যবহার করা হয়েছে -->
-                <i class="fa-solid fa-arrow-left menu-icon" onclick="history.back()"></i>
+                <i class="fa-solid fa-arrow-left menu-icon" onclick="history.back()" style="cursor: pointer;"></i>
                 <h2 class="logo-text">Make Your Self</h2>
                 <div class="nav-right">
                     <div class="balance-pill">
                         <span class="p-label">ব্যালেন্স</span>
                         <span class="p-amount" id="servicePageBalance">৳০.০০</span>
                     </div>
-                    <div class="notif-box">
-                        <i class="fa-solid fa-bell"></i>
-                        <span class="red-dot"></span>
-                    </div>
+                    <!-- নোটিফিকেশন বক্স রিমুভ করা হয়েছে -->
                 </div>
             </nav>
 
-            <!-- Horizontal White Cards Section -->
+            <!-- Horizontal White Cards Section (এটি রাখা হয়েছে) -->
             <div class="quick-contact">
                 <div class="q-card" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/EarnBD_Pro')">ইনকাম রিভিউ</div>
                 <div class="q-card">ফেসবুক</div>
@@ -50,7 +40,7 @@
             </div>
         </div>
 
-        <!-- Main Body Content -->
+        <!-- Main Body Content (বাকি সব একদম অপরিবর্তিত) -->
         <main class="main-body">
             <div class="section-head">
                 <span class="bar-orange"></span>
@@ -58,7 +48,6 @@
             </div>
 
             <div class="services-grid">
-                <!-- প্রতিটি সার্ভিস আইটেমে একটি ক্লিক মেসেজ দেওয়া হয়েছে -->
                 <div class="service-item" onclick="comingSoon()">
                     <span class="tag-hot">HOT</span>
                     <div class="icon-bg"><i class="fa-solid fa-tv" style="color: #4a90e2;"></i></div>
@@ -100,4 +89,4 @@
 
     <script src="page3dashboard.js"></script>
 </body>
-                    </html>
+    </html>
