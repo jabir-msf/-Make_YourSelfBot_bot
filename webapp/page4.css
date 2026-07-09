@@ -1,1 +1,207 @@
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Hind Siliguri', sans-serif;
+}
+
+body {
+    background-color: #f0f4ff;
+}
+
+.app-container {
+    max-width: 450px;
+    margin: 0 auto;
+    background: #f1f4f9;
+    min-height: 100vh;
+    padding-bottom: 80px;
+    position: relative;
+}
+
+/* Navbar Styling */
+.navbar {
+    background: #0d1b4d;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+.nav-left { display: flex; align-items: center; gap: 15px; }
+.menu-icon { font-size: 24px; }
+.logo { font-size: 20px; font-weight: 700; }
+
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.balance-pill {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 5px 15px;
+    border-radius: 25px;
+    text-align: center;
+}
+.b-text { display: block; font-size: 10px; opacity: 0.8; }
+.b-amount { font-size: 15px; font-weight: 600; }
+
+.notif-btn {
+    background: #3c4988;
+    padding: 10px;
+    border-radius: 12px;
+    color: #ffca28;
+    position: relative;
+}
+.dot {
+    position: absolute;
+    width: 6px; height: 6px;
+    background: #ff3b30;
+    border-radius: 50%;
+    top: 8px; right: 8px;
+}
+
+/* Referral Hero Area */
+.referral-hero {
+    background: linear-gradient(180deg, #301b5e 0%, #151a44 100%);
+    padding: 30px 20px;
+    text-align: center;
+    color: white;
+}
+.hero-badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.hero-sub { font-size: 16px; margin-top: 15px; opacity: 0.9; }
+.hero-amount { font-size: 55px; font-weight: 700; color: #fff; margin: 5px 0; }
+.hero-note { font-size: 13px; opacity: 0.7; }
+
+/* Steps */
+.steps-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+}
+.step-item { display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 2; }
+.circle {
+    width: 30px; height: 30px;
+    background: #4b527e;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+}
+.step-item span { font-size: 10px; opacity: 0.8; }
+.step-item.active .circle { background: #9c62f2; box-shadow: 0 0 15px #9c62f2; }
+.step-item.active span { opacity: 1; color: #d0a4ff; }
+.line { flex: 1; height: 2px; background: rgba(255,255,255,0.1); margin-top: -18px; }
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 20px;
+    margin-top: -20px;
+}
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 15px 5px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.stat-card.border-blue { border-top: 4px solid #3498db; }
+.stat-card.border-green { border-top: 4px solid #2ecc71; }
+.stat-card.border-yellow { border-top: 4px solid #f1c40f; }
+
+.s-icon { font-size: 20px; margin-bottom: 8px; }
+.icon-blue { color: #3498db; }
+.icon-green { color: #2ecc71; }
+.icon-yellow { color: #f1c40f; }
+.stat-card h3 { font-size: 22px; color: #2c3e50; }
+.stat-card p { font-size: 12px; color: #7f8c8d; font-weight: 600; }
+
+/* Referral Detail Card */
+.referral-card {
+    background: white;
+    margin: 0 20px;
+    padding: 25px 20px;
+    border-radius: 25px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+.card-title { font-size: 16px; color: #444; margin-bottom: 15px; }
+
+.code-box-dashed {
+    border: 2px dashed #b2bec3;
+    background: #f8faff;
+    padding: 12px 20px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0d1b4d;
+    letter-spacing: 1px;
+}
+.copy-btn {
+    background: #0d3b94;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.link-box {
+    background: #f1f4ff;
+    margin-top: 15px;
+    padding: 12px 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.url-text { font-size: 11px; color: #576574; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 85%; }
+.link-icon { color: #54a0ff; }
+
+/* Share Buttons */
+.share-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+.btn-share {
+    border: none;
+    color: white;
+    padding: 10px 5px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.wa { background: #2ecc71; }
+.fb { background: #3b5998; }
+.tg { background: #0088cc; }
+
+/* Bottom Nav */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 450px;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+}
+.nav-item { text-align: center; color: #95a5a6; cursor: pointer; }
+.nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
+.nav-item span { font-size: 11px; font-weight: 600; }
+.active-nav { color: #3498db; }
