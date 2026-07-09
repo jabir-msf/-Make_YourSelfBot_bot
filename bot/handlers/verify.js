@@ -2,52 +2,36 @@ const { CHANNEL_ID, WEBAPP_URL } = require("../config");
 
 module.exports = (bot) => {
     bot.on("callback_query", async (query) => {
-
         if (query.data !== "verify_join") return;
-        console.log("VERIFY BUTTON CLICKED", query.from.id);
 
         const chatId = query.message.chat.id;
         const userId = query.from.id;
 
         try {
-            // CHANNEL_ID ব্যবহার করে মেম্বারশিপ চেক
             const member = await bot.getChatMember(CHANNEL_ID, userId);
-            console.log("MEMBER STATUS:", member.status);
-
+            
             if (["creator", "administrator", "member"].includes(member.status)) {
-
                 await bot.editMessageText(
-                    "✅ Verification Successful!\n\nআপনি সফলভাবে Channel Join করেছেন।",
+                    "✅ Verification Successful!\n\nএখন আপনি অ্যাপটি ব্যবহার করতে পারবেন।",
                     {
                         chat_id: chatId,
                         message_id: query.message.message_id,
                         reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: "🚀 Open App",
-                                        web_app: {
-                                            url: WEBAPP_URL
-                                        }
-                                    }
-                                ]
-                            ]
+                            inline_keyboard: [[{ text: "🚀 Open App", web_app: { url: WEBAPP_URL } }]]
                         }
                     }
                 );
-
             } else {
                 await bot.answerCallbackQuery(query.id, {
-                    text: "❌ আগে Channel Join করুন।",
+                    text: "❌ আপনি এখনো চ্যানেলে জয়েন করেননি!",
                     show_alert: true
                 });
             }
-
         } catch (err) {
-            console.log("VERIFY ERROR:", err.response?.body || err.message);
-            // যদি মেম্বারশিপ চেক করতে কোনো সমস্যা হয় (যেমন বট এডমিন না থাকলে)
+            console.error("VERIFY ERROR:", err);
+            // এখানে মেসেজটি সহজ করে দেওয়া হলো যাতে ইউজার কনফিউজ না হয়
             await bot.answerCallbackQuery(query.id, {
-                text: "❌ Join যাচাই করা যায়নি। বটকে চ্যানেলে Admin করুন এবং আইডি চেক করুন।",
+                text: "❌ কারিগরি ত্রুটি! অনুগ্রহ করে কিছুক্ষণ পর চেষ্টা করুন বা চ্যানেল আইডি চেক করুন।",
                 show_alert: true
             });
         }
