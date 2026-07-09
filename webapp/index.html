@@ -1,10 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnBD Pro Replica</title>
+    <title>EarnBD Pro - Welcome</title>
+    
+    <!-- Telegram WebApp SDK (এটি ছাড়া অ্যাপ কাজ করবে না) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link rel="stylesheet" href="style.css">
     <!-- Google Fonts for Bengali -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +23,8 @@
                 <i class="fa-regular fa-square-check"></i>
                 <span>EarnBD Pro - ঘরে বসে আয় করুন</span>
             </div>
-            <i class="fa-solid fa-rotate-right refresh-icon"></i>
+            <!-- রিফ্রেশ করার ফাংশন যোগ করা হয়েছে -->
+            <i class="fa-solid fa-rotate-right refresh-icon" onclick="window.location.reload()"></i>
         </header>
 
         <!-- Main Card Section -->
@@ -29,8 +33,6 @@
                 <!-- Sparkle Icon -->
                 <div class="icon-circle">
                     <div class="sparkles">
-                        <i class="fa-solid fa-sparkles"></i>
-                        <!-- SVG for custom sparkles if needed -->
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2L14.5 9L22 11.5L14.5 14L12 21L9.5 14L2 11.5L9.5 9L12 2Z" fill="#FFD700"/>
                             <path d="M6 4L7 6L9 7L7 8L6 10L5 8L3 7L5 6L6 4Z" fill="#FFD700" opacity="0.7"/>
@@ -39,7 +41,8 @@
                 </div>
 
                 <h1 class="welcome-title">স্বাগতম!</h1>
-                <p class="welcome-sub">EarnBD Pro পরিবারে আপনাকে স্বাগত জানাই 🎉</p>
+                <!-- ইউজারের নাম অটোমেটিক এখানে চলে আসবে -->
+                <p class="welcome-sub">EarnBD Pro পরিবারে আপনাকে স্বাগত জানাই, <span id="userName">ইউজার</span>! 🎉</p>
 
                 <!-- Notice Box -->
                 <div class="notice-box">
@@ -72,6 +75,7 @@
         </main>
     </div>
 
+    <!-- মেইন জাভাস্ক্রিপ্ট ফাইল কানেক্ট করা হলো -->
     <script src="script.js"></script>
 </body>
-  </html>
+    </html>
