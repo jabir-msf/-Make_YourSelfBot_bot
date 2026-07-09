@@ -1,4 +1,4 @@
-const { CHANNEL_USERNAME, WEBAPP_URL } = require("../config");
+const { CHANNEL_ID, WEBAPP_URL } = require("../config");
 
 module.exports = (bot) => {
     bot.on("callback_query", async (query) => {
@@ -10,8 +10,9 @@ module.exports = (bot) => {
         const userId = query.from.id;
 
         try {
-            const member = await bot.getChatMember(CHANNEL_USERNAME, userId);
-            console.log("MEMBER STATUS:", member);
+            // CHANNEL_ID ব্যবহার করে মেম্বারশিপ চেক
+            const member = await bot.getChatMember(CHANNEL_ID, userId);
+            console.log("MEMBER STATUS:", member.status);
 
             if (["creator", "administrator", "member"].includes(member.status)) {
 
@@ -36,26 +37,19 @@ module.exports = (bot) => {
                 );
 
             } else {
-
                 await bot.answerCallbackQuery(query.id, {
                     text: "❌ আগে Channel Join করুন।",
                     show_alert: true
                 });
-
             }
 
         } catch (err) {
-
-    console.log("VERIFY ERROR:", err.response?.body || err.message);
-
-    await bot.answerCallbackQuery(query.id, {
-        text: "❌ Join যাচাই করা যায়নি।",
-        show_alert: true
-    });
-
-                    }
-
-        
-
+            console.log("VERIFY ERROR:", err.response?.body || err.message);
+            // যদি মেম্বারশিপ চেক করতে কোনো সমস্যা হয় (যেমন বট এডমিন না থাকলে)
+            await bot.answerCallbackQuery(query.id, {
+                text: "❌ Join যাচাই করা যায়নি। বটকে চ্যানেলে Admin করুন এবং আইডি চেক করুন।",
+                show_alert: true
+            });
+        }
     });
 };
