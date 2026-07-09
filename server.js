@@ -124,6 +124,40 @@ app.get("/api/withdrawals/:id", async (req, res) => {
         res.status(500).json({ error: "Data fetch failed" });
     }
 });
+// --- আগের কোড থাকবে ---
+
+// নতুন API: কাজের ইতিহাস (Page 7 এর জন্য)
+app.get("/api/tasks/history/:id", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', req.params.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []); // ডাটা না থাকলে খালি অ্যারে পাঠাবে
+    } catch (err) {
+        res.status(500).json({ error: "Tasks fetch failed" });
+    }
+});
+
+// ইউজারের রেফারেল পরিসংখ্যান পাওয়ার API (Page 4 এর জন্য)
+app.get("/api/referrals/:id", async (req, res) => {
+    try {
+        const { data, count, error } = await supabase
+            .from('profiles')
+            .select('id', { count: 'exact' })
+            .eq('referrer_id', req.params.id);
+
+        if (error) throw error;
+        res.json({ total_refs: count || 0 });
+    } catch (err) {
+        res.status(500).json({ total_refs: 0 });
+    }
+});
+
+// --- বাকি কোড যেমন আছে থাকবে ---
 // --- Pages ---
 
 // Home Page
