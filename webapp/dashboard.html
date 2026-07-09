@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -15,14 +16,7 @@
 <body>
 
     <div class="main-wrapper">
-        <!-- Top Status Bar -->
-        <header class="status-bar">
-            <div class="status-left">
-                <i class="fa-regular fa-square-check"></i>
-                <span>Make Your Self - ঘরে বসে আয় করুন</span>
-            </div>
-            <i class="fa-solid fa-rotate-right" id="refreshBtn" onclick="window.location.reload()"></i>
-        </header>
+        <!-- উপরের স্ট্যাটাস বারটি রিমুভ করা হয়েছে সরাসরি নেভিবার থেকে শুরু হচ্ছে -->
 
         <!-- Navbar -->
         <nav class="top-nav">
@@ -77,25 +71,17 @@
         <!-- White Content Area -->
         <div class="content-body">
             
-            <!-- কাজ শুরু করুন বাটন (এটিই এখন প্রধান অ্যাকশন বাটন) -->
+            <!-- কাজ শুরু করুন বাটন -->
             <div style="text-align: center; margin-bottom: 25px;">
                 <button onclick="window.location.href='page3dashboard.html'" style="width: 100%; padding: 18px; background: linear-gradient(90deg, #2ecc71, #27ae60); color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
                     🚀 কাজ শুরু করুন
                 </button>
             </div>
 
-            <!-- আপনার অরিজিনাল Quick Actions Section -->
+            <!-- দ্রুত অ্যাকশন সেকশন (উত্তোলন ও ডিপোজিট রিমুভড) -->
             <div class="section-wrap">
                 <h3 class="section-header">দ্রুত অ্যাকশন</h3>
                 <div class="action-grid">
-                    <div class="action-box">
-                        <i class="fa-solid fa-credit-card t-yellow"></i>
-                        <p>অ্যাড মানি</p>
-                    </div>
-                    <div class="action-box" onclick="window.location.href='page5.html'">
-                        <i class="fa-solid fa-square-arrow-down t-teal"></i>
-                        <p>উত্তোলন</p>
-                    </div>
                     <div class="action-box">
                         <i class="fa-solid fa-inbox t-brown"></i>
                         <p>সেন্ড মানি</p>
@@ -107,14 +93,10 @@
                 </div>
             </div>
 
-            <!-- আপনার অরিজিনাল Contact Section -->
+            <!-- যোগাযোগ সেকশন (ইউটিউব ও ইনকাম রিভিউ রিমুভড, এডমিনস এডেড) -->
             <div class="section-wrap">
                 <h3 class="section-header">যোগাযোগ করুন</h3>
                 <div class="action-grid">
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/EarnBD_Pro')">
-                        <i class="fa-solid fa-users t-blue"></i>
-                        <p>ইনকাম রিভিউ</p>
-                    </div>
                     <div class="action-box">
                         <i class="fa-solid fa-book t-darkblue"></i>
                         <p>ফেসবুক</p>
@@ -124,8 +106,8 @@
                         <p>টেলিগ্রাম</p>
                     </div>
                     <div class="action-box">
-                        <i class="fa-solid fa-play t-red"></i>
-                        <p>ইউটিউব</p>
+                        <i class="fa-solid fa-headset t-blue"></i>
+                        <p>এডমিনস</p>
                     </div>
                 </div>
             </div>
@@ -135,4 +117,4 @@
 
     <script src="dashboard.js"></script>
 </body>
-                </html>
+    </html>
