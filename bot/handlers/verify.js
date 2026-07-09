@@ -44,14 +44,16 @@ module.exports = (bot) => {
 
         } catch (err) {
 
-            await bot.answerCallbackQuery(query.id, {
-                text: "❌ Join যাচাই করা যায়নি।",
-                show_alert: true
-            });
+    console.log("VERIFY ERROR:", err.response?.body || err.message);
 
-            console.log(err);
+    await bot.answerCallbackQuery(query.id, {
+        text: "❌ Join যাচাই করা যায়নি।",
+        show_alert: true
+    });
 
-        }
+                    }
+
+        
 
     });
 };
