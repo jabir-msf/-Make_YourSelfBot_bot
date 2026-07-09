@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnBD Pro Referral</title>
+    <title>Make Your Self - Referral</title>
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link rel="stylesheet" href="page4.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,13 +18,14 @@
         <!-- Top Navbar -->
         <nav class="navbar">
             <div class="nav-left">
-                <i class="fa-solid fa-bars menu-icon"></i>
-                <h2 class="logo">EarnBD Pro</h2>
+                <!-- ব্যাক বাটন হিসেবে মেনু আইকন ব্যবহার -->
+                <i class="fa-solid fa-arrow-left menu-icon" onclick="history.back()"></i>
+                <h2 class="logo">Make Your Self</h2>
             </div>
             <div class="nav-right">
                 <div class="balance-pill">
                     <span class="b-text">ব্যালেন্স</span>
-                    <span class="b-amount">৳৮৬৪</span>
+                    <span class="b-amount" id="refPageBalance">৳০</span>
                 </div>
                 <div class="notif-btn">
                     <i class="fa-solid fa-bell"></i>
@@ -66,17 +71,17 @@
         <div class="stats-grid">
             <div class="stat-card border-blue">
                 <div class="s-icon icon-blue"><i class="fa-solid fa-user-group"></i></div>
-                <h3>11</h3>
+                <h3 id="totalRefs">0</h3>
                 <p>মোট রেফার</p>
             </div>
             <div class="stat-card border-green">
                 <div class="s-icon icon-green"><i class="fa-solid fa-square-check"></i></div>
-                <h3>2</h3>
+                <h3 id="successRefs">0</h3>
                 <p>সফল রেফার</p>
             </div>
             <div class="stat-card border-yellow">
                 <div class="s-icon icon-yellow"><i class="fa-solid fa-sack-dollar"></i></div>
-                <h3>৳40</h3>
+                <h3 id="refIncome">৳০</h3>
                 <p>মোট আয়</p>
             </div>
         </div>
@@ -85,35 +90,31 @@
         <div class="referral-card">
             <h4 class="card-title">আপনার রেফারেল কোড</h4>
             
-            <!-- Code Box -->
             <div class="code-box-dashed">
-                <span id="refCode">EBD-XLB90R</span>
-                <button class="copy-btn" id="copyCode">
+                <span id="refCodeDisplay">MYS-WAIT...</span>
+                <button class="copy-btn" id="copyCodeBtn">
                     <i class="fa-solid fa-paste"></i> কপি
                 </button>
             </div>
 
-            <!-- Link Box -->
             <div class="link-box">
-                <span class="url-text">https://earnbdpro-68341.web.app/?ref=EBD-XLB90R</span>
+                <span class="url-text" id="refLinkDisplay">https://t.me/Make_Your_SelfBot?start=...</span>
                 <i class="fa-solid fa-link link-icon"></i>
             </div>
 
-            <!-- Social Share Buttons -->
             <div class="share-buttons">
-                <button class="btn-share wa"><i class="fa-brands fa-whatsapp"></i> হোয়াটসঅ্যাপ</button>
-                <button class="btn-share fb"><i class="fa-brands fa-facebook-f"></i> ফেসবুক</button>
-                <button class="btn-share tg"><i class="fa-brands fa-telegram"></i> টেলিগ্রাম</button>
+                <button class="btn-share wa" id="shareWA"><i class="fa-brands fa-whatsapp"></i> হোয়াটসঅ্যাপ</button>
+                <button class="btn-share tg" id="shareTG"><i class="fa-brands fa-telegram"></i> টেলিগ্রাম</button>
             </div>
         </div>
 
         <!-- Bottom Navigation -->
         <footer class="bottom-nav">
-            <div class="nav-item">
+            <div class="nav-item" onclick="window.location.href='dashboard.html'">
                 <i class="fa-solid fa-house-chimney"></i>
                 <span>হোম</span>
             </div>
-            <div class="nav-item">
+            <div class="nav-item" onclick="window.location.href='page5.html'">
                 <i class="fa-solid fa-wallet"></i>
                 <span>ওয়ালেট</span>
             </div>
@@ -130,4 +131,4 @@
 
     <script src="page4.js"></script>
 </body>
-                                                   </html>
+                    </html>
