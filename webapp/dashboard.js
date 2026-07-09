@@ -1,68 +1,66 @@
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
+let currentBalance = 0, miningRate = 0;
 
-let currentBalance = 0;
-let miningRate = 0.001; // প্রতি সেকেন্ডে
-
-async function initDashboard() {
+async function init() {
     if (!user) return;
-
-    // ইউজারের নাম সেট করা
     document.getElementById('userFirstName').innerText = user.first_name;
+    const res = await fetch(`/api/user/${user.id}`);
+    const data = await res.json();
+    
+    currentBalance = parseFloat(data.balance);
+    miningRate = parseFloat(data.mining_rate);
 
-    try {
-        // ১. সার্ভার থেকে ইউজারের ডাটা আনা
-        const response = await fetch(`/api/user/${user.id}`);
-        const data = await response.json();
-
-        if (data) {
-            currentBalance = parseFloat(data.balance);
-            miningRate = parseFloat(data.mining_rate || 0.0001);
-
-            // ২. লাইভ ব্যালেন্স কাউন্টার শুরু করা
-            startLiveBalance();
-        }
-    } catch (err) {
-        console.error("Dashboard Load Error:", err);
-    }
-}
-
-function startLiveBalance() {
+    // লাইভ কাউন্টার
     setInterval(() => {
-        // প্রতি ১০০ মিলিসেকেন্ডে ব্যালেন্স একটু করে বাড়ানো (Visual)
         currentBalance += (miningRate / 10);
-        
-        // ড্যাশবোর্ডে আপডেট করা
         document.getElementById('mainBalance').innerText = `৳${currentBalance.toFixed(4)}`;
         document.getElementById('topBalance').innerText = `৳${currentBalance.toFixed(2)}`;
     }, 100);
+
+    // বোনাস টাইমার
+    setupTimer(data.last_daily_bonus);
 }
 
-// ৩. ক্লেইম বাটন ফাংশন
-document.getElementById('claimBtn').addEventListener('click', async () => {
-    const btn = document.getElementById('claimBtn');
-    btn.disabled = true;
-    btn.innerText = "প্রসেসিং হচ্ছে...";
-
-    try {
-        const res = await fetch('/api/claim-mining', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id })
-        });
-        const result = await res.json();
-
-        if (result.success) {
-            currentBalance = parseFloat(result.balance);
-            tg.showAlert("অভিনন্দন! আপনার মাইনিং ব্যালেন্স মূল ব্যালেন্সে যোগ হয়েছে।");
+function setupTimer(lastDate) {
+    const timerTxt = document.getElementById('bonusTimer');
+    const btn = document.getElementById('dailyBonusBtn');
+    
+    setInterval(() => {
+        const diff = new Date() - new Date(lastDate || 0);
+        const remain = (24 * 60 * 60 * 1000) - diff;
+        if (remain <= 0) {
+            timerTxt.innerText = "বোনাস রেডি!";
+            btn.style.display = "block";
+        } else {
+            const h = Math.floor(remain / 3600000);
+            const m = Math.floor((remain % 3600000) / 60000);
+            const s = Math.floor((remain % 60000) / 1000);
+            timerTxt.innerText = `পরবর্তী বোনাস: ${h}ঘ : ${m}মি : ${s}সে`;
+            btn.style.display = "none";
         }
-    } catch (err) {
-        tg.showAlert("দুঃখিত! ক্লেইম করতে সমস্যা হয়েছে।");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "💰 মাইনিং ক্লেইম করুন";
-    }
-});
+    }, 1000);
+}
 
-// ড্যাশবোর্ড ইনিশিয়ালাইজ করুন
-initDashboard();
+document.getElementById('claimBtn').onclick = async () => {
+    const res = await fetch('/api/claim-mining', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userId: user.id })
+    });
+    const result = await res.json();
+    if(result.success) { currentBalance = result.balance; tg.showAlert("ক্লেইম সফল!"); }
+};
+
+document.getElementById('dailyBonusBtn').onclick = async () => {
+    const res = await fetch('/api/daily-bonus', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ userId: user.id })
+    });
+    const result = await res.json();
+    tg.showAlert(result.message);
+    if(result.success) location.reload();
+};
+
+init();
