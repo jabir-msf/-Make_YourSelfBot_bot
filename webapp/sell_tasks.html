@@ -9,14 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 4px solid #1a3fb3; }
-        .stat-card h2 { font-size: 20px; color: #1a3fb3; }
-        .stat-card p { font-size: 12px; color: #666; }
-        .toggle-container { display: flex; background: #e0e7ff; border-radius: 10px; padding: 5px; margin-bottom: 20px; }
-        .toggle-btn { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .stat-card h2 { font-size: 20px; color: #1a3fb3; margin-top: 5px; }
+        .stat-card p { font-size: 11px; color: #777; font-weight: 600; }
+        .toggle-container { display: flex; background: #e0e7ff; border-radius: 12px; padding: 5px; margin-bottom: 20px; }
+        .toggle-btn { flex: 1; padding: 10px; text-align: center; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; transition: 0.3s; }
         .toggle-btn.active { background: #1a3fb3; color: white; }
-        .password-box { background: #fff3cd; border: 1px dashed #ffa000; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .password-box { background: #fff9e6; border: 1px dashed #ffa000; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .loader { display: none; color: #1a3fb3; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body style="background: #f4f7ff;">
@@ -27,11 +28,11 @@
         </header>
 
         <main class="content">
-            <!-- Stats Cards -->
+            <!-- stats -->
             <div class="stats-container">
                 <div class="stat-card">
                     <p>মোট সেল</p>
-                    <h2 id="totalSold">0</h2>
+                    <h2 id="totalSold">০</h2>
                 </div>
                 <div class="stat-card">
                     <p>মোট আয়</p>
@@ -39,37 +40,38 @@
                 </div>
             </div>
 
-            <!-- New/Used Toggle -->
+            <!-- Tab Switcher -->
             <div class="toggle-container">
                 <div class="toggle-btn active" id="btnNew" onclick="switchTab('new')">New Account</div>
                 <div class="toggle-btn" id="btnUsed" onclick="switchTab('used')">Used Account</div>
             </div>
 
-            <!-- Tab 1: New Account (Daily Pass + Sheet Upload) -->
+            <!-- New Account Section -->
             <div id="tabNew">
                 <div class="password-box">
-                    <p style="font-size: 13px; color: #856404;">আজকের পাসওয়ার্ড (অবশ্যই এটি দিবেন)</p>
-                    <h3 id="dailyPassword" style="font-size: 22px; color: #d35400;">Loading...</h3>
+                    <p style="font-size: 12px; color: #856404; margin-bottom: 5px;">আজকের পাসওয়ার্ড (অবশ্যই এটি দিবেন)</p>
+                    <h3 id="dailyPassword" style="font-size: 20px; color: #d35400;">Loading...</h3>
                 </div>
                 <div class="form-card">
-                    <label>শীট ফাইল আপলোড করুন (Excel/CSV/Text):</label>
-                    <input type="file" id="sheetFile" style="margin: 15px 0;">
+                    <label><i class="fa-solid fa-file-excel"></i> শীট/স্ক্রিনশট আপলোড করুন:</label>
+                    <input type="file" id="sheetFile" style="margin: 15px 0; width: 100%;">
+                    <div id="newLoader" class="loader"><i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে...</div>
                     <button class="submit-btn" onclick="submitSheet()">✅ শীট জমা দিন</button>
                 </div>
             </div>
 
-            <!-- Tab 2: Used Account (Manual Input) -->
+            <!-- Used Account Section -->
             <div id="tabUsed" style="display: none;">
                 <div class="form-card">
                     <div class="input-group">
-                        <label>ইমেইল বা ইউজারনেম</label>
+                        <label>ইমেইল বা আইডি</label>
                         <input type="text" id="usedEmail" placeholder="example@gmail.com">
                     </div>
                     <div class="input-group">
                         <label>পাসওয়ার্ড</label>
-                        <input type="password" id="usedPass" placeholder="******">
+                        <input type="text" id="usedPass" placeholder="******">
                     </div>
-                    <button class="submit-btn" onclick="submitManual()">✅ একটি জমা দিন</button>
+                    <button class="submit-btn" onclick="submitManual()" id="manualBtn">✅ একটি জমা দিন</button>
                 </div>
             </div>
         </main>
@@ -81,74 +83,101 @@
         const params = new URLSearchParams(window.location.search);
         const cat = params.get('cat') || "gmail_sell";
 
-        // পেজ টাইটেল সেট করা
         document.getElementById('pageTitle').innerText = cat.replace('_', ' ').toUpperCase();
 
         async function loadStats() {
-            const res = await fetch(`/api/user-stats/${user.id}/${cat}`);
-            const data = await res.json();
-            document.getElementById('totalSold').innerText = data.totalSold;
-            document.getElementById('totalEarned').innerText = `৳${data.totalEarned.toFixed(2)}`;
+            try {
+                const res = await fetch(`/api/user-stats/${user.id}/${cat}`);
+                const data = await res.json();
+                document.getElementById('totalSold').innerText = data.totalSold || 0;
+                document.getElementById('totalEarned').innerText = `৳${(data.totalEarned || 0).toFixed(2)}`;
 
-            // পাসওয়ার্ড লোড করা (Admin Task টেবিল থেকে)
-            const resTask = await fetch(`/api/admin-tasks/${cat}`);
-            const tasks = await resTask.json();
-            if(tasks.length > 0) {
-                document.getElementById('dailyPassword').innerText = tasks[0].daily_password || "No Password Set";
-            }
+                const resTask = await fetch(`/api/admin-tasks/${cat}`);
+                const tasks = await resTask.json();
+                if(tasks.length > 0) {
+                    document.getElementById('dailyPassword').innerText = tasks[0].daily_password || "No Password Set";
+                } else {
+                    document.getElementById('dailyPassword').innerText = "Not Set";
+                }
+            } catch(e) { console.error(e); }
         }
 
         function switchTab(type) {
-            if(type === 'new') {
-                document.getElementById('tabNew').style.display = 'block';
-                document.getElementById('tabUsed').style.display = 'none';
-                document.getElementById('btnNew').classList.add('active');
-                document.getElementById('btnUsed').classList.remove('active');
-            } else {
-                document.getElementById('tabNew').style.display = 'none';
-                document.getElementById('tabUsed').style.display = 'block';
-                document.getElementById('btnUsed').classList.add('active');
-                document.getElementById('btnNew').classList.remove('active');
+            document.getElementById('tabNew').style.display = type === 'new' ? 'block' : 'none';
+            document.getElementById('tabUsed').style.display = type === 'used' ? 'block' : 'none';
+            document.getElementById('btnNew').classList.toggle('active', type === 'new');
+            document.getElementById('btnUsed').classList.toggle('active', type === 'used');
+        }
+
+        // শীট বা ইমেজের প্রমাণ আপলোড
+        async function submitSheet() {
+            const fileInput = document.getElementById('sheetFile');
+            if(fileInput.files.length === 0) return tg.showAlert("ফাইল সিলেক্ট করুন!");
+            
+            const btn = document.querySelector("#tabNew .submit-btn");
+            const loader = document.getElementById('newLoader');
+            btn.disabled = true;
+            loader.style.display = 'block';
+
+            try {
+                const formData = new FormData();
+                formData.append("image", fileInput.files[0]);
+
+                const imgRes = await fetch("https://api.imgbb.com/1/upload?key=7246bc1a891878821a0140bd7686bdf9", {
+                    method: "POST",
+                    body: formData
+                });
+                const imgData = await imgRes.json();
+                if(!imgData.success) throw new Error("Upload Failed");
+
+                const res = await fetch('/api/tasks/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        taskName: `New ${cat.toUpperCase()} Sheet`,
+                        amount: 10.00, // ডিফল্ট বা ডাইনামিক করতে পারেন
+                        category: cat,
+                        proofUrl: imgData.data.url
+                    })
+                });
+                const result = await res.json();
+                tg.showAlert(result.message);
+                if(result.success) location.reload();
+            } catch (err) {
+                tg.showAlert("আপলোড ব্যর্থ! স্ক্রিনশট বা ইমেজ ফাইল ব্যবহার করুন।");
+                btn.disabled = false;
+                loader.style.display = 'none';
             }
         }
 
-        // শীট জমা দেওয়া
-        async function submitSheet() {
-            const file = document.getElementById('sheetFile').files[0];
-            if(!file) return tg.showAlert("ফাইল সিলেক্ট করুন!");
-            
-            tg.showConfirm("আপনি কি নিশ্চিত যে শীটটি জমা দিতে চান?", async (ok) => {
-                if(ok) {
-                    // এখানে শীট আপলোড লজিক (আপনি ImgBB এর মতো ফাইল ড্রাইভ বা সরাসরি ডাটাবেসে দিতে পারেন)
-                    tg.showAlert("শীটটি সফলভাবে জমা হয়েছে। এডমিন চেক করবে।");
-                    history.back();
-                }
-            });
-        }
-
-        // ম্যানুয়াল জমা দেওয়া
+        // ম্যানুয়াল ডাটা সাবমিট
         async function submitManual() {
             const email = document.getElementById('usedEmail').value;
             const pass = document.getElementById('usedPass').value;
             if(!email || !pass) return tg.showAlert("সবগুলো ঘর পূরণ করুন!");
+
+            const btn = document.getElementById('manualBtn');
+            btn.disabled = true;
 
             const res = await fetch('/api/tasks/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId: user.id,
-                    taskName: `Used ${cat} Submission`,
-                    amount: 5.00, // অ্যাডমিন নির্ধারিত অ্যামাউন্ট পরে ডাইনামিক করা যাবে
+                    taskName: `Used ${cat.toUpperCase()} Account`,
+                    amount: 5.00,
                     category: cat,
-                    proofUrl: `Email: ${email} | Pass: ${pass}`
+                    proofUrl: `ID: ${email} | Pass: ${pass}`
                 })
             });
             const result = await res.json();
             tg.showAlert(result.message);
-            if(result.success) history.back();
+            if(result.success) location.reload();
+            else btn.disabled = false;
         }
 
         loadStats();
     </script>
 </body>
-  </html>
+                </html>
