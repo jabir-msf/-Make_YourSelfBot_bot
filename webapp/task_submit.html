@@ -22,7 +22,7 @@
 
         <main class="content">
             <div class="balance-card">
-                <p style="color: rgba(255,255,255,0.8); font-size: 14px;">আপনার বর্তমান টাস্ক</p>
+                <p style="color: rgba(255,255,255,0.8); font-size: 14px;">বর্তমান টাস্ক</p>
                 <h3 id="tNameDisplay" style="color: white; margin: 5px 0;">Loading...</h3>
                 <h1 id="tAmountDisplay" style="font-size: 36px; color: #ffeb3b;">৳০.০০</h1>
             </div>
@@ -78,9 +78,10 @@
 
             btn.disabled = true;
             status.style.display = 'block';
+            btn.innerText = "প্রসেসিং...";
 
             try {
-                // ১. ImgBB তে ইমেজ আপলোড (আপনার Key ব্যবহার করা হয়েছে)
+                // ১. ImgBB Upload
                 const formData = new FormData();
                 formData.append("image", fileInput.files[0]);
 
@@ -93,7 +94,7 @@
                 if (!imgData.success) throw new Error("Image Upload Failed");
                 const proofUrl = imgData.data.url;
 
-                // ২. সার্ভারে ডাটা পাঠানো
+                // ২. Submit to Server API
                 const res = await fetch('/api/tasks/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -111,9 +112,10 @@
                 if (result.success) window.location.href = 'page7.html';
 
             } catch (err) {
-                tg.showAlert("দুঃখিত! আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+                tg.showAlert("আপলোড ব্যর্থ হয়েছে! আবার চেষ্টা করুন।");
                 btn.disabled = false;
                 status.style.display = 'none';
+                btn.innerText = "কাজ জমা দিন";
             }
         };
     </script>
