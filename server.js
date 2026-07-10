@@ -227,6 +227,37 @@ app.post("/api/admin/reject-task", async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
+// ১৩. সব পেন্ডিং উইথড্র দেখা (Admin Panel এর জন্য)
+app.get("/api/admin/pending-withdrawals", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('withdrawals')
+            .select('*, profiles(username)')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: true });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) { res.status(500).json([]); }
+});
+
+// ১৪. উইথড্র অ্যাকশন (Approve বা Cancel/Refund)
+app.post("/api/admin/action-withdraw", async (req, res) => {
+    const { id, type, userId, amount } = req.body;
+    try {
+        if (type === 'approve') {
+            // পেমেন্ট করা হয়ে গেলে স্ট্যাটাস পরিবর্তন
+            await supabase.from('withdrawals').update({ status: 'approved' }).eq('id', id);
+        } else {
+            // রিজেক্ট বা বাতিল করলে ইউজারের ব্যালেন্স ফেরত দেওয়া
+            const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+            const newBalance = parseFloat(user.balance || 0) + parseFloat(amount);
+            await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
+            await supabase.from('withdrawals').update({ status: 'cancelled' }).eq('id', id);
+        }
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
