@@ -34,7 +34,7 @@ app.get("/api/user/:id", async (req, res) => {
     }
 });
 
-// ২. অ্যাডমিনদের সেট করা টাস্ক লিস্ট পাওয়ার API (Category অনুযায়ী)
+// ২. অ্যাডমিনদের সেট করা টাস্ক লিস্ট পাওয়ার API
 app.get("/api/admin-tasks/:category", async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -48,59 +48,7 @@ app.get("/api/admin-tasks/:category", async (req, res) => {
     }
 });
 
-// ৩. টাস্ক সাবমিট করার API (স্ক্রিনশট URL ও ক্যাটাগরি সহ)
-app.post("/api/tasks/submit", async (req, res) => {
-    const { userId, taskName, amount, category, proofUrl } = req.body;
-    try {
-        const { error } = await supabase.from('tasks').insert({
-            user_id: userId,
-            task_name: taskName,
-            amount: parseFloat(amount),
-            category: category,
-            proof_url: proofUrl, // স্ক্রিনশট লিঙ্ক
-            status: 'pending'
-        });
-
-        if (error) throw error;
-        res.json({ success: true, message: "কাজটি জমা হয়েছে! এডমিন চেক করে এপ্রুভ করলে টাকা যোগ হবে।" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "টাস্ক জমা দিতে সমস্যা হয়েছে।" });
-    }
-});
-
-// ৪. অ্যাড এবং ভিডিও লিমিট চেক ও কাউন্ট করার API
-app.post("/api/earn/limit-check", async (req, res) => {
-    const { userId, type } = req.body; // type: 'ad' or 'video'
-    const limit = type === 'ad' ? 20 : 15;
-    const countCol = type === 'ad' ? 'ad_count' : 'vdo_count';
-    const resetCol = type === 'ad' ? 'last_ad_reset' : 'last_vdo_reset';
-
-    try {
-        const { data: user } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        if (!user) return res.status(404).json({ success: false });
-
-        const now = new Date();
-        const lastReset = user[resetCol] ? new Date(user[resetCol]) : new Date(0);
-        const diffHours = (now - lastReset) / (1000 * 60 * 60);
-
-        let currentCount = user[countCol] || 0;
-
-        // ১ ঘণ্টা পার হয়ে গেলে অটো রিসেট
-        if (diffHours >= 1) {
-            currentCount = 0;
-            await supabase.from('profiles').update({ 
-                [countCol]: 0, 
-                [resetCol]: now.toISOString() 
-            }).eq('id', userId);
-        }
-
-        if (currentCount >= limit) {
-            return res.json({ 
-                success: false, 
-                message: `দুঃখিত! আপনি এই ঘণ্টায় সর্বোচ্চ লিমিট (${limit}) শেষ করেছেন।` 
-            });
-            // ক্যাটাগরি অনুযায়ী ইউজারের সেলিং পরিসংখ্যান (Stats)
+// ৩. ক্যাটাগরি অনুযায়ী ইউজারের সেলিং পরিসংখ্যান (Stats)
 app.get("/api/user-stats/:userId/:category", async (req, res) => {
     const { userId, category } = req.params;
     try {
@@ -121,9 +69,60 @@ app.get("/api/user-stats/:userId/:category", async (req, res) => {
         res.status(500).json({ totalSold: 0, totalEarned: 0 });
     }
 });
+
+// ৪. টাস্ক সাবমিট করার API
+app.post("/api/tasks/submit", async (req, res) => {
+    const { userId, taskName, amount, category, proofUrl } = req.body;
+    try {
+        const { error } = await supabase.from('tasks').insert({
+            user_id: userId,
+            task_name: taskName,
+            amount: parseFloat(amount),
+            category: category,
+            proof_url: proofUrl,
+            status: 'pending'
+        });
+
+        if (error) throw error;
+        res.json({ success: true, message: "কাজটি জমা হয়েছে! এডমিন চেক করে এপ্রুভ করলে টাকা যোগ হবে।" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "টাস্ক জমা দিতে সমস্যা হয়েছে।" });
+    }
+});
+
+// ৫. অ্যাড এবং ভিডিও লিমিট চেক ও কাউন্ট করার API
+app.post("/api/earn/limit-check", async (req, res) => {
+    const { userId, type } = req.body;
+    const limit = type === 'ad' ? 20 : 15;
+    const countCol = type === 'ad' ? 'ad_count' : 'vdo_count';
+    const resetCol = type === 'ad' ? 'last_ad_reset' : 'last_vdo_reset';
+
+    try {
+        const { data: user } = await supabase.from('profiles').select('*').eq('id', userId).single();
+        if (!user) return res.status(404).json({ success: false });
+
+        const now = new Date();
+        const lastReset = user[resetCol] ? new Date(user[resetCol]) : new Date(0);
+        const diffHours = (now - lastReset) / (1000 * 60 * 60);
+
+        let currentCount = user[countCol] || 0;
+
+        if (diffHours >= 1) {
+            currentCount = 0;
+            await supabase.from('profiles').update({ 
+                [countCol]: 0, 
+                [resetCol]: now.toISOString() 
+            }).eq('id', userId);
         }
 
-        // লিমিট ওকে থাকলে ১ বাড়িয়ে দিবে
+        if (currentCount >= limit) {
+            return res.json({ 
+                success: false, 
+                message: `দুঃখিত! আপনি এই ঘণ্টায় সর্বোচ্চ লিমিট (${limit}) শেষ করেছেন।` 
+            });
+        }
+
         await supabase.from('profiles').update({ [countCol]: currentCount + 1 }).eq('id', userId);
         res.json({ success: true, remaining: limit - (currentCount + 1) });
 
@@ -133,7 +132,7 @@ app.get("/api/user-stats/:userId/:category", async (req, res) => {
     }
 });
 
-// ৫. উইথড্র রিকোয়েস্ট API
+// ৬. উইথড্র রিকোয়েস্ট API
 app.post("/api/withdraw", async (req, res) => {
     const { userId, method, accountNo, amount } = req.body;
     const withdrawAmount = parseFloat(amount);
@@ -161,7 +160,7 @@ app.post("/api/withdraw", async (req, res) => {
     }
 });
 
-// ৬. হিস্ট্রি বা ইতিহাস API (Withdraw & Tasks)
+// ৭. ইতিহাস API
 app.get("/api/withdrawals/:id", async (req, res) => {
     const { data } = await supabase.from('withdrawals').select('*').eq('user_id', req.params.id).order('created_at', { ascending: false });
     res.json(data || []);
@@ -172,7 +171,7 @@ app.get("/api/tasks/history/:id", async (req, res) => {
     res.json(data || []);
 });
 
-// ৭. রেফারেল পরিসংখ্যান API
+// ৮. রেফারেল পরিসংখ্যান API
 app.get("/api/referrals/:id", async (req, res) => {
     const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('referrer_id', req.params.id);
     res.json({ total_refs: count || 0 });
