@@ -111,15 +111,11 @@
         document.getElementById('tNameDisplay').innerText = tName;
         document.getElementById('tAmountDisplay').innerText = `৳${tAmount}`;
 
-        // ১. পেজ ইনিশিয়ালাইজেশন
         async function initPage() {
             if (!user) return;
-
-            // যদি অ্যাড বা ভিডিও হয় তবে লিমিট এবং পেন্ডিং কার্ড দেখাবে
             if (tCat === 'ad' || tCat === 'video') {
                 document.getElementById('earningStats').style.display = 'grid';
-                document.getElementById('ssUploadSection').style.display = 'none'; // SS লাগবে না
-                
+                document.getElementById('ssUploadSection').style.display = 'none';
                 try {
                     const res = await fetch('/api/earn/limit-check', {
                         method: 'POST',
@@ -129,8 +125,6 @@
                     const data = await res.json();
                     document.getElementById('limitDisplay').innerText = `${data.count}/${data.limit}`;
                     document.getElementById('pendingDisplay').innerText = `৳${data.pending}`;
-                    
-                    // যদি আগেই লিমিট শেষ হয়ে থাকে তবে বাটন ইনএক্টিভ করা যেতে পারে
                     if (!data.success && data.count >= data.limit) {
                         const btn = document.getElementById('finalSubmitBtn');
                         btn.disabled = true;
@@ -139,13 +133,11 @@
                     }
                 } catch(e) { console.error(e); }
             } else {
-                // মাইক্রো টাস্ক বা সেলিং এর জন্য স্ক্রিনশট লাগবে
                 document.getElementById('ssUploadSection').style.display = 'block';
                 document.getElementById('earningStats').style.display = 'none';
             }
         }
 
-        // ইমেজ প্রিভিউ
         function previewImg() {
             const file = document.getElementById('screenshotInput').files[0];
             if (file) {
@@ -159,20 +151,19 @@
             }
         }
 
-        // কাজের লিঙ্ক (এখানে টেলিগ্রাম চ্যানেলের লিঙ্ক দেওয়া আছে)
         document.getElementById('goLinkBtn').onclick = () => tg.openLink('https://t.me/EarnBD_Pro');
 
-        // ২. মেইন সাবমিট লজিক (Strict Limit Check সহ)
+        // ২. মেইন সাবমিট লজিক (পরিবর্তিত)
         document.getElementById('finalSubmitBtn').onclick = async () => {
             const btn = document.getElementById('finalSubmitBtn');
             const loader = document.getElementById('processingMsg');
             
+            // ডাবল ক্লিক ঠেকাতে সাথে সাথে বাটন ডিজেবল
             btn.disabled = true;
             loader.style.display = 'block';
             btn.innerText = "যাচাই হচ্ছে...";
 
             try {
-                // ক. সাবমিট করার ঠিক আগে লিমিট চেক (১৬তম টাস্ক ঠেকানোর জন্য)
                 if (tCat === 'ad' || tCat === 'video') {
                     const checkRes = await fetch('/api/earn/limit-check', {
                         method: 'POST',
@@ -182,7 +173,7 @@
                     const checkData = await checkRes.json();
                     if (!checkData.success) {
                         tg.showAlert(checkData.message);
-                        location.reload(); // পেজ রিফ্রেশ করে বাটন লক করা
+                        location.reload();
                         return;
                     }
                 }
@@ -190,7 +181,6 @@
                 btn.innerText = "জমা হচ্ছে...";
                 let proofUrl = "Auto Submit (No SS Required)";
 
-                // খ. মাইক্রো টাস্কের জন্য ImgBB তে আপলোড
                 if (tCat !== 'ad' && tCat !== 'video') {
                     const fileInput = document.getElementById('screenshotInput');
                     if (fileInput.files.length === 0) {
@@ -211,20 +201,19 @@
                     proofUrl = imgData.data.url;
                 }
 
-                // গ. ডাটাবেসে টাস্ক সেভ করা
+                // ডাটাবেসে টাস্ক সেভ (trim ব্যবহার করা হয়েছে নামের মিল নিশ্চিত করতে)
                 const res = await fetch('/api/tasks/submit', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         userId: user.id,
-                        taskName: tName,
+                        taskName: tName.trim(), 
                         amount: tAmount,
                         category: tCat,
                         proofUrl: proofUrl
                     })
                 });
 
-                // ঘ. যদি অ্যাড/ভিডিও হয় তবে কাউন্ট বাড়ানো (Increment)
                 if (tCat === 'ad' || tCat === 'video') {
                     await fetch('/api/earn/increment', {
                         method: 'POST',
@@ -236,16 +225,16 @@
                 const result = await res.json();
                 tg.showAlert(result.message);
                 
-                // ঙ. পেজ আপডেট
                 if (tCat === 'ad' || tCat === 'video') {
-                    location.reload(); // লিমিট কার্ড আপডেট করার জন্য রিফ্রেশ
+                    location.reload();
                 } else {
-                    window.location.href = 'page7.html'; // ইতিহাস পেজে যাওয়া
+                    // সাবমিট সফল হলে সরাসরি পেজ থেকে বের করে দিবে যাতে পুনরায় সাবমিট না হয়
+                    window.location.href = 'page7.html'; 
                 }
 
             } catch (err) {
                 console.error(err);
-                tg.showAlert("দুঃখিত, প্রযুক্তিগত ত্রুটি হয়েছে। আবার চেষ্টা করুন।");
+                tg.showAlert("আবার চেষ্টা করুন।");
                 btn.disabled = false;
                 loader.style.display = 'none';
                 btn.innerText = "কাজ জমা দিন";
