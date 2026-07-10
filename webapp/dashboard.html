@@ -60,8 +60,6 @@
     </aside>
 
     <div class="main-wrapper">
-        <!-- Top Status Bar removed as per instruction -->
-
         <!-- Navbar -->
         <nav class="top-nav">
             <i class="fa-solid fa-bars menu-trigger" id="menuBtn"></i>
@@ -115,17 +113,20 @@
         <!-- White Content Area -->
         <div class="content-body">
             
-            <!-- কাজ শুরু করুন বাটন -->
             <div style="text-align: center; margin-bottom: 25px;">
                 <button onclick="window.location.href='page3dashboard.html'" style="width: 100%; padding: 18px; background: linear-gradient(90deg, #2ecc71, #27ae60); color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
                     🚀 কাজ শুরু করুন
                 </button>
             </div>
 
-            <!-- দ্রুত অ্যাকশন সেকশন (উত্তোলন ও ডিপোজিট বাদ) -->
+            <!-- দ্রুত অ্যাকশন সেকশন (উত্তোলন বিবরণ যোগ করা হয়েছে) -->
             <div class="section-wrap">
                 <h3 class="section-header">দ্রুত অ্যাকশন</h3>
                 <div class="action-grid">
+                    <div class="action-box" onclick="window.location.href='page6.html'" style="cursor:pointer;">
+                        <i class="fa-solid fa-file-invoice-dollar t-teal"></i>
+                        <p>উত্তোলন বিবরণ</p>
+                    </div>
                     <div class="action-box">
                         <i class="fa-solid fa-inbox t-brown"></i>
                         <p>সেন্ড মানি</p>
@@ -137,10 +138,14 @@
                 </div>
             </div>
 
-            <!-- যোগাযোগ করুন সেকশন (ইউটিউব ও ইনকাম রিভিউ বাদ, এডমিনস যোগ) -->
+            <!-- যোগাযোগ করুন সেকশন (সাপোর্ট গ্রুপ যোগ করা হয়েছে) -->
             <div class="section-wrap">
                 <h3 class="section-header">যোগাযোগ করুন</h3>
                 <div class="action-grid">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourGroupLink')" style="cursor:pointer;">
+                        <i class="fa-solid fa-users-viewfinder t-blue"></i>
+                        <p>সাপোর্ট গ্রুপ</p>
+                    </div>
                     <div class="action-box">
                         <i class="fa-solid fa-book t-darkblue"></i>
                         <p>ফেসবুক</p>
@@ -161,4 +166,4 @@
 
     <script src="dashboard.js"></script>
 </body>
-                    </html>
+    </html>
