@@ -64,6 +64,10 @@
 
         loadTasks();
         tg.expand();
+        // ইউজার যখনই এই পেজে আসবে, তখনই লোড হবে (Back Button দিয়ে আসলেও)
+window.onpageshow = function(event) {
+    loadTasks();
+};
     </script>
 </body>
     </html>
