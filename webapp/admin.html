@@ -135,15 +135,26 @@
                 container.innerHTML = tasks.length ? '' : '<div class="card" style="text-align:center; color:#999;">কোন পেন্ডিং টাস্ক নেই</div>';
                 
                 tasks.forEach(t => {
-                    // profiles থেকে ইউজারনেম বের করা (Join Logic)
                     const uName = t.profiles ? t.profiles.username : 'ID: ' + t.user_id;
+
+                    // প্রুফ ইউআরএল নাল (Null) কি না চেক করা
+                    let proofDisplay = "";
+                    if (t.proof_url) {
+                        if (t.proof_url.startsWith('http')) {
+                            proofDisplay = `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">`;
+                        } else {
+                            proofDisplay = `<span style="color:#1a3fb3; font-weight:bold;">${t.proof_url}</span>`;
+                        }
+                    } else {
+                        proofDisplay = `<span style="color:red; font-weight:bold;">কোন প্রুফ নেই</span>`;
+                    }
 
                     container.innerHTML += `
                     <div class="card">
                         <h4>${t.task_name}</h4>
                         <p><strong>ইউজার:</strong> ${uName}</p>
                         <p><strong>রিওয়ার্ড:</strong> ৳${t.amount}</p>
-                        <p><strong>প্রুফ:</strong> ${t.proof_url.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">` : `<span style="color:#1a3fb3; font-weight:bold;">${t.proof_url}</span>`}</p>
+                        <p><strong>প্রুফ:</strong> ${proofDisplay}</p>
                         <div class="btn-group">
                             <button class="btn btn-approve" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')">Approve</button>
                             <button class="btn btn-reject" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')">Reject</button>
