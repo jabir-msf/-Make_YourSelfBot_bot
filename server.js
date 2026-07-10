@@ -68,7 +68,7 @@ app.post("/api/tasks/submit", async (req, res) => {
     }
 });
 
-// --- EARNING & LIMIT API --- (Ad/Vdo এর জন্য আগের মতোই রাখা হয়েছে)
+// --- EARNING & LIMIT API ---
 app.post("/api/earn/limit-check", async (req, res) => {
     const { userId, type } = req.body;
     const limit = type === 'ad' ? 20 : 15;
@@ -247,9 +247,8 @@ app.post("/api/admin/update-settings", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// --- UPDATED & NEW APIs (Fixed as per request) ---
+// --- UPDATED APIs (Withdraw 2 TK & Single Task Logic) ---
 
-// ৯. উইথড্র রিকোয়েস্ট API (৳২ সার্ভিস চার্জ লজিকসহ)
 app.post("/api/withdraw", async (req, res) => {
     const { userId, method, accountNo, amount } = req.body;
     const withdrawGrossAmount = parseFloat(amount); 
@@ -284,7 +283,7 @@ app.post("/api/withdraw", async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `সফল! ৳${charge} সার্ভিস চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
+            message: `সফল! ৳${charge} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
         });
 
     } catch (err) { 
@@ -292,7 +291,6 @@ app.post("/api/withdraw", async (req, res) => {
     }
 });
 
-// ১০. ইউজার ভিত্তিক অ্যাডমিন টাস্ক দেখার API (এক কাজ একবার করার লজিক)
 app.get("/api/admin-tasks/:userId/:category", async (req, res) => {
     const { userId, category } = req.params;
     try {
@@ -306,7 +304,6 @@ app.get("/api/admin-tasks/:userId/:category", async (req, res) => {
     } catch (err) { res.json([]); }
 });
 
-// ১১. ইউজারের উইথড্র হিস্ট্রি API (Page 6 এর তথ্য লোড করার জন্য)
 app.get("/api/withdrawals/:userId", async (req, res) => {
     try {
         const { data } = await supabase.from('withdrawals').select('*').eq('user_id', req.params.userId).order('created_at', { ascending: false });
@@ -314,7 +311,6 @@ app.get("/api/withdrawals/:userId", async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// ১২. ইউজারের কাজের বিবরণ/হিস্ট্রি API (Page 7 এর তথ্য লোড করার জন্য)
 app.get("/api/tasks/history/:userId", async (req, res) => {
     try {
         const { data } = await supabase.from('tasks').select('*').eq('user_id', req.params.userId).order('created_at', { ascending: false });
@@ -322,9 +318,9 @@ app.get("/api/tasks/history/:userId", async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// ১৩. সেলিং টাস্ক স্ট্যাটাস API (Sell Page এর জন্য)
 app.get("/api/user-stats/:userId/:cat", async (req, res) => {
     try {
+        // এখানে শুধু approved বাটন দিলে ইউজারের জয়েনিং চেক করা সহজ হয়
         const { data: approved } = await supabase.from('tasks').select('amount').eq('user_id', req.params.userId).eq('category', req.params.cat).eq('status', 'approved');
         const totalEarned = approved ? approved.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
         res.json({ totalSold: approved ? approved.length : 0, totalEarned: totalEarned.toFixed(2) });
