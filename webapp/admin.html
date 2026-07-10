@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarnBD Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: #1a3fb3; color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
+        .task-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .proof-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-approve { background: #27ae60; color: white; }
+        .btn-reject { background: #e74c3c; color: white; }
+        .badge { padding: 5px 10px; border-radius: 5px; font-size: 12px; background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Admin Panel (Pending Tasks)</h1>
+            <p>ইউজারদের কাজ যাচাই করুন</p>
+        </div>
+
+        <div id="taskList">
+            <p style="text-align: center;">লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadPendingTasks() {
+            const res = await fetch('/api/admin/pending-tasks');
+            const tasks = await res.json();
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+
+            if(tasks.length === 0) {
+                list.innerHTML = '<p style="text-align:center;">কোনো পেন্ডিং কাজ নেই।</p>';
+                return;
+            }
+
+            tasks.forEach(task => {
+                list.innerHTML += `
+                    <div class="task-card">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span><b>User:</b> ${task.profiles.username} (${task.user_id})</span>
+                            <span class="badge">${task.category}</span>
+                        </div>
+                        <p style="margin:10px 0;"><b>Task:</b> ${task.task_name} | <b>Amount:</b> ৳${task.amount}</p>
+                        
+                        ${task.proof_url.startsWith('http') 
+                            ? `<img src="${task.proof_url}" class="proof-img" onclick="window.open('${task.proof_url}')">` 
+                            : `<div style="padding:10px; background:#f9f9f9; border-radius:5px;"><b>Data:</b> ${task.proof_url}</div>`
+                        }
+
+                        <div class="btn-group">
+                            <button class="btn btn-approve" onclick="approveTask(${task.id}, ${task.user_id}, ${task.amount})">Approve</button>
+                            <button class="btn btn-reject" onclick="rejectTask(${task.id})">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function approveTask(taskId, userId, amount) {
+            if(!confirm("Approve করবেন?")) return;
+            const res = await fetch('/api/admin/approve-task', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId, userId, amount })
+            });
+            if((await res.json()).success) loadPendingTasks();
+        }
+
+        async function rejectTask(taskId) {
+            if(!confirm("Reject করবেন?")) return;
+            const res = await fetch('/api/admin/reject-task', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId })
+            });
+            if((await res.json()).success) loadPendingTasks();
+        }
+
+        loadPendingTasks();
+    </script>
+</body>
+  </html>
