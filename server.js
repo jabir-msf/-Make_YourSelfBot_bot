@@ -327,6 +327,59 @@ app.get("/api/user-stats/:userId/:cat", async (req, res) => {
     } catch (err) { res.json({ totalSold: 0, totalEarned: 0 }); }
 });
 
+// --- ADD MONEY (DEPOSIT) API ---
+app.post("/api/add-money", async (req, res) => {
+    const { userId, amount, transactionId, method } = req.body;
+    try {
+        const { error } = await supabase.from('deposits').insert({
+            user_id: userId,
+            amount: parseFloat(amount),
+            transaction_id: transactionId,
+            method: method,
+            status: 'pending'
+        });
+        if (error) throw error;
+        res.json({ success: true, message: "রিকোয়েস্ট জমা হয়েছে। এডমিন চেক করে ব্যালেন্স অ্যাড করে দিবে।" });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// --- ADMIN: PENDING DEPOSITS ---
+app.get("/api/admin/pending-deposits", async (req, res) => {
+    try {
+        const { data } = await supabase.from('deposits').select('*, profiles:user_id(username)').eq('status', 'pending');
+        res.json(data || []);
+    } catch (err) { res.status(500).json([]); }
+});
+
+// --- ADMIN: APPROVE DEPOSIT ---
+app.post("/api/admin/approve-deposit", async (req, res) => {
+    const { id, userId, amount } = req.body;
+    try {
+        // ১. ব্যালেন্স আপডেট
+        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        const newBalance = parseFloat(user.balance || 0) + parseFloat(amount);
+        await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
+        
+        // ২. স্ট্যাটাস আপডেট
+        await supabase.from('deposits').update({ status: 'approved' }).eq('id', id);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// --- RECHARGE API ---
+app.post("/api/recharge", async (req, res) => {
+    const { userId, operator, number, amount } = req.body;
+    try {
+        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        if(user.balance < amount) return res.json({success: false, message: "পর্যাপ্ত ব্যালেন্স নেই"});
+
+        await supabase.from('profiles').update({ balance: user.balance - amount }).eq('id', userId);
+        await supabase.from('withdrawals').insert({
+            user_id: userId, amount, method: `Recharge (${operator})`, account_no: number, status: 'pending'
+        });
+        res.json({ success: true, message: "রিচার্জ রিকোয়েস্ট সফল! ১ ঘণ্টার মধ্যে টাকা পাবেন।" });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
