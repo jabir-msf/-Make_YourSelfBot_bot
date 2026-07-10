@@ -30,7 +30,6 @@
             <!-- Balance Card -->
             <div class="balance-card">
                 <p class="balance-label">উত্তোলনযোগ্য ব্যালেন্স</p>
-                <!-- এই ID টি NaN ফিক্স করার জন্য এবং ব্যালেন্স দেখানোর জন্য ব্যবহৃত হবে -->
                 <h1 class="balance-amount" id="withdrawBalanceDisplay">৳০.০০</h1>
             </div>
 
@@ -58,7 +57,6 @@
                 <!-- Amount -->
                 <div class="input-group">
                     <label>পরিমাণ (৳)</label>
-                    <!-- JS থেকে এটার placeholder অটো আপডেট হবে -->
                     <input type="number" placeholder="ন্যূনতম ৳১০০" id="amount">
                 </div>
 
@@ -66,11 +64,10 @@
                 <div class="info-table">
                     <div class="info-row">
                         <span>সার্ভিস চার্জ</span>
-                        <span class="val">২%</span>
+                        <span class="val">৳২.০০</span> <!-- ২% এর বদলে ২ টাকা -->
                     </div>
                     <div class="info-row">
                         <span>ন্যূনতম</span>
-                        <!-- JS থেকে এই ৳১০০ অটো আপডেট হবে এডমিন সেটিংস অনুযায়ী -->
                         <span class="val">৳১০০</span>
                     </div>
                     <div class="info-row">
@@ -99,7 +96,6 @@
         </main>
     </div>
 
-    <!-- জাভাস্ক্রিপ্ট ফাইল কানেক্ট করা হলো -->
     <script src="page5.js"></script>
 </body>
-                            </html>
+</html>
