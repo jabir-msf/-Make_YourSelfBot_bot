@@ -27,7 +27,7 @@
                 </div>
                 <div class="user-details">
                     <h3 id="sideName">User Name</h3>
-                    <p id="userEbdId">EBD-XXXXXX</p>
+                    <p>EBD-XXXXXX</p>
                 </div>
             </div>
             <div class="sidebar-balance-card">
@@ -60,7 +60,7 @@
     </aside>
 
     <div class="main-wrapper">
-        <!-- Navbar -->
+        <!-- Navbar (Notification Icon Removed) -->
         <nav class="top-nav">
             <i class="fa-solid fa-bars menu-trigger" id="menuBtn"></i>
             <h2 class="brand">Make Your Self</h2>
@@ -69,7 +69,6 @@
                     <span class="label">ব্যালেন্স</span>
                     <span class="money" id="topBalance">৳০.০০</span>
                 </div>
-                <!-- নোটিফিকেশন আইকন রিমুভ করা হয়েছে -->
             </div>
         </nav>
 
@@ -95,7 +94,7 @@
             <div class="wallet-btns">
                 <div class="w-btn" onclick="openAddMoney()"><i class="fa-solid fa-credit-card c-yellow"></i> <span>অ্যাড</span></div>
                 <div class="w-btn" onclick="window.location.href='page5.html'"><i class="fa-solid fa-circle-arrow-down c-green"></i> <span>তোলা</span></div>
-                <!-- পাঠানো পরিবর্তন করে রিচার্জ করা হয়েছে -->
+                <!-- Pathan changed to Recharge -->
                 <div class="w-btn" onclick="openRecharge()"><i class="fa-solid fa-mobile-screen c-orange"></i> <span>রিচার্জ</span></div>
                 <div class="w-btn" onclick="window.location.href='page4.html'"><i class="fa-solid fa-link c-blue"></i> <span>রেফার</span></div>
             </div>
@@ -117,7 +116,7 @@
                 </button>
             </div>
 
-            <!-- দ্রুত অ্যাকশন সেকশন -->
+            <!-- দ্রুত অ্যাকশন (Send Money Removed) -->
             <div class="section-wrap">
                 <h3 class="section-header">দ্রুত অ্যাকশন</h3>
                 <div class="action-grid">
@@ -125,7 +124,6 @@
                         <i class="fa-solid fa-file-invoice-dollar t-teal"></i>
                         <p>উত্তোলন বিবরণ</p>
                     </div>
-                    <!-- সেন্ড মানি অপশন বাদ দেওয়া হয়েছে -->
                     <div class="action-box">
                         <i class="fa-solid fa-book-bookmark t-red"></i>
                         <p>টিউটোরিয়াল</p>
@@ -133,23 +131,23 @@
                 </div>
             </div>
 
-            <!-- যোগাযোগ করুন সেকশন -->
+            <!-- যোগাযোগ করুন -->
             <div class="section-wrap">
                 <h3 class="section-header">যোগাযোগ করুন</h3>
                 <div class="action-grid">
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourGroupLink')" style="cursor:pointer;">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourGroupLink')">
                         <i class="fa-solid fa-users-viewfinder t-blue"></i>
                         <p>সাপোর্ট গ্রুপ</p>
                     </div>
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://facebook.com/YourPageLink')" style="cursor:pointer;">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://facebook.com/YourPageLink')">
                         <i class="fa-solid fa-book t-darkblue"></i>
                         <p>ফেসবুক</p>
                     </div>
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourChannelLink')" style="cursor:pointer;">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourChannelLink')">
                         <i class="fa-solid fa-paper-plane t-sky"></i>
                         <p>টেলিগ্রাম</p>
                     </div>
-                    <div class="action-box" onclick="showAdmins()" style="cursor:pointer;">
+                    <div class="action-box" onclick="showAdmins()">
                         <i class="fa-solid fa-headset t-blue"></i>
                         <p>এডমিনস</p>
                     </div>
@@ -161,4 +159,4 @@
 
     <script src="dashboard.js"></script>
 </body>
-    </html>
+                        </html>
