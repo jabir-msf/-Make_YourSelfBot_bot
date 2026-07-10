@@ -233,3 +233,43 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🌐 Server running on port ${PORT}`);
 });
+
+        // --- ADMIN API ---
+
+// ১. সব পেন্ডিং টাস্ক দেখার API (ইমেজ সহ)
+app.get("/api/admin/pending-tasks", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*, profiles(username)') // ইউজারের নামসহ ডাটা আনবে
+            .eq('status', 'pending')
+            .order('created_at', { ascending: true });
+        if (error) throw error;
+        res.json(data);
+    } catch (err) { res.status(500).json([]); }
+});
+
+// ২. টাস্ক এপ্রুভ করার API (ব্যালেন্স যোগ করার লজিক সহ)
+app.post("/api/admin/approve-task", async (req, res) => {
+    const { taskId, userId, amount } = req.body;
+    try {
+        // ১. টাস্ক স্ট্যাটাস আপডেট
+        await supabase.from('tasks').update({ status: 'approved' }).eq('id', taskId);
+        
+        // ২. ইউজারের ব্যালেন্স বাড়ানো
+        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        const newBalance = parseFloat(user.balance || 0) + parseFloat(amount);
+        await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
+
+        res.json({ success: true, message: "Task Approved & Balance Added!" });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// ৩. টাস্ক রিজেক্ট করার API
+app.post("/api/admin/reject-task", async (req, res) => {
+    const { taskId } = req.body;
+    try {
+        await supabase.from('tasks').update({ status: 'rejected' }).eq('id', taskId);
+        res.json({ success: true });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
