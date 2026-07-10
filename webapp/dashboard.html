@@ -4,20 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Make Your Self Dashboard</title>
-    
-    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <link rel="stylesheet" href="dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Modal Design - Added for Add Money & Recharge */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center; }
+        .modal-card { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; animation: slideUp 0.3s ease; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-header h3 { margin: 0; color: #1a3fb3; font-size: 18px; }
+        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; }
+        .modal-body label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; color: #333; }
+        .modal-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+        .modal-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: #1a3fb3; color: white; transition: 0.2s; }
+        .modal-info-box { background: #f0f4ff; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 15px; border-left: 4px solid #1a3fb3; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
 </head>
 <body>
 
-    <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Sidebar Menu -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="user-profile-box">
@@ -35,9 +43,7 @@
                     <p>আমার ব্যালেন্স</p>
                     <h2 id="sideBalanceDisplay">৳০.০০</h2>
                 </div>
-                <div class="b-icon-box">
-                    <i class="fa-solid fa-sack-dollar"></i>
-                </div>
+                <div class="b-icon-box"><i class="fa-solid fa-sack-dollar"></i></div>
             </div>
         </div>
 
@@ -47,20 +53,16 @@
             <div class="item" onclick="window.location.href='page5.html'"><i class="fa-solid fa-briefcase icon-wallet"></i> ওয়ালেট</div>
             <div class="item" onclick="comingSoon()"><i class="fa-solid fa-star icon-member"></i> মেম্বারশিপ</div>
             <div class="item" onclick="window.location.href='page7.html'"><i class="fa-solid fa-chart-column icon-plan"></i> প্ল্যান স্ট্যাটাস</div>
-
             <p class="menu-label">কার্যক্রম</p>
             <div class="item" onclick="window.location.href='page4.html'"><i class="fa-solid fa-globe icon-network"></i> আমার নেটওয়ার্ক</div>
             <div class="item" onclick="comingSoon()"><i class="fa-solid fa-chart-line icon-report"></i> ইনকাম রিপোর্ট</div>
-            <div class="item item-highlight" onclick="comingSoon()"><i class="fa-solid fa-medal icon-proof"></i> Review Proof Submit</div>
-            <div class="item" onclick="comingSoon()"><i class="fa-solid fa-bell icon-notice"></i> নোটিশ বোর্ড</div>
-
+            <div class="item" onclick="comingSoon()"><i class="fa-solid fa-medal icon-proof"></i> Review Proof Submit</div>
             <p class="menu-label">সাহায্য</p>
             <div class="item" onclick="comingSoon()"><i class="fa-solid fa-headset icon-support"></i> সাপোর্ট</div>
         </div>
     </aside>
 
     <div class="main-wrapper">
-        <!-- Navbar (Notification Icon Removed) -->
         <nav class="top-nav">
             <i class="fa-solid fa-bars menu-trigger" id="menuBtn"></i>
             <h2 class="brand">Make Your Self</h2>
@@ -72,13 +74,11 @@
             </div>
         </nav>
 
-        <!-- User Info -->
         <div class="user-intro">
             <p>সুপ্রভাত! 👋</p>
             <h1 id="userFirstName">User</h1>
         </div>
 
-        <!-- Blue Wallet Card -->
         <div class="wallet-card">
             <div class="card-header">
                 <div class="balance-box">
@@ -94,58 +94,38 @@
             <div class="wallet-btns">
                 <div class="w-btn" onclick="openAddMoney()"><i class="fa-solid fa-credit-card c-yellow"></i> <span>অ্যাড</span></div>
                 <div class="w-btn" onclick="window.location.href='page5.html'"><i class="fa-solid fa-circle-arrow-down c-green"></i> <span>তোলা</span></div>
-                <!-- Pathan changed to Recharge -->
                 <div class="w-btn" onclick="openRecharge()"><i class="fa-solid fa-mobile-screen c-orange"></i> <span>রিচার্জ</span></div>
                 <div class="w-btn" onclick="window.location.href='page4.html'"><i class="fa-solid fa-link c-blue"></i> <span>রেফার</span></div>
             </div>
         </div>
 
-        <!-- Status Row -->
         <div class="status-info">
             <span>✅ ভেরিফাইড</span>
             <span>🔒 নিরাপদ</span>
             <span>⚡ ২৪/৭ সাপোর্ট</span>
         </div>
 
-        <!-- White Content Area -->
         <div class="content-body">
-            
             <div style="text-align: center; margin-bottom: 25px;">
-                <button onclick="window.location.href='page3dashboard.html'" style="width: 100%; padding: 18px; background: linear-gradient(90deg, #2ecc71, #27ae60); color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);">
+                <button onclick="window.location.href='page3dashboard.html'" style="width: 100%; padding: 18px; background: linear-gradient(90deg, #2ecc71, #27ae60); color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 18px;">
                     🚀 কাজ শুরু করুন
                 </button>
             </div>
 
-            <!-- দ্রুত অ্যাকশন (Send Money Removed) -->
-            <div class="section-wrap">
-                <h3 class="section-header">দ্রুত অ্যাকশন</h3>
-                <div class="action-grid">
-                    <div class="action-box" onclick="window.location.href='page6.html'" style="cursor:pointer;">
-                        <i class="fa-solid fa-file-invoice-dollar t-teal"></i>
-                        <p>উত্তোলন বিবরণ</p>
-                    </div>
-                    <div class="action-box">
-                        <i class="fa-solid fa-book-bookmark t-red"></i>
-                        <p>টিউটোরিয়াল</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- যোগাযোগ করুন -->
             <div class="section-wrap">
                 <h3 class="section-header">যোগাযোগ করুন</h3>
                 <div class="action-grid">
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourGroupLink')">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/+NDaESCJEtiowN2Rl')">
                         <i class="fa-solid fa-users-viewfinder t-blue"></i>
                         <p>সাপোর্ট গ্রুপ</p>
                     </div>
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://facebook.com/YourPageLink')">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://facebook.com/allaquariumyt')">
                         <i class="fa-solid fa-book t-darkblue"></i>
                         <p>ফেসবুক</p>
                     </div>
-                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/YourChannelLink')">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/Make_YourSelfBot_bot')">
                         <i class="fa-solid fa-paper-plane t-sky"></i>
-                        <p>টেলিগ্রাম</p>
+                        <p>চ্যানেল</p>
                     </div>
                     <div class="action-box" onclick="showAdmins()">
                         <i class="fa-solid fa-headset t-blue"></i>
@@ -153,10 +133,20 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <!-- ADD MONEY & RECHARGE MODAL -->
+    <div class="modal-overlay" id="actionModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle">অ্যাকশন</h3>
+                <button class="close-modal" onclick="closeActionModal()">&times;</button>
+            </div>
+            <div id="modalContent" class="modal-body"></div>
         </div>
     </div>
 
     <script src="dashboard.js"></script>
 </body>
-                        </html>
+    </html>
