@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Make Your Self</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        header { background: #1a3fb3; color: white; padding: 20px; text-align: center; }
+        .tabs { display: flex; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; cursor: pointer; font-weight: bold; color: #555; }
+        .tab-btn.active { color: #1a3fb3; border-bottom: 3px solid #1a3fb3; }
+        .container { padding: 20px; max-width: 800px; margin: auto; }
+        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card h4 { margin: 0 0 10px 0; color: #333; }
+        .card p { margin: 5px 0; font-size: 14px; color: #666; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-approve { background: #2ecc71; color: white; }
+        .btn-reject { background: #e74c3c; color: white; }
+        .proof-img { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; border-radius: 5px; background: #eee; }
+        #auth-msg { text-align: center; margin-top: 100px; color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="admin-content" style="display: none;">
+        <header>
+            <h2>অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+        </header>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tasks', this)">পেন্ডিং টাস্ক</button>
+            <button class="tab-btn" onclick="switchTab('withdraws', this)">উইথড্র রিকোয়েস্ট</button>
+        </div>
+        <div class="container" id="list-container">
+            <!-- ডাটা এখানে লোড হবে -->
+        </div>
+    </div>
+    <div id="auth-msg">যাচাই করা হচ্ছে...</div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
+        const ADMIN_ID = 123456789; // এখানে তোমার নিজের Telegram User ID দাও
+
+        if (user && user.id === ADMIN_ID) {
+            document.getElementById('admin-content').style.display = 'block';
+            document.getElementById('auth-msg').style.display = 'none';
+            loadPendingTasks();
+        } else {
+            document.getElementById('auth-msg').innerText = "অ্যাক্সেস রিফিউজড! আপনি অ্যাডমিন নন।";
+        }
+
+        async function switchTab(type, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if(type === 'tasks') loadPendingTasks();
+            else loadPendingWithdrawals();
+        }
+
+        async function loadPendingTasks() {
+            const container = document.getElementById('list-container');
+            container.innerHTML = "লোডিং...";
+            const res = await fetch('/api/admin/pending-tasks');
+            const tasks = await res.json();
+            container.innerHTML = tasks.length ? '' : 'কোন পেন্ডিং কাজ নেই।';
+            
+            tasks.forEach(t => {
+                container.innerHTML += `
+                <div class="card">
+                    <h4>${t.task_name}</h4>
+                    <p>ইউজার: ${t.profiles?.username || t.user_id}</p>
+                    <p>টাকা: ৳${t.amount}</p>
+                    <p>প্রুফ: ${t.proof_url.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">` : t.proof_url}</p>
+                    <div class="btn-group">
+                        <button class="btn btn-approve" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')">Approve</button>
+                        <button class="btn btn-reject" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')">Reject</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        async function actionTask(taskId, userId, amount, type) {
+            const endpoint = type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task';
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId, userId, amount })
+            });
+            const result = await res.json();
+            if(result.success) loadPendingTasks();
+            else alert("Error occurred!");
+        }
+
+        async function loadPendingWithdrawals() {
+            const container = document.getElementById('list-container');
+            container.innerHTML = "লোডিং...";
+            const res = await fetch('/api/admin/pending-withdrawals');
+            const withdraws = await res.json();
+            container.innerHTML = withdraws.length ? '' : 'কোন উইথড্র রিকোয়েস্ট নেই।';
+
+            withdraws.forEach(w => {
+                container.innerHTML += `
+                <div class="card">
+                    <h4>উইথড্র রিকোয়েস্ট</h4>
+                    <p>ইউজার আইডি: ${w.user_id}</p>
+                    <p>পদ্ধতি: ${w.method.toUpperCase()}</p>
+                    <p>নম্বর: ${w.account_no}</p>
+                    <p>পরিমাণ: ৳${w.amount}</p>
+                    <div class="btn-group">
+                        <button class="btn btn-approve" onclick="actionWithdraw('${w.id}', 'approve')">Paid (Approve)</button>
+                        <button class="btn btn-reject" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', ${w.amount})">Cancel (Refund)</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        async function actionWithdraw(id, type, userId, amount) {
+            const res = await fetch('/api/admin/action-withdraw', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, type, userId, amount })
+            });
+            loadPendingWithdrawals();
+        }
+    </script>
+</body>
+  </html>
