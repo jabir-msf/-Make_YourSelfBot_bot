@@ -3,60 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Proof - Make Your Self</title>
+    <title>Submit Task - Make Your Self</title>
     
-    <!-- Telegram WebApp SDK -->
+    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <link rel="stylesheet" href="page5.css">
-    <!-- Google Fonts for Bengali -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .upload-status { display: none; text-align: center; margin-top: 15px; color: #1a3fb3; font-weight: 700; background: #eef2ff; padding: 10px; border-radius: 8px; }
-        .info-box { background: #fff9db; border-left: 4px solid #fcc419; padding: 10px; margin-bottom: 15px; font-size: 13px; color: #666; }
+        /* নতুন কার্ড দুটির ডিজাইন */
+        .stats-row {
+            display: none; /* ডিফল্টভাবে হাইড থাকবে */
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .stat-card-mini {
+            background: white;
+            padding: 12px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-top: 4px solid #1a3fb3;
+        }
+        .stat-card-mini.orange { border-top-color: #f39c12; }
+        .stat-card-mini p { font-size: 11px; color: #777; margin-bottom: 4px; font-weight: 600; }
+        .stat-card-mini h2 { font-size: 18px; color: #333; font-weight: 700; }
+
+        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 1px solid #ddd; }
+        .loader { display: none; text-align: center; margin-top: 10px; color: #1a3fb3; font-weight: bold; }
+        .instruction-text { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 15px; background: #fff9e6; padding: 10px; border-radius: 10px; border-left: 4px solid #f39c12; }
     </style>
 </head>
 <body style="background: #f4f7ff;">
     <div class="app-container">
-        <!-- Header -->
         <header class="page-header">
-            <button class="back-btn" onclick="history.back()">
-                <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <div class="header-title">প্রমাণ জমা দিন</div>
+            <button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="header-title" id="pageTitle">কাজ জমা দিন</div>
         </header>
 
         <main class="content">
-            <!-- Task Info Card -->
+            <!-- কাজের লিমিট এবং পেন্ডিং ব্যালেন্স কার্ড (ভিডিও ও অ্যাডের জন্য) -->
+            <div id="earningStats" class="stats-row">
+                <div class="stat-card-mini">
+                    <p>কাজের লিমিট</p>
+                    <h2 id="limitDisplay">0/0</h2>
+                </div>
+                <div class="stat-card-mini orange">
+                    <p>পেন্ডিং ব্যালেন্স</p>
+                    <h2 id="pendingDisplay">৳০.০০</h2>
+                </div>
+            </div>
+
             <div class="balance-card">
-                <p style="color: rgba(255,255,255,0.8); font-size: 14px;">আপনার নির্বাচিত টাস্ক</p>
+                <p style="color: rgba(255,255,255,0.8); font-size: 13px;">নির্বাচিত কাজ</p>
                 <h3 id="tNameDisplay" style="color: white; margin: 5px 0;">Loading...</h3>
-                <h1 id="tAmountDisplay" style="font-size: 36px; color: #ffeb3b;">৳০.০০</h1>
+                <h1 id="tAmountDisplay" style="font-size: 32px; color: #ffeb3b;">৳০.০০</h1>
             </div>
 
             <div class="form-card">
-                <div class="info-box">
-                    <i class="fa-solid fa-circle-info"></i> কাজ শেষ করার পর স্ক্রিনশট এখানে আপলোড করুন। অ্যাডমিন আপনার কাজের প্রমাণ চেক করে ব্যালেন্সে টাকা যোগ করে দিবে।
+                <div class="instruction-text" id="instructions">
+                    নির্দেশনা: নিচের বাটনে ক্লিক করে কাজটি সম্পূর্ণ করুন এবং ফিরে এসে জমা দিন।
                 </div>
 
-                <div class="input-group">
-                    <label><i class="fa-solid fa-image"></i> স্ক্রিনশট ফাইল সিলেক্ট করুন</label>
-                    <input type="file" id="screenshotInput" accept="image/*" onchange="previewImage()" style="padding: 12px; background: #f1f4ff; border-radius: 10px; width: 100%; cursor: pointer; border: 1px dashed #1a3fb3;">
-                    <img id="imagePreview" class="preview-img" alt="Screenshot Preview">
+                <!-- মাইক্রো টাস্কের জন্য স্ক্রিনশট সেকশন -->
+                <div id="ssUploadSection" style="margin-bottom: 20px; display: none;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; font-size: 14px;">
+                        <i class="fa-solid fa-camera"></i> কাজের স্ক্রিনশট দিন:
+                    </label>
+                    <input type="file" id="screenshotInput" accept="image/*" onchange="previewImg()" style="width: 100%; padding: 10px; background: #f1f4ff; border-radius: 10px;">
+                    <img id="imagePreview" class="preview-img">
                 </div>
 
-                <!-- Status Message -->
-                <div id="statusMsg" class="upload-status">
-                    <i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং... একটু অপেক্ষা করুন।
+                <button class="submit-btn" id="goLinkBtn" style="background: #1a3fb3; margin-bottom: 15px;">
+                    <i class="fa-solid fa-up-right-from-square"></i> কাজে যান (লিঙ্ক)
+                </button>
+
+                <div id="loaderMsg" class="loader">
+                    <i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...
                 </div>
 
-                <!-- Action Button -->
-                <button class="submit-btn" id="finalSubmitBtn" style="margin-top: 20px; background: #0d1b4d; box-shadow: 0 4px 15px rgba(13, 27, 77, 0.3);">
-                    <i class="fa-solid fa-paper-plane"></i> কাজ জমা দিন
+                <button class="submit-btn" id="submitBtn">
+                    <i class="fa-solid fa-circle-check"></i> কাজ জমা দিন
                 </button>
             </div>
         </main>
@@ -65,34 +95,45 @@
     <script>
         const tg = window.Telegram.WebApp;
         const user = tg.initDataUnsafe.user;
-        
-        // URL থেকে ডাটা নেয়া
         const params = new URLSearchParams(window.location.search);
+        
+        const tCat = params.get('cat') || "micro";
         const tName = params.get('name') || "General Task";
         const tAmount = params.get('amount') || "0.00";
-        const tCat = params.get('cat') || "micro";
-        const tType = params.get('type') || "general"; // 'ad' or 'video' if applicable
 
-        // UI আপডেট
         document.getElementById('tNameDisplay').innerText = tName;
         document.getElementById('tAmountDisplay').innerText = `৳${tAmount}`;
 
-        // ইমেজ প্রিভিউ লজিক
-        function previewImage() {
-            const file = document.getElementById('screenshotInput').files[0];
-            const img = document.getElementById('imagePreview');
-            const status = document.getElementById('statusMsg');
-            
-            if (file) {
-                // ফাইল সাইজ চেক (৫ এমবির বেশি হলে বাধা দিবে)
-                if (file.size > 5 * 1024 * 1024) {
-                    tg.showAlert("ফাইলটি অনেক বড়! দয়া করে ৫ এমবির নিচের ফাইল দিন।");
-                    document.getElementById('screenshotInput').value = "";
-                    return;
-                }
+        // পেজ লোড লজিক
+        async function initPage() {
+            // ১. যদি ভিডিও বা অ্যাড হয় তবে কার্ড দেখাবে এবং স্ক্রিনশট হাইড করবে
+            if (tCat === 'ad' || tCat === 'video') {
+                document.getElementById('earningStats').style.display = 'grid';
+                document.getElementById('ssUploadSection').style.display = 'none';
+                
+                // সার্ভার থেকে লিমিট ও পেন্ডিং ডাটা আনা
+                const res = await fetch('/api/earn/limit-check', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ userId: user.id, type: tCat })
+                });
+                const data = await res.json();
+                document.getElementById('limitDisplay').innerText = `${data.count}/${data.limit}`;
+                document.getElementById('pendingDisplay').innerText = `৳${data.pending}`;
+            } else {
+                // ২. মাইক্রো টাস্ক বা অন্য কিছু হলে স্ক্রিনশট দেখাবে
+                document.getElementById('ssUploadSection').style.display = 'block';
+                document.getElementById('earningStats').style.display = 'none';
+            }
+        }
 
+        // ইমেজ প্রিভিউ
+        function previewImg() {
+            const file = document.getElementById('screenshotInput').files[0];
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    const img = document.getElementById('imagePreview');
                     img.src = e.target.result;
                     img.style.display = 'block';
                 }
@@ -100,79 +141,80 @@
             }
         }
 
-        // মেইন সাবমিট বাটন লজিক
-        document.getElementById('finalSubmitBtn').onclick = async () => {
-            const fileInput = document.getElementById('screenshotInput');
+        document.getElementById('goLinkBtn').onclick = () => tg.openLink('https://t.me/EarnBD_Pro');
+
+        // সাবমিট বাটন লজিক
+        document.getElementById('submitBtn').onclick = async () => {
+            const btn = document.getElementById('submitBtn');
+            const loader = document.getElementById('loaderMsg');
             
-            // ভ্যালিডেশন
-            if (!user) return tg.showAlert("টেলিগ্রাম ইউজার ডাটা পাওয়া যায়নি!");
-            if (fileInput.files.length === 0) return tg.showAlert("অনুগ্রহ করে কাজের একটি স্ক্রিনশট দিন!");
-
-            const btn = document.getElementById('finalSubmitBtn');
-            const status = document.getElementById('statusMsg');
-
-            // UI লক করা
             btn.disabled = true;
-            status.style.display = 'block';
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে...';
+            loader.style.display = 'block';
+            btn.innerText = "অপেক্ষা করুন...";
+
+            let finalProofUrl = "Auto Submit (No SS Required)";
 
             try {
-                // ১. ImgBB তে ইমেজ আপলোড করা
-                const formData = new FormData();
-                formData.append("image", fileInput.files[0]);
+                // ১. যদি মাইক্রো টাস্ক হয় তবে আগে ইমেজে আপলোড করবে
+                if (tCat !== 'ad' && tCat !== 'video') {
+                    const fileInput = document.getElementById('screenshotInput');
+                    if (fileInput.files.length === 0) {
+                        loader.style.display = 'none';
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> কাজ জমা দিন';
+                        return tg.showAlert("অনুগ্রহ করে একটি স্ক্রিনশট দিন!");
+                    }
 
-                // নোট: আপনার ImgBB API Key ব্যবহার করা হয়েছে
-                const imgRes = await fetch("https://api.imgbb.com/1/upload?key=7246bc1a891878821a0140bd7686bdf9", {
-                    method: "POST",
-                    body: formData
-                    // FormData পাঠালে আলাদাভাবে Headers দেয়া লাগে না, ব্রাউজার নিজে সেট করে নেয়।
-                });
-                
-                const imgData = await imgRes.json();
-                
-                if (!imgData.success) {
-                    console.error("ImgBB Error:", imgData);
-                    throw new Error("ইমেজ আপলোড ব্যর্থ হয়েছে!");
+                    const formData = new FormData();
+                    formData.append("image", fileInput.files[0]);
+                    const imgRes = await fetch("https://api.imgbb.com/1/upload?key=7246bc1a891878821a0140bd7686bdf9", {
+                        method: "POST",
+                        body: formData
+                    });
+                    const imgData = await imgRes.json();
+                    finalProofUrl = imgData.data.url;
                 }
-                
-                const proofUrl = imgData.data.url; // ইমেজের লাইভ লিঙ্ক
 
-                // ২. সার্ভার API-তে ডাটা পাঠানো
+                // ২. সার্ভারে টাস্ক সাবমিট
                 const res = await fetch('/api/tasks/submit', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         userId: user.id,
                         taskName: tName,
                         amount: tAmount,
                         category: tCat,
-                        proofUrl: proofUrl // ImgBB লিঙ্কটি এখানে পাঠানো হচ্ছে
+                        proofUrl: finalProofUrl
                     })
                 });
-                
+
+                // ৩. যদি ভিডিও বা অ্যাড হয় তবে কাউন্ট বাড়ানো
+                if (tCat === 'ad' || tCat === 'video') {
+                    await fetch('/api/earn/increment', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId: user.id, type: tCat })
+                    });
+                }
+
                 const result = await res.json();
+                tg.showAlert(result.message);
                 
-                if (result.success) {
-                    tg.showAlert("অভিনন্দন! আপনার কাজটি জমা হয়েছে। এডমিন চেক করার পর টাকা ব্যালেন্সে যোগ হবে।");
-                    window.location.href = 'page7.html'; // ইতিহাস পেজে নিয়ে যাবে
+                // পেজ রিফ্রেশ বা ব্যাক করা যাতে কার্ড আপডেট হয়
+                if (tCat === 'ad' || tCat === 'video') {
+                    location.reload(); 
                 } else {
-                    throw new Error(result.message || "সাবমিট করতে সমস্যা হয়েছে।");
+                    window.location.href = 'page7.html';
                 }
 
             } catch (err) {
-                console.error("Critical Submission Error:", err);
-                tg.showAlert("দুঃখিত! " + err.message);
-                
-                // UI আনলক করা
+                tg.showAlert("দুঃখিত, আবার চেষ্টা করুন।");
                 btn.disabled = false;
-                status.style.display = 'none';
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> কাজ জমা দিন';
+                loader.style.display = 'none';
             }
         };
 
-        // টেলিগ্রাম সেটিংস
-        tg.expand();
-        tg.enableClosingConfirmation();
+        initPage();
     </script>
 </body>
-</html>
+                    </html>
