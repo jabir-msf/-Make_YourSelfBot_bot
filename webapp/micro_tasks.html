@@ -21,53 +21,50 @@
     </main>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        const user = tg.initDataUnsafe.user;
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe.user;
 
-        async function loadTasks() {
-            if (!user) {
-                document.getElementById('taskList').innerHTML = "User not found!";
+    async function loadTasks() {
+        if (!user) return;
+        
+        try {
+            // ইউজারের আইডি এবং ক্যাটাগরি পাঠানো হচ্ছে ফিল্টার করার জন্য
+            const res = await fetch('/api/admin-tasks/' + user.id + '/micro');
+            const tasks = await res.json();
+            
+            const container = document.getElementById('taskList');
+            container.innerHTML = ''; 
+            
+            if (tasks.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: #777; margin-top: 50px;">
+                    <p>বর্তমানে কোন মাইক্রো টাস্ক নেই।</p></div>`;
                 return;
             }
 
-            try {
-                // আপডেট লিঙ্ক: ক্যাটাগরি 'micro' এবং ইউজারের আইডি পাঠানো হয়েছে
-                const res = await fetch('/api/admin-tasks/' + user.id + '/micro');
-                const tasks = await res.json();
-                
-                const container = document.getElementById('taskList');
-                container.innerHTML = ''; // লোডিং মেসেজ মুছে ফেলবে
-                
-                if (tasks.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: #777; margin-top: 50px;">
-                        <p>বর্তমানে কোন মাইক্রো টাস্ক নেই।</p></div>`;
-                    return;
-                }
-
-                tasks.forEach(task => {
-                    container.innerHTML += `
-                    <div class="q-card" style="margin-bottom: 15px; padding: 15px; text-align: left; display: block; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                        <h4 style="color: #14287a; font-size: 16px;">${task.title}</h4>
-                        <p style="font-size: 13px; color: #666; margin: 8px 0;">পারিশ্রমিক: <b style="color: #2ecc71;">৳${task.reward}</b></p>
-                        <button onclick="openSubmit('${task.title}', '${task.reward}')" style="background: #14287a; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: bold; width: 100%; cursor: pointer;">কাজটি শুরু করুন</button>
-                    </div>`;
-                });
-            } catch (err) {
-                console.error(err);
-                document.getElementById('taskList').innerHTML = "তথ্য লোড করতে সমস্যা হয়েছে।";
-            }
+            tasks.forEach(task => {
+                container.innerHTML += `
+                <div class="q-card" style="margin-bottom: 15px; padding: 15px; text-align: left; display: block; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <h4 style="color: #14287a; font-size: 16px;">${task.title}</h4>
+                    <p style="font-size: 13px; color: #666; margin: 8px 0;">পারিশ্রমিক: <b style="color: #2ecc71;">৳${task.reward}</b></p>
+                    <button onclick="openSubmit('${task.title}', '${task.reward}')" style="background: #14287a; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; width: 100%; cursor: pointer;">কাজটি শুরু করুন</button>
+                </div>`;
+            });
+        } catch (err) {
+            console.error(err);
         }
+    }
 
-        function openSubmit(name, reward) {
-            window.location.href = `task_submit.html?name=${encodeURIComponent(name)}&amount=${reward}&cat=micro`;
-        }
+    function openSubmit(name, reward) {
+        // encodeURIComponent ব্যবহার করা হয়েছে যাতে নামের ভেতরে স্পেস থাকলেও লিঙ্ক না ভাঙে
+        window.location.href = `task_submit.html?name=${encodeURIComponent(name.trim())}&amount=${reward}&cat=micro`;
+    }
 
+    // এটি খুবই গুরুত্বপূর্ণ: পেজটি যখনই সামনে আসবে (ব্যাক করলেও) লোড হবে
+    window.onpageshow = function(event) {
         loadTasks();
-        tg.expand();
-        // ইউজার যখনই এই পেজে আসবে, তখনই লোড হবে (Back Button দিয়ে আসলেও)
-window.onpageshow = function(event) {
-    loadTasks();
-};
+    };
+
+    tg.expand();
     </script>
 </body>
     </html>
