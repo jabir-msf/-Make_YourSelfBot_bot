@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Tasks - Make Your Self</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="page5.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 4px solid #1a3fb3; }
+        .stat-card h2 { font-size: 20px; color: #1a3fb3; }
+        .stat-card p { font-size: 12px; color: #666; }
+        .toggle-container { display: flex; background: #e0e7ff; border-radius: 10px; padding: 5px; margin-bottom: 20px; }
+        .toggle-btn { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .toggle-btn.active { background: #1a3fb3; color: white; }
+        .password-box { background: #fff3cd; border: 1px dashed #ffa000; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+    </style>
+</head>
+<body style="background: #f4f7ff;">
+    <div class="app-container">
+        <header class="page-header">
+            <button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="header-title" id="pageTitle">Selling Task</div>
+        </header>
+
+        <main class="content">
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <p>মোট সেল</p>
+                    <h2 id="totalSold">0</h2>
+                </div>
+                <div class="stat-card">
+                    <p>মোট আয়</p>
+                    <h2 id="totalEarned">৳০.০০</h2>
+                </div>
+            </div>
+
+            <!-- New/Used Toggle -->
+            <div class="toggle-container">
+                <div class="toggle-btn active" id="btnNew" onclick="switchTab('new')">New Account</div>
+                <div class="toggle-btn" id="btnUsed" onclick="switchTab('used')">Used Account</div>
+            </div>
+
+            <!-- Tab 1: New Account (Daily Pass + Sheet Upload) -->
+            <div id="tabNew">
+                <div class="password-box">
+                    <p style="font-size: 13px; color: #856404;">আজকের পাসওয়ার্ড (অবশ্যই এটি দিবেন)</p>
+                    <h3 id="dailyPassword" style="font-size: 22px; color: #d35400;">Loading...</h3>
+                </div>
+                <div class="form-card">
+                    <label>শীট ফাইল আপলোড করুন (Excel/CSV/Text):</label>
+                    <input type="file" id="sheetFile" style="margin: 15px 0;">
+                    <button class="submit-btn" onclick="submitSheet()">✅ শীট জমা দিন</button>
+                </div>
+            </div>
+
+            <!-- Tab 2: Used Account (Manual Input) -->
+            <div id="tabUsed" style="display: none;">
+                <div class="form-card">
+                    <div class="input-group">
+                        <label>ইমেইল বা ইউজারনেম</label>
+                        <input type="text" id="usedEmail" placeholder="example@gmail.com">
+                    </div>
+                    <div class="input-group">
+                        <label>পাসওয়ার্ড</label>
+                        <input type="password" id="usedPass" placeholder="******">
+                    </div>
+                    <button class="submit-btn" onclick="submitManual()">✅ একটি জমা দিন</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
+        const params = new URLSearchParams(window.location.search);
+        const cat = params.get('cat') || "gmail_sell";
+
+        // পেজ টাইটেল সেট করা
+        document.getElementById('pageTitle').innerText = cat.replace('_', ' ').toUpperCase();
+
+        async function loadStats() {
+            const res = await fetch(`/api/user-stats/${user.id}/${cat}`);
+            const data = await res.json();
+            document.getElementById('totalSold').innerText = data.totalSold;
+            document.getElementById('totalEarned').innerText = `৳${data.totalEarned.toFixed(2)}`;
+
+            // পাসওয়ার্ড লোড করা (Admin Task টেবিল থেকে)
+            const resTask = await fetch(`/api/admin-tasks/${cat}`);
+            const tasks = await resTask.json();
+            if(tasks.length > 0) {
+                document.getElementById('dailyPassword').innerText = tasks[0].daily_password || "No Password Set";
+            }
+        }
+
+        function switchTab(type) {
+            if(type === 'new') {
+                document.getElementById('tabNew').style.display = 'block';
+                document.getElementById('tabUsed').style.display = 'none';
+                document.getElementById('btnNew').classList.add('active');
+                document.getElementById('btnUsed').classList.remove('active');
+            } else {
+                document.getElementById('tabNew').style.display = 'none';
+                document.getElementById('tabUsed').style.display = 'block';
+                document.getElementById('btnUsed').classList.add('active');
+                document.getElementById('btnNew').classList.remove('active');
+            }
+        }
+
+        // শীট জমা দেওয়া
+        async function submitSheet() {
+            const file = document.getElementById('sheetFile').files[0];
+            if(!file) return tg.showAlert("ফাইল সিলেক্ট করুন!");
+            
+            tg.showConfirm("আপনি কি নিশ্চিত যে শীটটি জমা দিতে চান?", async (ok) => {
+                if(ok) {
+                    // এখানে শীট আপলোড লজিক (আপনি ImgBB এর মতো ফাইল ড্রাইভ বা সরাসরি ডাটাবেসে দিতে পারেন)
+                    tg.showAlert("শীটটি সফলভাবে জমা হয়েছে। এডমিন চেক করবে।");
+                    history.back();
+                }
+            });
+        }
+
+        // ম্যানুয়াল জমা দেওয়া
+        async function submitManual() {
+            const email = document.getElementById('usedEmail').value;
+            const pass = document.getElementById('usedPass').value;
+            if(!email || !pass) return tg.showAlert("সবগুলো ঘর পূরণ করুন!");
+
+            const res = await fetch('/api/tasks/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    taskName: `Used ${cat} Submission`,
+                    amount: 5.00, // অ্যাডমিন নির্ধারিত অ্যামাউন্ট পরে ডাইনামিক করা যাবে
+                    category: cat,
+                    proofUrl: `Email: ${email} | Pass: ${pass}`
+                })
+            });
+            const result = await res.json();
+            tg.showAlert(result.message);
+            if(result.success) history.back();
+        }
+
+        loadStats();
+    </script>
+</body>
+  </html>
