@@ -266,3 +266,20 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🌐 Server running on port ${PORT}`);
 });
+
+// ১৫. নতুন অ্যাডমিন টাস্ক যোগ করা
+app.post("/api/admin/add-task", async (req, res) => {
+    const { title, reward, category, pass } = req.body;
+    try {
+        const { error } = await supabase.from('admin_tasks').insert({
+            title: title,
+            reward: parseFloat(reward),
+            category: category,
+            daily_password: pass || null
+        });
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
