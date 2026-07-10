@@ -7,10 +7,19 @@ async function loadWithdrawPage() {
     try {
         const response = await fetch(`/api/user/${user.id}`);
         const data = await response.json();
-        if (data) {
-            document.getElementById('withdrawBalanceDisplay').innerText = `৳${parseFloat(data.balance).toFixed(2)}`;
+        
+        let balance = 0;
+        if (data && !data.error) {
+            balance = parseFloat(data.balance || 0);
         }
-    } catch (err) { console.error(err); }
+        
+        // ব্যালেন্স সেট করা (NaN প্রোটেকশনসহ)
+        document.getElementById('withdrawBalanceDisplay').innerText = `৳${balance.toFixed(2)}`;
+        
+    } catch (err) { 
+        console.error(err);
+        document.getElementById('withdrawBalanceDisplay').innerText = `৳0.00`;
+    }
 }
 
 document.getElementById('withdrawBtn').addEventListener('click', async () => {
@@ -22,7 +31,6 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
         return tg.showAlert("সঠিক নম্বর এবং ন্যূনতম ১০০ টাকা দিন।");
     }
 
-    // কনফার্মেশন চাওয়া
     tg.showConfirm(`আপনি কি নিশ্চিত যে ৳${amount} (${method}) উত্তোলন করতে চান?`, async (confirmed) => {
         if (confirmed) {
             const btn = document.getElementById('withdrawBtn');
@@ -39,7 +47,7 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
 
                 if (result.success) {
                     tg.showAlert(result.message);
-                    window.location.href = 'page6.html'; // হিস্ট্রিতে নিয়ে যাবে
+                    window.location.href = 'page6.html';
                 } else {
                     tg.showAlert(result.message);
                     btn.disabled = false;
@@ -54,7 +62,5 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
 });
 
 loadWithdrawPage();
-
-// ব্যাক বাটন সচল করা
 tg.BackButton.show();
 tg.BackButton.onClick(() => history.back());
