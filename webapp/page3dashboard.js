@@ -1,70 +1,56 @@
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
 
-let currentBalance = 0;
-
-// পেজ লোড হলে ব্যালেন্স আপডেট করা
-async function initServicePage() {
+// সার্ভিস পেজের ব্যালেন্স ডাটা লোড করা
+async function loadServicePageData() {
+    // টেলিগ্রাম ইউজার না থাকলে থামিয়ে দিবে
     if (!user) {
         console.error("Telegram user not found!");
         return;
     }
 
     try {
-        // সার্ভার থেকে ইউজার ডাটা আনা
+        // API থেকে ইউজারের ডাটা ফেচ করা
         const response = await fetch(`/api/user/${user.id}`);
         const data = await response.json();
 
+        let currentBalance = 0;
+
+        // যদি ডাটাবেসে ইউজার থাকে, তবে তার আসল ব্যালেন্স নেওয়া
         if (data && !data.error) {
-            // ডাটা থাকলে সেটি সেট করা
             currentBalance = parseFloat(data.balance || 0);
         } else {
-            // ডাটা না থাকলে ০ সেট করা (NaN প্রোটেকশন)
+            // ইউজার না পাওয়া গেলে বা ব্যালেন্স ফাকা থাকলে ০ সেট করা (NaN প্রোটেকশন)
             currentBalance = 0.00;
         }
 
-        // ব্যালেন্স UI আপডেট করা
-        updateUI();
+        // HTML-এর id="servicePageBalance" অংশে ব্যালেন্স দেখানো
+        const balanceDisplay = document.getElementById('servicePageBalance');
+        if (balanceDisplay) {
+            balanceDisplay.innerText = `৳${currentBalance.toFixed(2)}`;
+        }
 
     } catch (err) {
-        console.error("Error loading balance:", err);
-        currentBalance = 0.00;
-        updateUI();
+        console.error("Balance loading error:", err);
+        // এরর হলেও যেন NaN না দেখায়, ০ দেখায়
+        const balanceDisplay = document.getElementById('servicePageBalance');
+        if (balanceDisplay) {
+            balanceDisplay.innerText = `৳0.00`;
+        }
     }
 }
 
-// ব্যালেন্স দেখানোর ফাংশন
-function updateUI() {
-    // আপনার HTML-এ ব্যালেন্স দেখানোর জন্য যে এলিমেন্টগুলো আছে
-    const balanceDisplay = document.getElementById('page3Balance') || document.querySelector('.balance-pill span');
-    
-    if (balanceDisplay) {
-        balanceDisplay.innerText = `৳${currentBalance.toFixed(2)}`;
-    }
+// সার্ভিস বাটনগুলোতে ক্লিক করলে এই মেসেজটি দেখাবে
+function comingSoon() {
+    tg.showAlert("এই সার্ভিসটি খুব শীঘ্রই চালু করা হবে। আমাদের সাথেই থাকুন!");
 }
 
-// প্রতিটি সার্ভিস বাটনের জন্য ফাংশন
-function openTask(taskName) {
-    // আপনি চাইলে এখানে টাস্ক অনুযায়ী আলাদা পেজে পাঠাতে পারেন
-    // আপাতত "শীঘ্রই আসছে" মেসেজ দেখাবে
-    tg.showAlert(`${taskName} সার্ভিসটি খুব শীঘ্রই চালু করা হবে।`);
-}
+// পেজ চালু হওয়ার সাথে সাথে ব্যালেন্স লোড করা
+loadServicePageData();
 
-// ব্যানার বা বিশেষ বাটন ক্লিক লজিক (উত্তোলন ইতিহাস, কাজের বিবরণ ইত্যাদি)
-function navigateTo(url) {
-    window.location.href = url;
-}
+// টেলিগ্রাম অ্যাপ সেটিংস
+tg.expand(); // অ্যাপটি বড় করে ওপেন করা
+tg.enableClosingConfirmation(); // অ্যাপ বন্ধের সময় কনফার্মেশন চাওয়া
 
-// পেজ ইনিশিয়ালাইজ করা
-initServicePage();
-
-// টেলিগ্রাম সেটিংস
-tg.expand(); // অ্যাপটি ফুল স্ক্রিন করা
-tg.BackButton.show(); // ব্যাক বাটন দেখানো
-tg.BackButton.onClick(() => {
-    window.location.href = 'dashboard.html'; // ড্যাশবোর্ডে ফিরে যাওয়া
-});
-
-// আপনার HTML এর বাটনগুলোতে যদি সরাসরি ফাংশন কল করতে চান, তবে এগুলো গ্লোবাল করে দেওয়া হলো
-window.openTask = openTask;
-window.navigateTo = navigateTo;
+// HTML থেকে সরাসরি ফাংশন কল করার জন্য গ্লোবাল উইন্ডোতে রাখা হলো
+window.comingSoon = comingSoon;
