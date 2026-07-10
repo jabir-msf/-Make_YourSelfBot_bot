@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Withdraw - Make Your Self</title>
     
-    <!-- Telegram SDK (এটি ছাড়া ব্যালেন্স আসবে না) -->
+    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <link rel="stylesheet" href="page5.css">
@@ -30,7 +30,7 @@
             <!-- Balance Card -->
             <div class="balance-card">
                 <p class="balance-label">উত্তোলনযোগ্য ব্যালেন্স</p>
-                <!-- এখানে আইডিটি রাখা হয়েছে যা dashboard.js থেকে ব্যালেন্স আনবে -->
+                <!-- এই ID টি NaN ফিক্স করার জন্য ব্যবহৃত হবে -->
                 <h1 class="balance-amount" id="withdrawBalanceDisplay">৳০.০০</h1>
             </div>
 
@@ -87,7 +87,7 @@
                 </button>
             </div>
 
-            <!-- History Link (এটিতে ক্লিক করলে হিস্ট্রি পেজে যাবে) -->
+            <!-- History Link -->
             <div class="history-link" onclick="window.location.href='page6.html'" style="cursor: pointer;">
                 <div class="blue-bar"></div>
                 <i class="fa-regular fa-clipboard"></i>
@@ -100,4 +100,4 @@
     <!-- জাভাস্ক্রিপ্ট ফাইল কানেক্ট করা হলো -->
     <script src="page5.js"></script>
 </body>
-                        </html>
+</html>
