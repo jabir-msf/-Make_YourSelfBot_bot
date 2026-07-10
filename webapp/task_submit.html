@@ -153,12 +153,11 @@
 
         document.getElementById('goLinkBtn').onclick = () => tg.openLink('https://t.me/EarnBD_Pro');
 
-        // ২. মেইন সাবমিট লজিক (পরিবর্তিত)
+        // ২. মেইন সাবমিট লজিক
         document.getElementById('finalSubmitBtn').onclick = async () => {
             const btn = document.getElementById('finalSubmitBtn');
             const loader = document.getElementById('processingMsg');
             
-            // ডাবল ক্লিক ঠেকাতে সাথে সাথে বাটন ডিজেবল
             btn.disabled = true;
             loader.style.display = 'block';
             btn.innerText = "যাচাই হচ্ছে...";
@@ -201,7 +200,7 @@
                     proofUrl = imgData.data.url;
                 }
 
-                // ডাটাবেসে টাস্ক সেভ (trim ব্যবহার করা হয়েছে নামের মিল নিশ্চিত করতে)
+                // ডাটাবেসে টাস্ক সেভ
                 const res = await fetch('/api/tasks/submit', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -228,8 +227,15 @@
                 if (tCat === 'ad' || tCat === 'video') {
                     location.reload();
                 } else {
-                    // সাবমিট সফল হলে সরাসরি পেজ থেকে বের করে দিবে যাতে পুনরায় সাবমিট না হয়
-                    window.location.href = 'page7.html'; 
+                    // এটি পরিবর্তন করা হয়েছে: সাবমিট সফল হলে মাইক্রো টাস্ক লিস্টে নিয়ে যাবে
+                    // ক্যাটাগরি অনুযায়ী সঠিক লিস্ট পেজে ফেরত যাবে
+                    if (tCat === 'micro') {
+                        window.location.href = 'micro_tasks.html'; 
+                    } else if (tCat.includes('sell')) {
+                        window.location.href = `sell_tasks.html?cat=${tCat}`;
+                    } else {
+                        window.location.href = 'page3dashboard.html';
+                    }
                 }
 
             } catch (err) {
