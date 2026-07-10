@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Report</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+        .header { text-align: center; padding: 20px 0; color: #1a3fb3; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .income-card { background: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-bottom: 4px solid #1a3fb3; }
+        .income-card i { font-size: 24px; color: #1a3fb3; margin-bottom: 10px; }
+        .income-card h3 { margin: 5px 0; font-size: 14px; color: #666; }
+        .income-card p { margin: 0; font-size: 18px; font-weight: bold; color: #333; }
+        .total-card { grid-column: span 2; background: linear-gradient(135deg, #1a3fb3, #0d1b4d); color: white; border: none; }
+        .total-card h3, .total-card p { color: white; }
+        .back-btn { margin-top: 20px; width: 100%; padding: 12px; background: #ddd; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2><i class="fa-solid fa-chart-pie"></i> ইনকাম রিপোর্ট</h2>
+    </div>
+
+    <div class="grid">
+        <div class="income-card total-card">
+            <i class="fa-solid fa-wallet" style="color: white;"></i>
+            <h3>সর্বমোট আয়</h3>
+            <p id="total-inc">৳০.০০</p>
+        </div>
+        <div class="income-card">
+            <i class="fa-solid fa-calendar-day"></i>
+            <h3>আজকের আয়</h3>
+            <p id="daily-inc">৳০.০০</p>
+        </div>
+        <div class="income-card">
+            <i class="fa-solid fa-calendar-week"></i>
+            <h3>এই সপ্তাহের আয়</h3>
+            <p id="weekly-inc">৳০.০০</p>
+        </div>
+        <div class="income-card">
+            <i class="fa-solid fa-calendar-days"></i>
+            <h3>এই মাসের আয়</h3>
+            <p id="monthly-inc">৳০.০০</p>
+        </div>
+        <div class="income-card">
+            <i class="fa-solid fa-layer-group"></i>
+            <h3>এই বছরের আয়</h3>
+            <p id="yearly-inc">৳০.০০</p>
+        </div>
+    </div>
+
+    <button class="back-btn" onclick="window.history.back()">ফিরে যান</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        // এখানে সার্ভার থেকে ইনকাম ডাটা আনার লজিক যুক্ত করতে পারেন। 
+        // বর্তমানে এটি শুধুমাত্র ডেমো হিসেবে ০.০০ দেখাচ্ছে।
+    </script>
+</body>
+  </html>
