@@ -113,6 +113,20 @@
 
         async function initPage() {
             if (!user) return;
+
+            // --- নতুন চেক লজিক: ইউজার কি এই কাজ আগে করেছে? ---
+            if (tCat !== 'ad' && tCat !== 'video') {
+                try {
+                    const checkRes = await fetch(`/api/tasks/history/${user.id}?t=${Date.now()}`);
+                    const history = await checkRes.json();
+                    if (history.some(t => t.task_name.trim() === tName.trim())) {
+                        tg.showAlert("আপনি ইতিমধ্যে এই কাজটি সম্পন্ন করেছেন!");
+                        window.location.replace('micro_tasks.html');
+                        return;
+                    }
+                } catch(e) { console.error(e); }
+            }
+
             if (tCat === 'ad' || tCat === 'video') {
                 document.getElementById('earningStats').style.display = 'grid';
                 document.getElementById('ssUploadSection').style.display = 'none';
@@ -224,18 +238,23 @@
                 const result = await res.json();
                 tg.showAlert(result.message);
                 
-                if (tCat === 'ad' || tCat === 'video') {
-                    location.reload();
-                } else {
-                    // এটি পরিবর্তন করা হয়েছে: সাবমিট সফল হলে মাইক্রো টাস্ক লিস্টে নিয়ে যাবে
-                    // ক্যাটাগরি অনুযায়ী সঠিক লিস্ট পেজে ফেরত যাবে
-                    if (tCat === 'micro') {
-                        window.location.href = 'micro_tasks.html'; 
-                    } else if (tCat.includes('sell')) {
-                        window.location.href = `sell_tasks.html?cat=${tCat}`;
+                if (result.success) {
+                    if (tCat === 'ad' || tCat === 'video') {
+                        location.reload();
                     } else {
-                        window.location.href = 'page3dashboard.html';
+                        // replace ব্যবহার করা হয়েছে যাতে ব্যাক করলে এই পেজ আর না আসে
+                        if (tCat === 'micro') {
+                            window.location.replace('micro_tasks.html'); 
+                        } else if (tCat.includes('sell')) {
+                            window.location.replace(`sell_tasks.html?cat=${tCat}`);
+                        } else {
+                            window.location.replace('page3dashboard.html');
+                        }
                     }
+                } else {
+                    btn.disabled = false;
+                    loader.style.display = 'none';
+                    btn.innerText = "কাজ জমা দিন";
                 }
 
             } catch (err) {
