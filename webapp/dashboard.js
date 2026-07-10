@@ -16,9 +16,13 @@ if (menuBtn) {
         
         // সাইডবারে ইউজার ডাটা সিঙ্ক করা
         if(user) {
-            document.getElementById('sideName').innerText = user.first_name;
-            document.getElementById('sideInitial').innerText = user.first_name.charAt(0);
-            document.getElementById('sideBalanceDisplay').innerText = `৳${currentBalance.toFixed(2)}`;
+            const sideName = document.getElementById('sideName');
+            const sideInitial = document.getElementById('sideInitial');
+            const sideBalance = document.getElementById('sideBalanceDisplay');
+
+            if(sideName) sideName.innerText = user.first_name || "ইউজার";
+            if(sideInitial) sideInitial.innerText = (user.first_name || "U").charAt(0);
+            if(sideBalance) sideBalance.innerText = `৳${currentBalance.toFixed(2)}`;
         }
     });
 }
@@ -35,11 +39,14 @@ if (sidebarOverlay) {
 async function initDashboard() {
     if (!user) {
         console.error("Telegram user not found!");
+        // UI-তে ডিফল্ট ভ্যালু বসানো (NaN রোধ করতে)
+        updateBalanceUI();
         return;
     }
     
     // ড্যাশবোর্ডে ইউজারের নাম সেট করা
-    document.getElementById('userFirstName').innerText = user.first_name;
+    const userNameElement = document.getElementById('userFirstName');
+    if(userNameElement) userNameElement.innerText = user.first_name;
 
     try {
         // API থেকে ইউজারের ডাটা আনা
@@ -47,14 +54,12 @@ async function initDashboard() {
         const data = await response.json();
 
         if (data && !data.error) {
-            // ডাটাবেসে যে ব্যালেন্স আছে শুধু সেটুকুই দেখাবে
-            currentBalance = parseFloat(data.balance || 0);
+            // ডাটাবেসে যে ব্যালেন্স আছে শুধু সেটুকুই দেখাবে (parseFloat logic fixed)
+            currentBalance = parseFloat(data.balance) || 0;
         } else {
-            // ডাটা না থাকলে ০ দেখাবে
             currentBalance = 0.00;
         }
 
-        // স্ক্রিনে ব্যালেন্স আপডেট করা (এটি আর অটো বাড়বে না)
         updateBalanceUI();
 
     } catch (err) {
@@ -64,12 +69,15 @@ async function initDashboard() {
     }
 }
 
-// ব্যালেন্স UI আপডেট করার ফাংশন
+// ব্যালেন্স UI আপডেট করার ফাংশন (সব জায়গায় আপডেট হবে)
 function updateBalanceUI() {
-    // ড্যাশবোর্ডের মেইন ব্যালেন্স (৳০.০০ স্টাইলে)
-    document.getElementById('mainBalance').innerText = `৳${currentBalance.toFixed(2)}`;
+    // ড্যাশবোর্ডের মেইন ব্যালেন্স
+    const mainBal = document.getElementById('mainBalance');
+    if(mainBal) mainBal.innerText = `৳${currentBalance.toFixed(2)}`;
+
     // টপ বারের ছোট ব্যালেন্স
-    document.getElementById('topBalance').innerText = `৳${currentBalance.toFixed(2)}`;
+    const topBal = document.getElementById('topBalance');
+    if(topBal) topBal.innerText = `৳${currentBalance.toFixed(2)}`;
     
     // সাইডবার ওপেন থাকলে সেখানেও আপডেট হবে
     const sideDisplay = document.getElementById('sideBalanceDisplay');
