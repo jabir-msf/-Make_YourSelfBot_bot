@@ -66,7 +66,7 @@ app.post("/api/tasks/submit", async (req, res) => {
     }
 });
 
-// ৩. লিমিট চেক ও ইনক্রিমেন্ট API (Final Fixed)
+// ৩. লিমিট চেক ও ইউজার ডাটা (Updated for Video/Ad Page)
 app.post("/api/earn/limit-check", async (req, res) => {
     const { userId, type } = req.body;
     const limit = type === 'ad' ? 20 : 15;
@@ -74,54 +74,53 @@ app.post("/api/earn/limit-check", async (req, res) => {
     const resetCol = type === 'ad' ? 'last_ad_reset' : 'last_vdo_reset';
 
     try {
-        const { data: user, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-        if (error || !user) return res.status(404).json({ success: false });
+        const { data: user } = await supabase.from('profiles').select('*').eq('id', userId).single();
+        if (!user) return res.status(404).json({ success: false });
 
+        // ১. লিমিট রিসেট লজিক
         const now = new Date();
         const lastReset = user[resetCol] ? new Date(user[resetCol]) : new Date(0);
-        
-        // সময়ের পার্থক্য বের করা (মিলি-সেকেন্ডে)
-        const diffMs = now.getTime() - lastReset.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
+        const diffHours = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
 
         let currentCount = parseInt(user[countCol]) || 0;
-
-        // ১ ঘণ্টা পার হয়ে গেলে রিসেট হবে
         if (diffHours >= 1) {
             currentCount = 0;
-            // ডাটাবেসে রিসেট আপডেট
-            await supabase.from('profiles').update({ 
-                [countCol]: 1, // প্রথম কাজ হিসেবে ১ ধরবে
-                [resetCol]: now.toISOString() 
-            }).eq('id', userId);
-            
-            return res.json({ success: true, remaining: limit - 1 });
+            await supabase.from('profiles').update({ [countCol]: 0, [resetCol]: now.toISOString() }).eq('id', userId);
         }
 
-        // লিমিট চেক
-        if (currentCount >= limit) {
-            return res.json({ 
-                success: false, 
-                message: `দুঃখিত! আপনি এই ঘণ্টার লিমিট (${limit}) শেষ করেছেন। ১ ঘণ্টা পর আবার চেষ্টা করুন।` 
-            });
-        }
+        // ২. পেন্ডিং ব্যালেন্স বের করা (ঐ ক্যাটাগরির জন্য)
+        const { data: tasks } = await supabase
+            .from('tasks')
+            .select('amount')
+            .eq('user_id', userId)
+            .eq('category', type)
+            .eq('status', 'pending');
 
-        // লিমিট ওকে থাকলে ১ বাড়িয়ে আপডেট করা
-        const newCount = currentCount + 1;
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ [countCol]: newCount })
-            .eq('id', userId);
+        const pendingBalance = tasks ? tasks.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
 
-        if(updateError) throw updateError;
-
-        res.json({ success: true, remaining: limit - newCount });
+        res.json({ 
+            success: true, 
+            count: currentCount, 
+            limit: limit, 
+            pending: pendingBalance.toFixed(2) 
+        });
 
     } catch (err) {
-        console.error("Limit API Error:", err);
         res.status(500).json({ success: false });
     }
 });
+
+// ৩.১ ইনক্রিমেন্ট করার জন্য আলাদা API (সাবমিট করার সময় কল হবে)
+app.post("/api/earn/increment", async (req, res) => {
+    const { userId, type } = req.body;
+    const countCol = type === 'ad' ? 'ad_count' : 'vdo_count';
+    try {
+        const { data: user } = await supabase.from('profiles').select(countCol).eq('id', userId).single();
+        await supabase.from('profiles').update({ [countCol]: (user[countCol] || 0) + 1 }).eq('id', userId);
+        res.json({ success: true });
+    } catch (err) { res.json({ success: false }); }
+});
+
 // ৪. ইউজারের সেলিং পরিসংখ্যান (Stats) API
 app.get("/api/user-stats/:userId/:category", async (req, res) => {
     try {
