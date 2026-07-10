@@ -100,6 +100,27 @@ app.post("/api/earn/limit-check", async (req, res) => {
                 success: false, 
                 message: `দুঃখিত! আপনি এই ঘণ্টায় সর্বোচ্চ লিমিট (${limit}) শেষ করেছেন।` 
             });
+            // ক্যাটাগরি অনুযায়ী ইউজারের সেলিং পরিসংখ্যান (Stats)
+app.get("/api/user-stats/:userId/:category", async (req, res) => {
+    const { userId, category } = req.params;
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('amount, status')
+            .eq('user_id', userId)
+            .eq('category', category);
+
+        if (error) throw error;
+
+        const approvedTasks = data.filter(t => t.status === 'approved');
+        const totalSold = approvedTasks.length;
+        const totalEarned = approvedTasks.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+        res.json({ totalSold, totalEarned });
+    } catch (err) {
+        res.status(500).json({ totalSold: 0, totalEarned: 0 });
+    }
+});
         }
 
         // লিমিট ওকে থাকলে ১ বাড়িয়ে দিবে
