@@ -16,7 +16,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "webapp")));
 
 // --- SETTINGS SYNC API (For Users) ---
-// ইউজাররা যাতে এডমিন প্যানেলের মিনিমাম উইথড্র দেখতে পায়
 app.get("/api/settings", async (req, res) => {
     try {
         const { data } = await supabase.from('settings').select('*').eq('id', 1).single();
@@ -26,7 +25,6 @@ app.get("/api/settings", async (req, res) => {
 
 // --- PUBLIC USER API ---
 
-// ১. ইউজারের প্রোফাইল ডাটা পাওয়ার API (ব্যান চেক সহ)
 app.get("/api/user/:id", async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -39,7 +37,6 @@ app.get("/api/user/:id", async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // ইউজার যদি ব্যান থাকে
         if (data.is_banned) {
             return res.status(403).json({ error: "Your account is banned!", banned: true });
         }
@@ -51,7 +48,6 @@ app.get("/api/user/:id", async (req, res) => {
     }
 });
 
-// ২. টাস্ক সাবমিট API
 app.post("/api/tasks/submit", async (req, res) => {
     const { userId, taskName, amount, category, proofUrl } = req.body;
     try {
@@ -72,7 +68,7 @@ app.post("/api/tasks/submit", async (req, res) => {
     }
 });
 
-// --- EARNING & LIMIT API --- (আগের মতোই রাখা হয়েছে)
+// --- EARNING & LIMIT API --- (Ad/Vdo এর জন্য আগের মতোই রাখা হয়েছে)
 app.post("/api/earn/limit-check", async (req, res) => {
     const { userId, type } = req.body;
     const limit = type === 'ad' ? 20 : 15;
@@ -113,9 +109,8 @@ app.post("/api/earn/increment", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// --- ADMIN CONTROL API (MEGA UPDATED) ---
+// --- ADMIN CONTROL API ---
 
-// ১৬. অ্যাডমিন ড্যাশবোর্ড পরিসংখ্যান (Stats)
 app.get("/api/admin/stats", async (req, res) => {
     try {
         const { count: totalUsers } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
@@ -129,7 +124,6 @@ app.get("/api/admin/stats", async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Failed to fetch stats" }); }
 });
 
-// ১০. সব পেন্ডিং টাস্ক দেখা
 app.get("/api/admin/pending-tasks", async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -142,7 +136,6 @@ app.get("/api/admin/pending-tasks", async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// ১১. টাস্ক এপ্রুভ ও ব্যালেন্স যোগ
 app.post("/api/admin/approve-task", async (req, res) => {
     const { taskId, userId, amount } = req.body;
     try {
@@ -154,7 +147,6 @@ app.post("/api/admin/approve-task", async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ১২. টাস্ক রিজেক্ট
 app.post("/api/admin/reject-task", async (req, res) => {
     const { taskId } = req.body;
     try {
@@ -163,7 +155,6 @@ app.post("/api/admin/reject-task", async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ১৩. সব পেন্ডিং উইথড্র দেখা
 app.get("/api/admin/pending-withdrawals", async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -176,7 +167,6 @@ app.get("/api/admin/pending-withdrawals", async (req, res) => {
     } catch (err) { res.status(500).json([]); }
 });
 
-// ১৪. উইথড্র অ্যাকশন (Dynamic Min Withdraw Check সহ)
 app.post("/api/admin/action-withdraw", async (req, res) => {
     const { id, type, userId, amount } = req.body;
     try {
@@ -192,7 +182,6 @@ app.post("/api/admin/action-withdraw", async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ১৫. নতুন অ্যাডমিন টাস্ক যোগ করা (Daily Password সহ)
 app.post("/api/admin/add-task", async (req, res) => {
     const { title, reward, category, pass } = req.body;
     try {
@@ -204,7 +193,6 @@ app.post("/api/admin/add-task", async (req, res) => {
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// ১৭. ইউজার সার্চ API
 app.get("/api/admin/user-search/:query", async (req, res) => {
     const q = req.params.query;
     try {
@@ -216,7 +204,6 @@ app.get("/api/admin/user-search/:query", async (req, res) => {
     } catch (err) { res.json([]); }
 });
 
-// ২১. ইউজার ব্যান/আনব্যান API (নতুন যোগ করা হলো)
 app.post("/api/admin/ban-user", async (req, res) => {
     const { userId, status } = req.body;
     try {
@@ -225,7 +212,6 @@ app.post("/api/admin/ban-user", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// ১৮. ইউজারের ব্যালেন্স এডিট
 app.post("/api/admin/update-balance", async (req, res) => {
     const { userId, amount } = req.body;
     try {
@@ -234,7 +220,6 @@ app.post("/api/admin/update-balance", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// ৭. রেফারেল হিস্ট্রি (কার রেফারে কে জয়েন করেছে)
 app.get("/api/admin/ref-history", async (req, res) => {
     try {
         const { data } = await supabase
@@ -247,7 +232,6 @@ app.get("/api/admin/ref-history", async (req, res) => {
     } catch (err) { res.json([]); }
 });
 
-// ১৯. গ্লোবাল সেটিংস কন্ট্রোল API
 app.get("/api/admin/get-settings", async (req, res) => {
     try {
         const { data } = await supabase.from('settings').select('*').eq('id', 1).single();
@@ -263,13 +247,14 @@ app.post("/api/admin/update-settings", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// ৯. উইথড্র রিকোয়েস্ট API (২% সার্ভিস চার্জ লজিকসহ)
+// --- UPDATED & NEW APIs (Fixed as per request) ---
+
+// ৯. উইথড্র রিকোয়েস্ট API (৳২ সার্ভিস চার্জ লজিকসহ)
 app.post("/api/withdraw", async (req, res) => {
     const { userId, method, accountNo, amount } = req.body;
-    const withdrawGrossAmount = parseFloat(amount); // ইউজার যেটা ইনপুট দিয়েছে
+    const withdrawGrossAmount = parseFloat(amount); 
 
     try {
-        // ১. এডমিন সেটিংস থেকে মিনিমাম লিমিট চেক করা
         const { data: settings } = await supabase.from('settings').select('min_withdraw').eq('id', 1).single();
         const minAmount = settings ? parseFloat(settings.min_withdraw) : 100;
 
@@ -277,21 +262,18 @@ app.post("/api/withdraw", async (req, res) => {
             return res.json({ success: false, message: `ন্যূনতম ৳${minAmount} উত্তোলন করতে হবে।` });
         }
 
-        // ২. ইউজারের ব্যালেন্স চেক করা
         const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
         if (!user || parseFloat(user.balance) < withdrawGrossAmount) {
             return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
         }
 
-        // ৩. ২% সার্ভিস চার্জ ক্যালকুলেশন
-        const charge = withdrawGrossAmount * 0.02; 
-        const netAmount = withdrawGrossAmount - charge; // এডমিন যেটা পেমেন্ট করবে
+        // লজিক পরিবর্তন: ২% এর বদলে ফিক্সড ২ টাকা চার্জ
+        const charge = 2; 
+        const netAmount = withdrawGrossAmount - charge; 
 
-        // ৪. ইউজারের অ্যাকাউন্ট থেকে পুরো টাকা কেটে নেওয়া
         const newBalance = parseFloat(user.balance) - withdrawGrossAmount;
         await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
         
-        // ৫. উইথড্রাল টেবিলে চার্জ কাটার পরের টাকাটি সেভ করা
         await supabase.from('withdrawals').insert({ 
             user_id: userId, 
             amount: netAmount, 
@@ -302,112 +284,53 @@ app.post("/api/withdraw", async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `সফল! ২% (৳${charge.toFixed(2)}) সার্ভিস চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
+            message: `সফল! ৳${charge} সার্ভিস চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
         });
 
     } catch (err) { 
-        console.error("Withdraw error:", err);
         res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); 
     }
 });
-// --- নতুন যোগ করা API সমূহ ---
 
-// ১. ইউজারের উইথড্র হিস্ট্রি পাওয়ার API (page6.js এর জন্য)
-app.get("/api/withdrawals/:userId", async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('withdrawals')
-            .select('*')
-            .eq('user_id', req.params.userId)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        res.json(data || []);
-    } catch (err) { res.status(500).json([]); }
-});
-
-// ২. ইউজারের কাজের হিস্ট্রি পাওয়ার API (page7.js এর জন্য)
-app.get("/api/tasks/history/:userId", async (req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .eq('user_id', req.params.userId)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        res.json(data || []);
-    } catch (err) { res.status(500).json([]); }
-});
-
-// ৩. সেলিং টাস্কের স্ট্যাটাস দেখার API (sell_tasks.html এর জন্য)
-app.get("/api/user-stats/:userId/:cat", async (req, res) => {
-    try {
-        const { data: approvedTasks } = await supabase.from('tasks').select('amount').eq('user_id', req.params.userId).eq('category', req.params.cat).eq('status', 'approved');
-        const totalEarned = approvedTasks ? approvedTasks.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
-        const totalSold = approvedTasks ? approvedTasks.length : 0;
-        res.json({ totalSold, totalEarned });
-    } catch (err) { res.json({ totalSold: 0, totalEarned: 0 }); }
-});
-
-// ৪. অ্যাডমিন টাস্ক দেখার API (এক কাজ একবার করার লজিক সহ)
+// ১০. ইউজার ভিত্তিক অ্যাডমিন টাস্ক দেখার API (এক কাজ একবার করার লজিক)
 app.get("/api/admin-tasks/:userId/:category", async (req, res) => {
     const { userId, category } = req.params;
     try {
-        // প্রথমে ওই ক্যাটাগরির সব টাস্ক আনুন
         const { data: allTasks } = await supabase.from('admin_tasks').select('*').eq('category', category);
-        // তারপর ইউজার অলরেডি কোন কাজগুলো জমা দিয়েছে সেগুলো আনুন
-        const { data: submittedTasks } = await supabase.from('tasks').select('task_name').eq('user_id', userId);
+        const { data: userTasks } = await supabase.from('tasks').select('task_name').eq('user_id', userId);
         
-        const submittedNames = submittedTasks.map(t => t.task_name);
+        const submittedNames = userTasks ? userTasks.map(t => t.task_name) : [];
+        const filteredTasks = allTasks.filter(task => !submittedNames.includes(task.title));
         
-        // ফিল্টার করুন: যে কাজগুলো ইউজার এখনো করেনি শুধু সেগুলো দেখাবে
-        const availableTasks = allTasks.filter(task => !submittedNames.includes(task.title));
-        
-        res.json(availableTasks);
+        res.json(filteredTasks || []);
     } catch (err) { res.json([]); }
 });
 
-// --- উইথড্র লজিক পরিবর্তন (২% এর বদলে ২ টাকা চার্জ) ---
-app.post("/api/withdraw", async (req, res) => {
-    const { userId, method, accountNo, amount } = req.body;
-    const withdrawGrossAmount = parseFloat(amount);
-
+// ১১. ইউজারের উইথড্র হিস্ট্রি API (Page 6 এর তথ্য লোড করার জন্য)
+app.get("/api/withdrawals/:userId", async (req, res) => {
     try {
-        const { data: settings } = await supabase.from('settings').select('min_withdraw').eq('id', 1).single();
-        const minAmount = settings ? parseFloat(settings.min_withdraw) : 100;
-
-        if (withdrawGrossAmount < minAmount) {
-            return res.json({ success: false, message: `ন্যূনতম ৳${minAmount} উত্তোলন করতে হবে।` });
-        }
-
-        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
-        if (!user || parseFloat(user.balance) < withdrawGrossAmount) {
-            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
-        }
-
-        // ২ টাকা ফিক্সড সার্ভিস চার্জ
-        const charge = 2; 
-        const netAmount = withdrawGrossAmount - charge;
-
-        const newBalance = parseFloat(user.balance) - withdrawGrossAmount;
-        await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
-        
-        await supabase.from('withdrawals').insert({ 
-            user_id: userId, 
-            amount: netAmount, 
-            method, 
-            account_no: accountNo, 
-            status: 'pending' 
-        });
-
-        res.json({ 
-            success: true, 
-            message: `সফল! ৳${charge} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
-        });
-
-    } catch (err) { 
-        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); 
-    }
+        const { data } = await supabase.from('withdrawals').select('*').eq('user_id', req.params.userId).order('created_at', { ascending: false });
+        res.json(data || []);
+    } catch (err) { res.status(500).json([]); }
 });
+
+// ১২. ইউজারের কাজের বিবরণ/হিস্ট্রি API (Page 7 এর তথ্য লোড করার জন্য)
+app.get("/api/tasks/history/:userId", async (req, res) => {
+    try {
+        const { data } = await supabase.from('tasks').select('*').eq('user_id', req.params.userId).order('created_at', { ascending: false });
+        res.json(data || []);
+    } catch (err) { res.status(500).json([]); }
+});
+
+// ১৩. সেলিং টাস্ক স্ট্যাটাস API (Sell Page এর জন্য)
+app.get("/api/user-stats/:userId/:cat", async (req, res) => {
+    try {
+        const { data: approved } = await supabase.from('tasks').select('amount').eq('user_id', req.params.userId).eq('category', req.params.cat).eq('status', 'approved');
+        const totalEarned = approved ? approved.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
+        res.json({ totalSold: approved ? approved.length : 0, totalEarned: totalEarned.toFixed(2) });
+    } catch (err) { res.json({ totalSold: 0, totalEarned: 0 }); }
+});
+
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
