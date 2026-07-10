@@ -1,44 +1,121 @@
-<!-- task_submit.html এর মূল অংশ -->
-<div class="form-card">
-    <label>কাজের স্ক্রিনশট দিন (Proof):</label>
-    <input type="file" id="screenshotInput" accept="image/*" style="margin: 15px 0;">
-    
-    <button class="submit-btn" id="finalSubmitBtn">
-        <i class="fa-solid fa-cloud-arrow-up"></i> কাজ জমা দিন
-    </button>
-</div>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Proof - Make Your Self</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="page5.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid #ddd; }
+        .upload-status { display: none; text-align: center; margin-top: 15px; color: #1a3fb3; font-weight: 700; }
+    </style>
+</head>
+<body style="background: #f4f7ff;">
+    <div class="app-container">
+        <header class="page-header">
+            <button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="header-title">প্রমাণ জমা দিন</div>
+        </header>
 
-<script>
-// স্ক্রিনশট আপলোড লজিক (ImgBB উদাহরণ)
-document.getElementById('finalSubmitBtn').onclick = async () => {
-    const fileInput = document.getElementById('screenshotInput');
-    if (fileInput.files.length === 0) return alert("স্ক্রিনশট আপলোড করুন!");
+        <main class="content">
+            <div class="balance-card">
+                <p style="color: rgba(255,255,255,0.8); font-size: 14px;">আপনার বর্তমান টাস্ক</p>
+                <h3 id="tNameDisplay" style="color: white; margin: 5px 0;">Loading...</h3>
+                <h1 id="tAmountDisplay" style="font-size: 36px; color: #ffeb3b;">৳০.০০</h1>
+            </div>
 
-    const btn = document.getElementById('finalSubmitBtn');
-    btn.innerText = "আপলোড হচ্ছে...";
-    
-    // ১. ইমেজটি ImgBB তে আপলোড করা (আপনি আপনার API Key ব্যবহার করবেন)
-    const formData = new FormData();
-    formData.append("image", fileInput.files[0]);
+            <div class="form-card">
+                <div class="input-group">
+                    <label><i class="fa-solid fa-image"></i> কাজের স্ক্রিনশট সিলেক্ট করুন</label>
+                    <input type="file" id="screenshotInput" accept="image/*" onchange="previewImage()" style="padding: 10px; background: #f1f4ff; border-radius: 10px; width: 100%;">
+                    <img id="imagePreview" class="preview-img">
+                </div>
 
-    const imgRes = await fetch("https://api.imgbb.com/1/upload?key=YOUR_IMGBB_API_KEY", {
-        method: "POST",
-        body: formData
-    });
-    const imgData = await imgRes.json();
-    const proofUrl = imgData.data.url;
+                <div id="statusMsg" class="upload-status">
+                    <i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে, অপেক্ষা করুন...
+                </div>
 
-    // ২. সার্ভারে টাস্ক সাবমিট করা
-    const res = await fetch('/api/tasks/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            userId: user.id,
-            taskName: tName,
-            amount: tAmount,
-            proofUrl: proofUrl // স্ক্রিনশট লিঙ্ক
-        })
-    });
-    // ... বাকি সাকসেস লজিক
-};
-  </script>
+                <button class="submit-btn" id="finalSubmitBtn" style="margin-top: 20px; background: #0d1b4d;">
+                    <i class="fa-solid fa-paper-plane"></i> কাজ জমা দিন
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
+        const params = new URLSearchParams(window.location.search);
+        const tName = params.get('name') || "General Task";
+        const tAmount = params.get('amount') || "0.00";
+        const tCat = params.get('cat') || "micro";
+
+        document.getElementById('tNameDisplay').innerText = tName;
+        document.getElementById('tAmountDisplay').innerText = `৳${tAmount}`;
+
+        function previewImage() {
+            const file = document.getElementById('screenshotInput').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('imagePreview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('finalSubmitBtn').onclick = async () => {
+            const fileInput = document.getElementById('screenshotInput');
+            if (fileInput.files.length === 0) return tg.showAlert("একটি স্ক্রিনশট আপলোড করুন!");
+
+            const btn = document.getElementById('finalSubmitBtn');
+            const status = document.getElementById('statusMsg');
+
+            btn.disabled = true;
+            status.style.display = 'block';
+
+            try {
+                // ১. ImgBB তে ইমেজ আপলোড (আপনার Key ব্যবহার করা হয়েছে)
+                const formData = new FormData();
+                formData.append("image", fileInput.files[0]);
+
+                const imgRes = await fetch("https://api.imgbb.com/1/upload?key=7246bc1a891878821a0140bd7686bdf9", {
+                    method: "POST",
+                    body: formData
+                });
+                const imgData = await imgRes.json();
+                
+                if (!imgData.success) throw new Error("Image Upload Failed");
+                const proofUrl = imgData.data.url;
+
+                // ২. সার্ভারে ডাটা পাঠানো
+                const res = await fetch('/api/tasks/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        taskName: tName,
+                        amount: tAmount,
+                        category: tCat,
+                        proofUrl: proofUrl
+                    })
+                });
+                const result = await res.json();
+                
+                tg.showAlert(result.message);
+                if (result.success) window.location.href = 'page7.html';
+
+            } catch (err) {
+                tg.showAlert("দুঃখিত! আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+                btn.disabled = false;
+                status.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+    </html>
