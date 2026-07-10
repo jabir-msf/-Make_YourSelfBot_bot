@@ -1,36 +1,51 @@
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
 
+// পেজ লোড হলে ব্যালেন্স ডাটা আনা
 async function loadWithdrawPage() {
-    if (!user) return;
+    if (!user) {
+        console.log("No User Found");
+        return;
+    }
 
     try {
         const response = await fetch(`/api/user/${user.id}`);
         const data = await response.json();
         
-        let balance = 0;
+        let currentBalance = 0;
+
+        // ব্যালেন্স চেক এবং NaN প্রোটেকশন (|| 0 ব্যবহারের মাধ্যমে)
         if (data && !data.error) {
-            balance = parseFloat(data.balance || 0);
+            currentBalance = parseFloat(data.balance || 0);
+        } else {
+            currentBalance = 0.00;
         }
-        
-        // ব্যালেন্স সেট করা (NaN প্রোটেকশনসহ)
-        document.getElementById('withdrawBalanceDisplay').innerText = `৳${balance.toFixed(2)}`;
-        
+
+        // HTML-এর id="withdrawBalanceDisplay" অংশে ব্যালেন্স দেখানো
+        const display = document.getElementById('withdrawBalanceDisplay');
+        if (display) {
+            display.innerText = `৳${currentBalance.toFixed(2)}`;
+        }
+
     } catch (err) { 
-        console.error(err);
-        document.getElementById('withdrawBalanceDisplay').innerText = `৳0.00`;
+        console.error("Balance fetch error:", err);
+        const display = document.getElementById('withdrawBalanceDisplay');
+        if (display) display.innerText = `৳0.00`;
     }
 }
 
+// উত্তোলন বাটন লজিক
 document.getElementById('withdrawBtn').addEventListener('click', async () => {
     const method = document.getElementById('paymentMethod').value;
     const account = document.getElementById('accountNo').value;
     const amount = document.getElementById('amount').value;
 
+    // ভ্যালিডেশন
     if (!account || amount < 100) {
         return tg.showAlert("সঠিক নম্বর এবং ন্যূনতম ১০০ টাকা দিন।");
     }
 
+    // কনফার্মেশন চাওয়া (আপনার অরিজিনাল লজিক)
     tg.showConfirm(`আপনি কি নিশ্চিত যে ৳${amount} (${method}) উত্তোলন করতে চান?`, async (confirmed) => {
         if (confirmed) {
             const btn = document.getElementById('withdrawBtn');
@@ -47,7 +62,7 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
 
                 if (result.success) {
                     tg.showAlert(result.message);
-                    window.location.href = 'page6.html';
+                    window.location.href = 'page6.html'; // হিস্ট্রি পেজে নিয়ে যাবে
                 } else {
                     tg.showAlert(result.message);
                     btn.disabled = false;
@@ -56,11 +71,21 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
             } catch (err) {
                 tg.showAlert("একটি ত্রুটি হয়েছে!");
                 btn.disabled = false;
+                btn.innerText = "✅ উত্তোলন করুন";
             }
         }
     });
 });
 
+// পেজ ইনিশিয়ালাইজ করা
 loadWithdrawPage();
+
+// টেলিগ্রাম ব্যাক বাটন সচল করা
 tg.BackButton.show();
-tg.BackButton.onClick(() => history.back());
+tg.BackButton.onClick(() => {
+    history.back();
+});
+
+// টেলিগ্রাম অ্যাপ সেটিংস
+tg.expand();
+tg.enableClosingConfirmation();
