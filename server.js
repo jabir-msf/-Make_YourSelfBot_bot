@@ -310,6 +310,104 @@ app.post("/api/withdraw", async (req, res) => {
         res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); 
     }
 });
+// --- নতুন যোগ করা API সমূহ ---
+
+// ১. ইউজারের উইথড্র হিস্ট্রি পাওয়ার API (page6.js এর জন্য)
+app.get("/api/withdrawals/:userId", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('withdrawals')
+            .select('*')
+            .eq('user_id', req.params.userId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) { res.status(500).json([]); }
+});
+
+// ২. ইউজারের কাজের হিস্ট্রি পাওয়ার API (page7.js এর জন্য)
+app.get("/api/tasks/history/:userId", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', req.params.userId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) { res.status(500).json([]); }
+});
+
+// ৩. সেলিং টাস্কের স্ট্যাটাস দেখার API (sell_tasks.html এর জন্য)
+app.get("/api/user-stats/:userId/:cat", async (req, res) => {
+    try {
+        const { data: approvedTasks } = await supabase.from('tasks').select('amount').eq('user_id', req.params.userId).eq('category', req.params.cat).eq('status', 'approved');
+        const totalEarned = approvedTasks ? approvedTasks.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
+        const totalSold = approvedTasks ? approvedTasks.length : 0;
+        res.json({ totalSold, totalEarned });
+    } catch (err) { res.json({ totalSold: 0, totalEarned: 0 }); }
+});
+
+// ৪. অ্যাডমিন টাস্ক দেখার API (এক কাজ একবার করার লজিক সহ)
+app.get("/api/admin-tasks/:userId/:category", async (req, res) => {
+    const { userId, category } = req.params;
+    try {
+        // প্রথমে ওই ক্যাটাগরির সব টাস্ক আনুন
+        const { data: allTasks } = await supabase.from('admin_tasks').select('*').eq('category', category);
+        // তারপর ইউজার অলরেডি কোন কাজগুলো জমা দিয়েছে সেগুলো আনুন
+        const { data: submittedTasks } = await supabase.from('tasks').select('task_name').eq('user_id', userId);
+        
+        const submittedNames = submittedTasks.map(t => t.task_name);
+        
+        // ফিল্টার করুন: যে কাজগুলো ইউজার এখনো করেনি শুধু সেগুলো দেখাবে
+        const availableTasks = allTasks.filter(task => !submittedNames.includes(task.title));
+        
+        res.json(availableTasks);
+    } catch (err) { res.json([]); }
+});
+
+// --- উইথড্র লজিক পরিবর্তন (২% এর বদলে ২ টাকা চার্জ) ---
+app.post("/api/withdraw", async (req, res) => {
+    const { userId, method, accountNo, amount } = req.body;
+    const withdrawGrossAmount = parseFloat(amount);
+
+    try {
+        const { data: settings } = await supabase.from('settings').select('min_withdraw').eq('id', 1).single();
+        const minAmount = settings ? parseFloat(settings.min_withdraw) : 100;
+
+        if (withdrawGrossAmount < minAmount) {
+            return res.json({ success: false, message: `ন্যূনতম ৳${minAmount} উত্তোলন করতে হবে।` });
+        }
+
+        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        if (!user || parseFloat(user.balance) < withdrawGrossAmount) {
+            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
+        }
+
+        // ২ টাকা ফিক্সড সার্ভিস চার্জ
+        const charge = 2; 
+        const netAmount = withdrawGrossAmount - charge;
+
+        const newBalance = parseFloat(user.balance) - withdrawGrossAmount;
+        await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
+        
+        await supabase.from('withdrawals').insert({ 
+            user_id: userId, 
+            amount: netAmount, 
+            method, 
+            account_no: accountNo, 
+            status: 'pending' 
+        });
+
+        res.json({ 
+            success: true, 
+            message: `সফল! ৳${charge} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
+        });
+
+    } catch (err) { 
+        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); 
+    }
+});
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
