@@ -87,19 +87,29 @@
 
         async function loadData() {
             try {
-                // Stats Load
+                // ১. Stats Load
                 const statRes = await fetch(`/api/user-stats/${user.id}/${cat}`);
                 const stats = await statRes.json();
                 document.getElementById('totalSold').innerText = stats.totalSold || 0;
-                document.getElementById('totalEarned').innerText = `৳${(stats.totalEarned || 0).toFixed(2)}`;
+                document.getElementById('totalEarned').innerText = `৳${(stats.totalEarned || 0)}`;
 
-                // Password Load
-                const taskRes = await fetch(`/api/admin-tasks/${cat}`);
+                // ২. Password & Task Load (UserId সহ যাতে এক কাজ একবার লজিক কাজ করে)
+                const taskRes = await fetch(`/api/admin-tasks/${user.id}/${cat}`);
                 const tasks = await taskRes.json();
-                if(tasks.length > 0) {
-                    document.getElementById('dailyPassword').innerText = tasks[0].daily_password || "Not Set";
+                
+                const passDisplay = document.getElementById('dailyPassword');
+                if(tasks && tasks.length > 0) {
+                    passDisplay.innerText = tasks[0].daily_password || "পাসওয়ার্ড নেই";
+                } else {
+                    passDisplay.innerText = "নতুন কোন কাজ নেই";
+                    // টাস্ক না থাকলে বাটন ডিজেবল রাখা ভালো
+                    document.querySelector("#tabNew .submit-btn").disabled = true;
+                    document.getElementById('manualBtn').disabled = true;
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error(e); 
+                document.getElementById('dailyPassword').innerText = "ত্রুটি হয়েছে!";
+            }
         }
 
         function switchTab(type) {
@@ -180,4 +190,4 @@
         loadData();
     </script>
 </body>
-                            </html>
+                    </html>
