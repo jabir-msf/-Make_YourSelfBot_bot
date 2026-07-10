@@ -263,31 +263,53 @@ app.post("/api/admin/update-settings", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// ৯. উইথড্র রিকোয়েস্ট (ইউজার সাইড) - সেটিংস সিঙ্ক সহ
+// ৯. উইথড্র রিকোয়েস্ট API (২% সার্ভিস চার্জ লজিকসহ)
 app.post("/api/withdraw", async (req, res) => {
     const { userId, method, accountNo, amount } = req.body;
-    const withdrawAmount = parseFloat(amount);
+    const withdrawGrossAmount = parseFloat(amount); // ইউজার যেটা ইনপুট দিয়েছে
+
     try {
+        // ১. এডমিন সেটিংস থেকে মিনিমাম লিমিট চেক করা
         const { data: settings } = await supabase.from('settings').select('min_withdraw').eq('id', 1).single();
         const minAmount = settings ? parseFloat(settings.min_withdraw) : 100;
 
-        if (withdrawAmount < minAmount) {
+        if (withdrawGrossAmount < minAmount) {
             return res.json({ success: false, message: `ন্যূনতম ৳${minAmount} উত্তোলন করতে হবে।` });
         }
 
+        // ২. ইউজারের ব্যালেন্স চেক করা
         const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
-        if (!user || parseFloat(user.balance) < withdrawAmount) {
-            return res.json({ success: false, message: "পর্যাপ্ত ব্যালেন্স নেই।" });
+        if (!user || parseFloat(user.balance) < withdrawGrossAmount) {
+            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
         }
 
-        const newBalance = parseFloat(user.balance) - withdrawAmount;
+        // ৩. ২% সার্ভিস চার্জ ক্যালকুলেশন
+        const charge = withdrawGrossAmount * 0.02; 
+        const netAmount = withdrawGrossAmount - charge; // এডমিন যেটা পেমেন্ট করবে
+
+        // ৪. ইউজারের অ্যাকাউন্ট থেকে পুরো টাকা কেটে নেওয়া
+        const newBalance = parseFloat(user.balance) - withdrawGrossAmount;
         await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
-        await supabase.from('withdrawals').insert({ user_id: userId, amount: withdrawAmount, method, account_no: accountNo, status: 'pending' });
+        
+        // ৫. উইথড্রাল টেবিলে চার্জ কাটার পরের টাকাটি সেভ করা
+        await supabase.from('withdrawals').insert({ 
+            user_id: userId, 
+            amount: netAmount, 
+            method, 
+            account_no: accountNo, 
+            status: 'pending' 
+        });
 
-        res.json({ success: true, message: "আপনার উত্তোলনের অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে।" });
-    } catch (err) { res.status(500).json({ success: false }); }
+        res.json({ 
+            success: true, 
+            message: `সফল! ২% (৳${charge.toFixed(2)}) সার্ভিস চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
+        });
+
+    } catch (err) { 
+        console.error("Withdraw error:", err);
+        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); 
+    }
 });
-
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
