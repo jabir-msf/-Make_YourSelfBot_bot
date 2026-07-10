@@ -66,7 +66,7 @@ app.post("/api/tasks/submit", async (req, res) => {
     }
 });
 
-// ৩. লিমিট চেক API (Fixed Hourly Logic)
+// ৩. লিমিট চেক ও ইনক্রিমেন্ট API (Final Fixed)
 app.post("/api/earn/limit-check", async (req, res) => {
     const { userId, type } = req.body;
     const limit = type === 'ad' ? 20 : 15;
@@ -74,51 +74,54 @@ app.post("/api/earn/limit-check", async (req, res) => {
     const resetCol = type === 'ad' ? 'last_ad_reset' : 'last_vdo_reset';
 
     try {
-        const { data: user, error: fetchError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
-
-        if (fetchError || !user) return res.status(404).json({ success: false });
+        const { data: user, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+        if (error || !user) return res.status(404).json({ success: false });
 
         const now = new Date();
         const lastReset = user[resetCol] ? new Date(user[resetCol]) : new Date(0);
-        const diffInMs = now.getTime() - lastReset.getTime();
-        const diffHours = diffInMs / (1000 * 60 * 60);
+        
+        // সময়ের পার্থক্য বের করা (মিলি-সেকেন্ডে)
+        const diffMs = now.getTime() - lastReset.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
 
-        let currentCount = user[countCol] || 0;
+        let currentCount = parseInt(user[countCol]) || 0;
 
-        // যদি ১ ঘণ্টা পার হয়ে যায়, তবে কাউন্ট রিসেট হবে
+        // ১ ঘণ্টা পার হয়ে গেলে রিসেট হবে
         if (diffHours >= 1) {
             currentCount = 0;
+            // ডাটাবেসে রিসেট আপডেট
             await supabase.from('profiles').update({ 
-                [countCol]: 0, 
+                [countCol]: 1, // প্রথম কাজ হিসেবে ১ ধরবে
                 [resetCol]: now.toISOString() 
             }).eq('id', userId);
-            console.log(`Limit Reset for User ${userId} (${type})`);
+            
+            return res.json({ success: true, remaining: limit - 1 });
         }
 
+        // লিমিট চেক
         if (currentCount >= limit) {
             return res.json({ 
                 success: false, 
-                message: `এই ঘণ্টার লিমিট (${limit}) শেষ। ১ ঘণ্টা পর চেষ্টা করুন।` 
+                message: `দুঃখিত! আপনি এই ঘণ্টার লিমিট (${limit}) শেষ করেছেন। ১ ঘণ্টা পর আবার চেষ্টা করুন।` 
             });
         }
 
-        // লিমিট ওকে থাকলে কাউন্ট ১ বাড়িয়ে আপডেট করা
-        await supabase.from('profiles').update({ 
-            [countCol]: currentCount + 1 
-        }).eq('id', userId);
+        // লিমিট ওকে থাকলে ১ বাড়িয়ে আপডেট করা
+        const newCount = currentCount + 1;
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ [countCol]: newCount })
+            .eq('id', userId);
 
-        res.json({ success: true, remaining: limit - (currentCount + 1) });
+        if(updateError) throw updateError;
+
+        res.json({ success: true, remaining: limit - newCount });
 
     } catch (err) {
-        console.error("Limit Check Error:", err);
+        console.error("Limit API Error:", err);
         res.status(500).json({ success: false });
     }
 });
-
 // ৪. ইউজারের সেলিং পরিসংখ্যান (Stats) API
 app.get("/api/user-stats/:userId/:category", async (req, res) => {
     try {
