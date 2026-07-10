@@ -1,7 +1,10 @@
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
 
-// পেজ লোড হলে ব্যালেন্স ডাটা আনা
+// গ্লোবাল ভেরিয়েবল (ডিফল্ট ১০০)
+let minWithdrawAmount = 100;
+
+// পেজ লোড হলে ব্যালেন্স এবং এডমিন সেটিংস ডাটা আনা
 async function loadWithdrawPage() {
     if (!user) {
         console.log("No User Found");
@@ -9,26 +12,45 @@ async function loadWithdrawPage() {
     }
 
     try {
+        // ১. ইউজারের ব্যালেন্স ডাটা আনা
         const response = await fetch(`/api/user/${user.id}`);
         const data = await response.json();
         
         let currentBalance = 0;
-
-        // ব্যালেন্স চেক এবং NaN প্রোটেকশন (|| 0 ব্যবহারের মাধ্যমে)
         if (data && !data.error) {
             currentBalance = parseFloat(data.balance || 0);
         } else {
             currentBalance = 0.00;
         }
 
-        // HTML-এর id="withdrawBalanceDisplay" অংশে ব্যালেন্স দেখানো
+        // ব্যালেন্স প্রদর্শন
         const display = document.getElementById('withdrawBalanceDisplay');
         if (display) {
             display.innerText = `৳${currentBalance.toFixed(2)}`;
         }
 
+        // ২. এডমিন প্যানেলের সেটিংস থেকে মিনিমাম উইথড্র লিমিট আনা
+        const settingsRes = await fetch('/api/settings');
+        const settingsData = await settingsRes.json();
+        
+        if (settingsData && settingsData.min_withdraw) {
+            minWithdrawAmount = parseFloat(settingsData.min_withdraw);
+        }
+
+        // ৩. UI আপডেট করা (সেটিংস অনুযায়ী)
+        const amountInput = document.getElementById('amount');
+        if (amountInput) {
+            amountInput.placeholder = `ন্যূনতম ৳${minWithdrawAmount}`;
+        }
+
+        // ইনফো টেবিলের "ন্যূনতম" রো আপডেট করা
+        const infoValues = document.querySelectorAll('.info-row .val');
+        if (infoValues.length > 1) {
+            infoValues[1].innerText = `৳${minWithdrawAmount}`;
+        }
+
     } catch (err) { 
-        console.error("Balance fetch error:", err);
+        console.error("Data fetch error:", err);
         const display = document.getElementById('withdrawBalanceDisplay');
         if (display) display.innerText = `৳0.00`;
     }
@@ -38,14 +60,15 @@ async function loadWithdrawPage() {
 document.getElementById('withdrawBtn').addEventListener('click', async () => {
     const method = document.getElementById('paymentMethod').value;
     const account = document.getElementById('accountNo').value;
-    const amount = document.getElementById('amount').value;
+    const amountStr = document.getElementById('amount').value;
+    const amount = parseFloat(amountStr);
 
-    // ভ্যালিডেশন
-    if (!account || amount < 100) {
-        return tg.showAlert("সঠিক নম্বর এবং ন্যূনতম ১০০ টাকা দিন।");
+    // ভ্যালিডেশন (এখন এডমিন প্যানেলের লিমিট অনুযায়ী হবে)
+    if (!account || isNaN(amount) || amount < minWithdrawAmount) {
+        return tg.showAlert(`সঠিক নম্বর দিন এবং ন্যূনতম ৳${minWithdrawAmount} উত্তোলন করুন।`);
     }
 
-    // কনফার্মেশন চাওয়া (আপনার অরিজিনাল লজিক)
+    // কনফার্মেশন চাওয়া
     tg.showConfirm(`আপনি কি নিশ্চিত যে ৳${amount} (${method}) উত্তোলন করতে চান?`, async (confirmed) => {
         if (confirmed) {
             const btn = document.getElementById('withdrawBtn');
@@ -56,7 +79,7 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
                 const res = await fetch('/api/withdraw', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id, method, accountNo: account, amount })
+                    body: JSON.stringify({ userId: user.id, method, accountNo: account, amount: amount })
                 });
                 const result = await res.json();
 
@@ -69,7 +92,7 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
                     btn.innerText = "✅ উত্তোলন করুন";
                 }
             } catch (err) {
-                tg.showAlert("একটি ত্রুটি হয়েছে!");
+                tg.showAlert("সার্ভারে সমস্যা হয়েছে! আবার চেষ্টা করুন।");
                 btn.disabled = false;
                 btn.innerText = "✅ উত্তোলন করুন";
             }
