@@ -187,22 +187,25 @@ app.post("/api/withdraw", async (req, res) => {
         res.json({ success: true, message: "আপনার উত্তোলনের অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে।" });
     } catch (err) { res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); }
 });
-
-// --- ADMIN CONTROL API ---
-
-// ১০. সব পেন্ডিং টাস্ক দেখা (profiles এর সাথে join করা)
+// ১০. সব পেন্ডিং টাস্ক দেখা (সহজ কুয়েরি)
 app.get("/api/admin/pending-tasks", async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('tasks')
-            .select('*, profiles(username)')
+            .select(`
+                *,
+                profiles:user_id (username)
+            `)
             .eq('status', 'pending')
             .order('created_at', { ascending: true });
-        if (error) throw error;
-        res.json(data);
+
+        if (error) {
+            console.error("Query Error:", error);
+            return res.status(500).json({ error: error.message });
+        }
+        res.json(data || []);
     } catch (err) { 
-        console.error("Admin Fetch Error:", err);
-        res.status(500).json([]); 
+        res.status(500).json({ error: "Server error" }); 
     }
 });
 
