@@ -64,7 +64,7 @@
             <button class="tab-btn" onclick="switchTab('withdraws', this)">Paid</button>
             <button class="tab-btn" onclick="switchTab('users', this)">Users</button>
             <button class="tab-btn" onclick="switchTab('config', this)">Settings</button>
-            <button class="tab-btn" onclick="switchTab('msg', this)">Notice</button>
+            <button class="tab-btn" onclick="switchTab('reflist', this)">Ref List</button>
         </div>
 
         <div class="container">
@@ -92,7 +92,7 @@
                 <button class="btn btn-blue" onclick="loadStats()"><i class="fa-solid fa-rotate"></i> Refresh Stats</button>
             </div>
 
-            <!-- 2. Pending Tasks/Withdraws (Common Container) -->
+            <!-- 2. Common List View (Tasks & Withdrawals) -->
             <div id="tab-list" style="display: none;"></div>
 
             <!-- 3. User Management Tab -->
@@ -114,34 +114,30 @@
                     <label style="font-size: 11px;">Ref Bonus (৳)</label>
                     <input type="number" id="cfg-ref" class="admin-input" placeholder="20">
                     
-                    <label style="font-size: 11px;">Daily Notice</label>
+                    <label style="font-size: 11px;">App Notice (Notice board এ দেখাবে)</label>
                     <textarea id="cfg-notice" class="admin-input" style="height: 80px;"></textarea>
                     
                     <button class="btn btn-green" onclick="saveSettings()">Update Settings</button>
                 </div>
                 
-                <!-- Add Task Form inside Settings for Convenience -->
                 <div class="card">
                     <h4>Add New Task</h4>
                     <input type="text" id="newTaskTitle" class="admin-input" placeholder="Title">
                     <input type="number" id="newTaskReward" class="admin-input" placeholder="Amount (৳)">
+                    <input type="text" id="newTaskPass" class="admin-input" placeholder="Daily Password (ঐচ্ছিক)">
                     <select id="newTaskCat" class="admin-input">
                         <option value="micro">Micro Task</option>
                         <option value="gmail_sell">Gmail Sell</option>
                         <option value="fb_sell">Facebook Sell</option>
+                        <option value="insta_sell">Instagram Sell</option>
                     </select>
                     <button class="btn btn-blue" onclick="addNewTask()">Add Task</button>
                 </div>
             </div>
 
-            <!-- 5. Broadcast Tab -->
-            <div id="tab-msg" style="display: none;">
-                <div class="card">
-                    <h4>Broadcast Message</h4>
-                    <p style="font-size: 11px;">এই মেসেজটি সব ইউজারের টেলিগ্রাম বটে চলে যাবে।</p>
-                    <textarea id="broadcastMsg" class="admin-input" style="height: 120px;" placeholder="সবাইকে স্বাগতম..."></textarea>
-                    <button class="btn btn-orange" onclick="sendBroadcast()"><i class="fa-solid fa-paper-plane"></i> Send to All Users</button>
-                </div>
+            <!-- 5. Ref List Tab -->
+            <div id="tab-reflist" style="display: none;">
+                <!-- রেফারেল হিস্ট্রি এখানে লোড হবে -->
             </div>
 
         </div>
@@ -168,8 +164,7 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            // Hide all tabs
-            ['tab-stats', 'tab-list', 'tab-users', 'tab-config', 'tab-msg'].forEach(id => {
+            ['tab-stats', 'tab-list', 'tab-users', 'tab-config', 'tab-reflist'].forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
 
@@ -187,12 +182,12 @@
             } else if(tab === 'config') {
                 document.getElementById('tab-config').style.display = 'block';
                 loadSettings();
-            } else if(tab === 'msg') {
-                document.getElementById('tab-msg').style.display = 'block';
+            } else if(tab === 'reflist') {
+                document.getElementById('tab-reflist').style.display = 'block';
+                loadRefList();
             }
         }
 
-        // 1. Stats Loading
         async function loadStats() {
             try {
                 const res = await fetch('/api/admin/stats');
@@ -204,7 +199,6 @@
             } catch(e) { console.error(e); }
         }
 
-        // 2. Pending Tasks (Old Logic Fix)
         async function loadPendingTasks() {
             const container = document.getElementById('tab-list');
             container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
@@ -246,7 +240,6 @@
             });
         }
 
-        // 3. User Management
         async function searchUser() {
             const query = document.getElementById('userSearchInput').value;
             const res = await fetch(`/api/admin/user-search/${query}`);
@@ -254,36 +247,48 @@
             const container = document.getElementById('search-result');
             container.innerHTML = users.length ? '' : '<p>No user found.</p>';
             users.forEach(u => {
+                const banBtnText = u.is_banned ? "Unban User" : "Ban User";
+                const banBtnClass = u.is_banned ? "btn-green" : "btn-red";
                 container.innerHTML += `<div class="card">
                     <h4>${u.username} (ID: ${u.id})</h4>
                     <p>Balance: <b>৳${u.balance}</b></p>
                     <p>Ref ID: ${u.referrer_id || 'None'}</p>
                     <div style="display:flex; gap:5px; margin-top:10px;">
-                        <button class="btn btn-blue" onclick="editBalance('${u.id}', ${u.balance})">Edit Balance</button>
-                        <button class="btn btn-red" onclick="banUser('${u.id}')">Ban</button>
+                        <button class="btn btn-blue" onclick="editBalance('${u.id}', ${u.balance})">Balance</button>
+                        <button class="btn ${banBtnClass}" onclick="toggleBan('${u.id}', ${u.is_banned})">${banBtnText}</button>
                     </div>
                 </div>`;
             });
         }
 
+        async function toggleBan(userId, currentStatus) {
+            if(!confirm(`Are you sure to ${currentStatus ? 'Unban' : 'Ban'} this user?`)) return;
+            const res = await fetch('/api/admin/ban-user', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userId, status: !currentStatus })
+            });
+            const result = await res.json();
+            if(result.success) searchUser();
+        }
+
         async function editBalance(id, old) {
             const amount = prompt("New Balance?", old);
             if(amount === null) return;
-            const res = await fetch('/api/admin/update-balance', {
+            await fetch('/api/admin/update-balance', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ userId: id, amount })
             });
-            if((await res.json()).success) searchUser();
+            searchUser();
         }
 
-        // 4. Settings
         async function loadSettings() {
             const res = await fetch('/api/admin/get-settings');
             const data = await res.json();
-            document.getElementById('cfg-min').value = data.min_withdraw;
-            document.getElementById('cfg-ref').value = data.ref_bonus;
-            document.getElementById('cfg-notice').value = data.app_notice;
+            document.getElementById('cfg-min').value = data.min_withdraw || 100;
+            document.getElementById('cfg-ref').value = data.ref_bonus || 20;
+            document.getElementById('cfg-notice').value = data.app_notice || "";
         }
 
         async function saveSettings() {
@@ -299,20 +304,43 @@
             if((await res.json()).success) alert("Settings Saved!");
         }
 
-        // 5. Broadcast
-        async function sendBroadcast() {
-            const msg = document.getElementById('broadcastMsg').value;
-            if(!msg) return;
-            if(!confirm("Are you sure to send to ALL users?")) return;
-            const res = await fetch('/api/admin/broadcast', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: msg })
+        async function loadRefList() {
+            const container = document.getElementById('tab-reflist');
+            container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+            const res = await fetch('/api/admin/ref-history');
+            const data = await res.json();
+            container.innerHTML = "<h4>Referral History (Recent 50)</h4>";
+            if(!data.length) container.innerHTML += "<p>No referrals found.</p>";
+            data.forEach(r => {
+                container.innerHTML += `<div class="card">
+                    <p><b>${r.username}</b> (ID: ${r.id})</p>
+                    <p>Joined via Referrer ID: <b>${r.referrer_id}</b></p>
+                    <p style="font-size:11px; color:#999;">Date: ${new Date(r.created_at).toLocaleString()}</p>
+                </div>`;
             });
-            if((await res.json()).success) alert("Sent successfully!");
         }
 
-        // Core Actions (Tasks/Withdraw)
+        async function addNewTask() {
+            const title = document.getElementById('newTaskTitle').value;
+            const reward = document.getElementById('newTaskReward').value;
+            const pass = document.getElementById('newTaskPass').value;
+            const category = document.getElementById('newTaskCat').value;
+
+            if(!title || !reward) return alert("Fill required fields!");
+
+            const res = await fetch('/api/admin/add-task', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, reward, category, pass })
+            });
+            if((await res.json()).success) {
+                alert("Task Added!");
+                document.getElementById('newTaskTitle').value = "";
+                document.getElementById('newTaskReward').value = "";
+                document.getElementById('newTaskPass').value = "";
+            }
+        }
+
         async function actionTask(taskId, userId, amount, type) {
             await fetch(type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task', {
                 method: 'POST',
