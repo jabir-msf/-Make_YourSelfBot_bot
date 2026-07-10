@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work - Make Your Self</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="page5.css"> <!-- Existing CSS for design match -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="page-header">
+            <button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="header-title">টাস্ক সম্পন্ন করুন</div>
+        </header>
+
+        <main class="content">
+            <div class="balance-card">
+                <h3 id="taskTitle" style="color:white; margin-bottom:10px;">লোডিং...</h3>
+                <h1 class="balance-amount" id="taskReward" style="font-size:35px;">৳০.০০</h1>
+            </div>
+
+            <div class="form-card">
+                <div class="input-group">
+                    <label>নির্দেশনা:</label>
+                    <p style="font-size: 14px; color: #555; line-height: 1.6;">
+                        নিচের বাটনে ক্লিক করে কাজটি সম্পন্ন করুন। কাজ শেষ করে আবার এই অ্যাপে ফিরে এসে সাবমিট বাটনে ক্লিক করুন। এডমিন চেক করে আপনার ব্যালেন্সে টাকা যোগ করে দিবে।
+                    </p>
+                </div>
+
+                <button class="submit-btn" style="background:#1a3fb3; margin-bottom:15px;" id="linkBtn">
+                    <i class="fa-solid fa-link"></i> কাজের লিঙ্কে যান
+                </button>
+
+                <button class="submit-btn" id="submitBtn">
+                    <i class="fa-solid fa-circle-check"></i> কাজ সাবমিট করুন
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe.user;
+        const params = new URLSearchParams(window.location.search);
+        const tName = params.get('name') || "General Task";
+        const tAmount = params.get('amount') || "0.00";
+
+        document.getElementById('taskTitle').innerText = tName;
+        document.getElementById('taskReward').innerText = `৳${tAmount}`;
+
+        document.getElementById('linkBtn').onclick = () => {
+            tg.openLink('https://t.me/EarnBD_Pro'); // Replace with real links if dynamic
+        };
+
+        document.getElementById('submitBtn').onclick = async () => {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "প্রসেসিং...";
+
+            try {
+                const res = await fetch('/api/tasks/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id, taskName: tName, amount: tAmount })
+                });
+                const result = await res.json();
+                tg.showAlert(result.message);
+                if(result.success) window.location.href = 'page7.html';
+            } catch (err) {
+                tg.showAlert("ত্রুটি হয়েছে!");
+                btn.disabled = false;
+                btn.innerText = "কাজ সাবমিট করুন";
+            }
+        };
+    </script>
+</body>
+                                                                </html>
