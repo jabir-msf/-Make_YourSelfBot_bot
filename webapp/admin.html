@@ -60,11 +60,11 @@
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('stats', this)">Stats</button>
+            <button class="tab-btn" onclick="switchTab('deposits', this)">Add Money</button>
             <button class="tab-btn" onclick="switchTab('tasks', this)">Tasks</button>
-            <button class="tab-btn" onclick="switchTab('withdraws', this)">Paid</button>
+            <button class="tab-btn" onclick="switchTab('withdraws', this)">Paid/Recharge</button>
             <button class="tab-btn" onclick="switchTab('users', this)">Users</button>
             <button class="tab-btn" onclick="switchTab('config', this)">Settings</button>
-            <button class="tab-btn" onclick="switchTab('reflist', this)">Ref List</button>
         </div>
 
         <div class="container">
@@ -81,21 +81,26 @@
                         <h2 id="stat-balance">৳0</h2>
                     </div>
                     <div class="stat-box">
-                        <p>Pending Tasks</p>
-                        <h2 id="stat-tasks">0</h2>
+                        <p>Pending Add Money</p>
+                        <h2 id="stat-deposits">0</h2>
                     </div>
                     <div class="stat-box">
-                        <p>Pending Withdraw</p>
+                        <p>Pending Withdraw/Recharge</p>
                         <h2 id="stat-withdraw">0</h2>
                     </div>
                 </div>
                 <button class="btn btn-blue" onclick="loadStats()"><i class="fa-solid fa-rotate"></i> Refresh Stats</button>
             </div>
 
-            <!-- 2. Common List View (Tasks & Withdrawals) -->
+            <!-- 2. Deposits (Add Money) Tab -->
+            <div id="tab-deposits" style="display: none;">
+                <div id="deposits-list"></div>
+            </div>
+
+            <!-- 3. Common List View (Tasks & Withdrawals/Recharge) -->
             <div id="tab-list" style="display: none;"></div>
 
-            <!-- 3. User Management Tab -->
+            <!-- 4. User Management Tab -->
             <div id="tab-users" style="display: none;">
                 <div class="search-row">
                     <input type="text" id="userSearchInput" class="admin-input" placeholder="User ID or Username">
@@ -104,7 +109,7 @@
                 <div id="search-result"></div>
             </div>
 
-            <!-- 4. Global Settings Tab -->
+            <!-- 5. Global Settings Tab -->
             <div id="tab-config" style="display: none;">
                 <div class="card">
                     <h4>Global Configuration</h4>
@@ -114,30 +119,11 @@
                     <label style="font-size: 11px;">Ref Bonus (৳)</label>
                     <input type="number" id="cfg-ref" class="admin-input" placeholder="20">
                     
-                    <label style="font-size: 11px;">App Notice (Notice board এ দেখাবে)</label>
+                    <label style="font-size: 11px;">App Notice</label>
                     <textarea id="cfg-notice" class="admin-input" style="height: 80px;"></textarea>
                     
                     <button class="btn btn-green" onclick="saveSettings()">Update Settings</button>
                 </div>
-                
-                <div class="card">
-                    <h4>Add New Task</h4>
-                    <input type="text" id="newTaskTitle" class="admin-input" placeholder="Title">
-                    <input type="number" id="newTaskReward" class="admin-input" placeholder="Amount (৳)">
-                    <input type="text" id="newTaskPass" class="admin-input" placeholder="Daily Password (ঐচ্ছিক)">
-                    <select id="newTaskCat" class="admin-input">
-                        <option value="micro">Micro Task</option>
-                        <option value="gmail_sell">Gmail Sell</option>
-                        <option value="fb_sell">Facebook Sell</option>
-                        <option value="insta_sell">Instagram Sell</option>
-                    </select>
-                    <button class="btn btn-blue" onclick="addNewTask()">Add Task</button>
-                </div>
-            </div>
-
-            <!-- 5. Ref List Tab -->
-            <div id="tab-reflist" style="display: none;">
-                <!-- রেফারেল হিস্ট্রি এখানে লোড হবে -->
             </div>
 
         </div>
@@ -164,13 +150,16 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
-            ['tab-stats', 'tab-list', 'tab-users', 'tab-config', 'tab-reflist'].forEach(id => {
+            ['tab-stats', 'tab-list', 'tab-users', 'tab-config', 'tab-deposits'].forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
 
             if(tab === 'stats') {
                 document.getElementById('tab-stats').style.display = 'block';
                 loadStats();
+            } else if(tab === 'deposits') {
+                document.getElementById('tab-deposits').style.display = 'block';
+                loadPendingDeposits();
             } else if(tab === 'tasks') {
                 document.getElementById('tab-list').style.display = 'block';
                 loadPendingTasks();
@@ -182,9 +171,6 @@
             } else if(tab === 'config') {
                 document.getElementById('tab-config').style.display = 'block';
                 loadSettings();
-            } else if(tab === 'reflist') {
-                document.getElementById('tab-reflist').style.display = 'block';
-                loadRefList();
             }
         }
 
@@ -194,14 +180,49 @@
                 const data = await res.json();
                 document.getElementById('stat-users').innerText = data.totalUsers;
                 document.getElementById('stat-balance').innerText = '৳' + data.totalBalance.toFixed(0);
-                document.getElementById('stat-tasks').innerText = data.pendingTasks;
+                
+                // Add money রিকোয়েস্ট সংখ্যা এখানে বসবে (সার্ভার থেকে আনতে হবে)
+                const depRes = await fetch('/api/admin/pending-deposits');
+                const deps = await depRes.json();
+                document.getElementById('stat-deposits').innerText = deps.length;
+                
                 document.getElementById('stat-withdraw').innerText = data.pendingWithdrawals;
             } catch(e) { console.error(e); }
         }
 
+        async function loadPendingDeposits() {
+            const container = document.getElementById('deposits-list');
+            container.innerHTML = "<p style='text-align:center;'>Loading Add Money Requests...</p>";
+            const res = await fetch('/api/admin/pending-deposits');
+            const data = await res.json();
+            container.innerHTML = data.length ? '' : '<div class="card" style="text-align:center;">No Pending Deposits</div>';
+            data.forEach(d => {
+                container.innerHTML += `<div class="card">
+                    <h4>Add Money: ${d.method}</h4>
+                    <p>User ID: ${d.user_id}</p>
+                    <p>Amount: <b>৳${d.amount}</b></p>
+                    <p style="color:var(--secondary)">TrxID: <b>${d.transaction_id}</b></p>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-green" onclick="actionDeposit('${d.id}', '${d.user_id}', ${d.amount}, 'approve')">Approve</button>
+                        <button class="btn btn-red" onclick="actionDeposit('${d.id}', '${d.user_id}', 0, 'reject')">Reject</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        async function actionDeposit(id, userId, amount, type) {
+            const endpoint = type === 'approve' ? '/api/admin/approve-deposit' : '/api/admin/reject-deposit';
+            await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, userId, amount })
+            });
+            loadPendingDeposits();
+        }
+
         async function loadPendingTasks() {
             const container = document.getElementById('tab-list');
-            container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+            container.innerHTML = "<p style='text-align:center;'>Loading Tasks...</p>";
             const res = await fetch('/api/admin/pending-tasks');
             const tasks = await res.json();
             container.innerHTML = tasks.length ? '' : '<div class="card" style="text-align:center;">No Tasks</div>';
@@ -222,18 +243,18 @@
 
         async function loadPendingWithdrawals() {
             const container = document.getElementById('tab-list');
-            container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+            container.innerHTML = "<p style='text-align:center;'>Loading Withdrawals/Recharge...</p>";
             const res = await fetch('/api/admin/pending-withdrawals');
             const data = await res.json();
-            container.innerHTML = data.length ? '' : '<div class="card" style="text-align:center;">No Withdrawals</div>';
+            container.innerHTML = data.length ? '' : '<div class="card" style="text-align:center;">No Pending Requests</div>';
             data.forEach(w => {
                 container.innerHTML += `<div class="card">
-                    <h4>Withdraw: ${w.method.toUpperCase()}</h4>
-                    <p>User: ${w.profiles?.username || w.user_id}</p>
-                    <p>Number: ${w.account_no}</p>
-                    <p>Amount: ৳${w.amount}</p>
+                    <h4>Request: ${w.method.toUpperCase()}</h4>
+                    <p>User ID: ${w.user_id}</p>
+                    <p>Number: <b>${w.account_no}</b></p>
+                    <p>Amount: <b>৳${w.amount}</b></p>
                     <div style="display:flex; gap:5px;">
-                        <button class="btn btn-green" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', ${w.amount})">Paid</button>
+                        <button class="btn btn-green" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', ${w.amount})">Complete/Paid</button>
                         <button class="btn btn-red" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', ${w.amount})">Refund</button>
                     </div>
                 </div>`;
@@ -252,7 +273,6 @@
                 container.innerHTML += `<div class="card">
                     <h4>${u.username} (ID: ${u.id})</h4>
                     <p>Balance: <b>৳${u.balance}</b></p>
-                    <p>Ref ID: ${u.referrer_id || 'None'}</p>
                     <div style="display:flex; gap:5px; margin-top:10px;">
                         <button class="btn btn-blue" onclick="editBalance('${u.id}', ${u.balance})">Balance</button>
                         <button class="btn ${banBtnClass}" onclick="toggleBan('${u.id}', ${u.is_banned})">${banBtnText}</button>
@@ -262,14 +282,13 @@
         }
 
         async function toggleBan(userId, currentStatus) {
-            if(!confirm(`Are you sure to ${currentStatus ? 'Unban' : 'Ban'} this user?`)) return;
+            if(!confirm(`Are you sure?`)) return;
             const res = await fetch('/api/admin/ban-user', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ userId, status: !currentStatus })
             });
-            const result = await res.json();
-            if(result.success) searchUser();
+            searchUser();
         }
 
         async function editBalance(id, old) {
@@ -301,44 +320,7 @@
                     notice: document.getElementById('cfg-notice').value
                 })
             });
-            if((await res.json()).success) alert("Settings Saved!");
-        }
-
-        async function loadRefList() {
-            const container = document.getElementById('tab-reflist');
-            container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
-            const res = await fetch('/api/admin/ref-history');
-            const data = await res.json();
-            container.innerHTML = "<h4>Referral History (Recent 50)</h4>";
-            if(!data.length) container.innerHTML += "<p>No referrals found.</p>";
-            data.forEach(r => {
-                container.innerHTML += `<div class="card">
-                    <p><b>${r.username}</b> (ID: ${r.id})</p>
-                    <p>Joined via Referrer ID: <b>${r.referrer_id}</b></p>
-                    <p style="font-size:11px; color:#999;">Date: ${new Date(r.created_at).toLocaleString()}</p>
-                </div>`;
-            });
-        }
-
-        async function addNewTask() {
-            const title = document.getElementById('newTaskTitle').value;
-            const reward = document.getElementById('newTaskReward').value;
-            const pass = document.getElementById('newTaskPass').value;
-            const category = document.getElementById('newTaskCat').value;
-
-            if(!title || !reward) return alert("Fill required fields!");
-
-            const res = await fetch('/api/admin/add-task', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ title, reward, category, pass })
-            });
-            if((await res.json()).success) {
-                alert("Task Added!");
-                document.getElementById('newTaskTitle').value = "";
-                document.getElementById('newTaskReward').value = "";
-                document.getElementById('newTaskPass').value = "";
-            }
+            alert("Settings Saved!");
         }
 
         async function actionTask(taskId, userId, amount, type) {
@@ -362,4 +344,4 @@
         checkAccess();
     </script>
 </body>
-                                                                                   </html>
+                            </html>
