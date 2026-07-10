@@ -1,50 +1,72 @@
 const tg = window.Telegram.WebApp;
 const user = tg.initDataUnsafe.user;
-const botUsername = "Make_Your_SelfBot"; // আপনার বটের নাম @ ছাড়া
+
+// আপনার দেওয়া বট ইউজারনেম
+const botUsername = "makeyourself12_bot"; 
 
 async function loadReferralData() {
     if (!user) return;
 
-    const refCode = `MYS-${user.id}`;
+    // ১. রেফারেল কোড ও লিঙ্ক সেটআপ (ইউজার আইডি অনুযায়ী)
+    const refCode = user.id; // যেমন: 282147...
     const refLink = `https://t.me/${botUsername}?start=${user.id}`;
 
     document.getElementById('refCodeDisplay').innerText = refCode;
     document.getElementById('refLinkDisplay').innerText = refLink;
 
     try {
-        // ১. ব্যালেন্স আপডেট করা
+        // ২. ব্যালেন্স লোড করা (NaN প্রোটেকশনসহ)
         const responseUser = await fetch(`/api/user/${user.id}`);
-        const dataUser = await responseUser.json();
-        if (dataUser) {
-            document.getElementById('refPageBalance').innerText = `৳${parseFloat(dataUser.balance).toFixed(0)}`;
+        const userData = await responseUser.json();
+
+        if (userData && !userData.error) {
+            const balance = parseFloat(userData.balance || 0);
+            document.getElementById('refPageBalance').innerText = `৳${balance.toFixed(0)}`;
+        } else {
+            document.getElementById('refPageBalance').innerText = `৳০`;
         }
 
-        // ২. মোট রেফারেল সংখ্যা আনা (নতুন API থেকে)
+        // ৩. সার্ভার থেকে আসল রেফারেল সংখ্যা আনা
         const responseRefs = await fetch(`/api/referrals/${user.id}`);
-        const dataRefs = await responseRefs.json();
-        document.getElementById('totalRefs').innerText = dataRefs.total_refs || 0;
+        const refData = await responseRefs.json();
         
-        // সফল রেফারের ইনকাম হিসাব (যদি প্রতি রেফারে ২০ টাকা হয়)
-        // নোট: এটি লজিক অনুযায়ী ডাটাবেস থেকেও আনা যেতে পারে
-        // document.getElementById('refIncome').innerText = `৳${dataRefs.total_refs * 20}`;
+        document.getElementById('totalRefs').innerText = refData.total_refs || 0;
+        // সফল রেফার ও ইনকাম আপাতত ০ (ডাটাবেসে ডাটা থাকলে পরে আপডেট হবে)
+        document.getElementById('successRefs').innerText = "0";
+        document.getElementById('refIncome').innerText = `৳০`;
 
     } catch (err) {
-        console.error("Referral Data Error:", err);
+        console.error("Referral Load Error:", err);
+        document.getElementById('refPageBalance').innerText = `৳০`;
     }
-
-    // কপি বাটন
-    document.getElementById('copyCodeBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText(refLink);
-        tg.showAlert("লিঙ্ক কপি করা হয়েছে!");
-    });
-
-    // শেয়ার বাটন
-    document.getElementById('shareTG').addEventListener('click', () => {
-        const text = `Make Your Self অ্যাপে জয়েন করুন এবং আয় করুন!`;
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
-    });
 }
 
+// কপি বাটন লজিক
+document.getElementById('copyCodeBtn').addEventListener('click', () => {
+    const refLink = `https://t.me/${botUsername}?start=${user.id}`;
+    navigator.clipboard.writeText(refLink);
+    tg.showAlert("আপনার রেফারেল লিঙ্ক কপি হয়েছে!");
+});
+
+// হোয়াটসঅ্যাপ শেয়ার
+document.getElementById('shareWA').addEventListener('click', () => {
+    const refLink = `https://t.me/${botUsername}?start=${user.id}`;
+    const text = `Make Your Self অ্যাপে জয়েন করুন এবং আয় করুন: ${refLink}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+});
+
+// টেলিগ্রাম শেয়ার
+document.getElementById('shareTG').addEventListener('click', () => {
+    const refLink = `https://t.me/${botUsername}?start=${user.id}`;
+    const text = `Make Your Self অ্যাপে জয়েন করে প্রতিদিন ঘরে বসে আয় করুন! আমার রেফারেল লিঙ্ক:`;
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${encodeURIComponent(text)}`);
+});
+
+// টেলিগ্রাম ব্যাক বাটন
 tg.BackButton.show();
-tg.BackButton.onClick(() => history.back());
+tg.BackButton.onClick(() => {
+    history.back();
+});
+
 loadReferralData();
+tg.expand();
