@@ -63,13 +63,17 @@ document.getElementById('withdrawBtn').addEventListener('click', async () => {
     const amountStr = document.getElementById('amount').value;
     const amount = parseFloat(amountStr);
 
-    // ভ্যালিডেশন (এখন এডমিন প্যানেলের লিমিট অনুযায়ী হবে)
+    // ভ্যালিডেশন
     if (!account || isNaN(amount) || amount < minWithdrawAmount) {
         return tg.showAlert(`সঠিক নম্বর দিন এবং ন্যূনতম ৳${minWithdrawAmount} উত্তোলন করুন।`);
     }
 
-    // কনফার্মেশন চাওয়া
-    tg.showConfirm(`আপনি কি নিশ্চিত যে ৳${amount} (${method}) উত্তোলন করতে চান?`, async (confirmed) => {
+    // ২% সার্ভিস চার্জ হিসাব
+    const charge = amount * 0.02; // ২% চার্জ
+    const finalAmount = amount - charge; // ইউজার যা পাবে
+
+    // কনফার্মেশন চাওয়া (চার্জের হিসাবসহ)
+    tg.showConfirm(`৳${amount} উত্তোলনে ২% (৳${charge.toFixed(2)}) সার্ভিস চার্জ কাটা হবে। আপনি পাবেন ৳${finalAmount.toFixed(2)}। আপনি কি নিশ্চিত?`, async (confirmed) => {
         if (confirmed) {
             const btn = document.getElementById('withdrawBtn');
             btn.disabled = true;
