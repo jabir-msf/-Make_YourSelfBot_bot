@@ -1,0 +1,44 @@
+<!-- task_submit.html এর মূল অংশ -->
+<div class="form-card">
+    <label>কাজের স্ক্রিনশট দিন (Proof):</label>
+    <input type="file" id="screenshotInput" accept="image/*" style="margin: 15px 0;">
+    
+    <button class="submit-btn" id="finalSubmitBtn">
+        <i class="fa-solid fa-cloud-arrow-up"></i> কাজ জমা দিন
+    </button>
+</div>
+
+<script>
+// স্ক্রিনশট আপলোড লজিক (ImgBB উদাহরণ)
+document.getElementById('finalSubmitBtn').onclick = async () => {
+    const fileInput = document.getElementById('screenshotInput');
+    if (fileInput.files.length === 0) return alert("স্ক্রিনশট আপলোড করুন!");
+
+    const btn = document.getElementById('finalSubmitBtn');
+    btn.innerText = "আপলোড হচ্ছে...";
+    
+    // ১. ইমেজটি ImgBB তে আপলোড করা (আপনি আপনার API Key ব্যবহার করবেন)
+    const formData = new FormData();
+    formData.append("image", fileInput.files[0]);
+
+    const imgRes = await fetch("https://api.imgbb.com/1/upload?key=YOUR_IMGBB_API_KEY", {
+        method: "POST",
+        body: formData
+    });
+    const imgData = await imgRes.json();
+    const proofUrl = imgData.data.url;
+
+    // ২. সার্ভারে টাস্ক সাবমিট করা
+    const res = await fetch('/api/tasks/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            userId: user.id,
+            taskName: tName,
+            amount: tAmount,
+            proofUrl: proofUrl // স্ক্রিনশট লিঙ্ক
+        })
+    });
+    // ... বাকি সাকসেস লজিক
+};
+  </script>
