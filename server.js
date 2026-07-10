@@ -4,7 +4,8 @@ require("dotenv").config();
 const supabase = require("./database/supabase");
 
 // Start Telegram Bot
-require("./bot/bot");
+// ব্রডকাস্টের জন্য বটের ইন্সট্যান্সটি ইমপোর্ট করা হলো
+const bot = require("./bot/bot"); 
 
 const app = express();
 
@@ -92,7 +93,6 @@ app.post("/api/earn/limit-check", async (req, res) => {
             });
         }
 
-        // পেন্ডিং ব্যালেন্স বের করা
         const { data: tasks } = await supabase.from('tasks').select('amount').eq('user_id', userId).eq('category', type).eq('status', 'pending');
         const pendingBalance = tasks ? tasks.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
 
@@ -187,25 +187,36 @@ app.post("/api/withdraw", async (req, res) => {
         res.json({ success: true, message: "আপনার উত্তোলনের অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে।" });
     } catch (err) { res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" }); }
 });
-// ১০. সব পেন্ডিং টাস্ক দেখা (সহজ কুয়েরি)
+
+// --- ADMIN CONTROL API (MEGA UPDATED) ---
+
+// ১৬. অ্যাডমিন ড্যাশবোর্ড পরিসংখ্যান (Stats)
+app.get("/api/admin/stats", async (req, res) => {
+    try {
+        const { count: totalUsers } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
+        const { data: balances } = await supabase.from('profiles').select('balance');
+        const totalBalance = balances.reduce((sum, b) => sum + parseFloat(b.balance || 0), 0);
+        
+        const { count: pendingTasks } = await supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        const { count: pendingWithdrawals } = await supabase.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+
+        res.json({ totalUsers, totalBalance, pendingTasks, pendingWithdrawals });
+    } catch (err) { res.status(500).json({ error: "Failed to fetch stats" }); }
+});
+
+// ১০. সব পেন্ডিং টাস্ক দেখা (profiles এর সাথে join করা)
 app.get("/api/admin/pending-tasks", async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('tasks')
-            .select(`
-                *,
-                profiles:user_id (username)
-            `)
+            .select(`*, profiles:user_id (username)`)
             .eq('status', 'pending')
             .order('created_at', { ascending: true });
-
-        if (error) {
-            console.error("Query Error:", error);
-            return res.status(500).json({ error: error.message });
-        }
-        res.json(data || []);
+        if (error) throw error;
+        res.json(data);
     } catch (err) { 
-        res.status(500).json({ error: "Server error" }); 
+        console.error("Admin Fetch Error:", err);
+        res.status(500).json([]); 
     }
 });
 
@@ -235,7 +246,7 @@ app.get("/api/admin/pending-withdrawals", async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('withdrawals')
-            .select('*, profiles(username)')
+            .select('*, profiles:user_id(username)')
             .eq('status', 'pending')
             .order('created_at', { ascending: true });
         if (error) throw error;
@@ -248,10 +259,8 @@ app.post("/api/admin/action-withdraw", async (req, res) => {
     const { id, type, userId, amount } = req.body;
     try {
         if (type === 'approve') {
-            // পেমেন্ট করা হয়ে গেলে স্ট্যাটাস পরিবর্তন
             await supabase.from('withdrawals').update({ status: 'approved' }).eq('id', id);
         } else {
-            // রিজেক্ট বা বাতিল করলে ইউজারের ব্যালেন্স ফেরত দেওয়া
             const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
             const newBalance = parseFloat(user.balance || 0) + parseFloat(amount);
             await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
@@ -259,15 +268,6 @@ app.post("/api/admin/action-withdraw", async (req, res) => {
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ success: false }); }
-});
-
-// Root & Health Check
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
-app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🌐 Server running on port ${PORT}`);
 });
 
 // ১৫. নতুন অ্যাডমিন টাস্ক যোগ করা
@@ -282,7 +282,71 @@ app.post("/api/admin/add-task", async (req, res) => {
         });
         if (error) throw error;
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false });
-    }
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// ১৭. ইউজার সার্চ API
+app.get("/api/admin/user-search/:query", async (req, res) => {
+    const q = req.params.query;
+    try {
+        const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .or(`id.eq.${isNaN(q) ? 0 : q},username.ilike.%${q}%`);
+        res.json(data || []);
+    } catch (err) { res.json([]); }
+});
+
+// ১৮. ইউজারের ব্যালেন্স সরাসরি এডিট
+app.post("/api/admin/update-balance", async (req, res) => {
+    const { userId, amount } = req.body;
+    try {
+        await supabase.from('profiles').update({ balance: parseFloat(amount) }).eq('id', userId);
+        res.json({ success: true });
+    } catch (err) { res.json({ success: false }); }
+});
+
+// ১৯. গ্লোবাল সেটিংস কন্ট্রোল API
+app.get("/api/admin/get-settings", async (req, res) => {
+    try {
+        const { data } = await supabase.from('settings').select('*').eq('id', 1).single();
+        res.json(data || {});
+    } catch (err) { res.json({}); }
+});
+
+app.post("/api/admin/update-settings", async (req, res) => {
+    const { min, ref, notice } = req.body;
+    try {
+        await supabase.from('settings').update({ min_withdraw: min, ref_bonus: ref, app_notice: notice }).eq('id', 1);
+        res.json({ success: true });
+    } catch (err) { res.json({ success: false }); }
+});
+
+// ২০. ব্রডকাস্টিং (বট মেসেজ) API
+app.post("/api/admin/broadcast", async (req, res) => {
+    const { message } = req.body;
+    try {
+        const { data: users } = await supabase.from('profiles').select('id');
+        if (!users) return res.json({ success: false });
+
+        users.forEach((u, index) => {
+            // টেলিগ্রাম ফ্লাড লিমিট এড়াতে প্রতি মেসেজের মাঝে ৫০ মিলিসেকেন্ড গ্যাপ
+            setTimeout(() => {
+                if (bot && typeof bot.sendMessage === 'function') {
+                    bot.sendMessage(u.id, `📢 **নতুন নোটিশ:**\n\n${message}`, { parse_mode: 'Markdown' })
+                        .catch(e => console.log(`Error sending to ${u.id}`));
+                }
+            }, index * 50);
+        });
+        res.json({ success: true });
+    } catch (e) { res.json({ success: false }); }
+});
+
+// Root & Health Check
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
+app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🌐 Server running on port ${PORT}`);
 });
