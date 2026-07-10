@@ -3,91 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Make Your Self</title>
+    <title>Admin Control - Make Your Self</title>
+    
+    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        header { background: #1a3fb3; color: white; padding: 20px; text-align: center; }
-        .tabs { display: flex; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; cursor: pointer; font-weight: bold; color: #555; font-size: 13px; }
-        .tab-btn.active { color: #1a3fb3; border-bottom: 3px solid #1a3fb3; }
-        .container { padding: 20px; max-width: 800px; margin: auto; }
-        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .card h4 { margin: 0 0 10px 0; color: #333; }
-        .card p { margin: 5px 0; font-size: 14px; color: #666; }
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-approve { background: #2ecc71; color: white; }
+        header { background: #0d1b4d; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; cursor: pointer; font-weight: bold; color: #555; font-size: 13px; transition: 0.3s; }
+        .tab-btn.active { color: #1a3fb3; border-bottom: 3px solid #1a3fb3; background: #f8faff; }
+        
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .card h4 { margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; }
+        .card p { margin: 6px 0; font-size: 13px; color: #444; line-height: 1.5; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn:active { transform: scale(0.95); }
+        .btn-approve { background: #27ae60; color: white; }
         .btn-reject { background: #e74c3c; color: white; }
-        .proof-img { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; border-radius: 5px; background: #eee; cursor: pointer; }
-        #auth-msg { text-align: center; margin-top: 100px; color: red; font-weight: bold; }
+        
+        .proof-img { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; background: #fafafa; }
+        
+        /* Form Styling */
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; outline: none; background: #fdfdfd; }
+        .admin-input:focus { border-color: #1a3fb3; }
+        label { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 5px; display: block; margin-left: 5px; }
 
-        /* Form Styling for Manage Tab */
-        .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .manage-title { font-size: 18px; font-weight: bold; color: #1a3fb3; margin-bottom: 15px; display: block; }
+        /* Auth Screen */
+        #auth-msg { text-align: center; padding: 50px 20px; }
+        .error-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 5px solid #e74c3c; }
+        .error-icon { font-size: 50px; color: #e74c3c; margin-bottom: 15px; }
     </style>
 </head>
 <body>
+
+    <!-- Access Denied / Loader Screen -->
+    <div id="auth-msg">
+        <div class="container">
+            <div class="error-box">
+                <i class="fa-solid fa-shield-halved error-icon" id="status-icon"></i>
+                <h2 id="status-text">যাচাই করা হচ্ছে...</h2>
+                <p id="status-desc">অনুগ্রহ করে টেলিগ্রাম অ্যাপ থেকে প্রবেশ করুন।</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Content -->
     <div id="admin-content" style="display: none;">
         <header>
-            <h2>অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+            <h2 style="margin: 0; font-size: 20px;">Make Your Self Admin</h2>
         </header>
+
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tasks', this)">পেন্ডিং টাস্ক</button>
-            <button class="tab-btn" onclick="switchTab('withdraws', this)">উইথড্র</button>
-            <button class="tab-btn" onclick="switchTab('manage', this)">কাজ যোগ করুন</button>
+            <button class="tab-btn active" onclick="switchTab('tasks', this)"><i class="fa-solid fa-list-check"></i> টাস্ক</button>
+            <button class="tab-btn" onclick="switchTab('withdraws', this)"><i class="fa-solid fa-money-bill-transfer"></i> উইথড্র</button>
+            <button class="tab-btn" onclick="switchTab('manage', this)"><i class="fa-solid fa-plus-circle"></i> নতুন কাজ</button>
         </div>
         
         <div class="container">
-            <!-- List View (Tasks & Withdrawals) -->
-            <div id="list-container">
-                <!-- ডাটা এখানে লোড হবে -->
-            </div>
+            <!-- List View -->
+            <div id="list-container"></div>
 
-            <!-- Management View (Add New Tasks) -->
+            <!-- Manage View -->
             <div id="manage-section" style="display: none;">
                 <div class="card">
-                    <span class="manage-title"><i class="fa-solid fa-plus-circle"></i> নতুন কাজ পাবলিশ করুন</span>
+                    <h4 style="color: #1a3fb3;"><i class="fa-solid fa-plus"></i> নতুন কাজ যোগ করুন</h4>
                     
-                    <label style="font-size: 12px; font-weight: bold; color: #555;">কাজের নাম</label>
-                    <input type="text" id="taskTitle" placeholder="যেমন: Subscribe our channel" class="admin-input">
+                    <label>কাজের নাম (Title)</label>
+                    <input type="text" id="taskTitle" placeholder="YouTube Subscribe" class="admin-input">
                     
-                    <label style="font-size: 12px; font-weight: bold; color: #555;">পারিশ্রমিক (৳)</label>
-                    <input type="number" id="taskReward" placeholder="যেমন: 5.00" class="admin-input">
+                    <label>পারিশ্রমিক (৳)</label>
+                    <input type="number" id="taskReward" placeholder="5.00" class="admin-input">
                     
-                    <label style="font-size: 12px; font-weight: bold; color: #555;">ক্যাটাগরি</label>
+                    <label>ক্যাটাগরি</label>
                     <select id="taskCategory" class="admin-input">
-                        <option value="micro">Micro Task (Admin)</option>
-                        <option value="gmail_sell">Gmail Sell</option>
-                        <option value="fb_sell">Facebook Sell</option>
-                        <option value="insta_sell">Instagram Sell</option>
-                        <option value="tiktok_sell">Tiktok Sell</option>
+                        <option value="micro">মাইক্রো টাস্ক (Micro)</option>
+                        <option value="gmail_sell">জিমেইল সেল (Selling)</option>
+                        <option value="fb_sell">ফেসবুক সেল (Selling)</option>
+                        <option value="insta_sell">ইনস্টাগ্রাম সেল (Selling)</option>
                     </select>
                     
-                    <label style="font-size: 12px; font-weight: bold; color: #555;">ডেইলি পাসওয়ার্ড (Selling Tasks এর জন্য)</label>
-                    <input type="text" id="taskPass" placeholder="Password (ঐচ্ছিক)" class="admin-input">
+                    <label>পাসওয়ার্ড (Optional)</label>
+                    <input type="text" id="taskPass" placeholder="যদি প্রয়োজন হয়" class="admin-input">
                     
-                    <button class="btn btn-approve" onclick="addNewTask()" style="width: 100%; margin-top: 10px;">
-                        <i class="fa-solid fa-cloud-upload"></i> কাজটি সেভ করুন
+                    <button class="btn btn-approve" onclick="addNewTask()" style="width: 100%; background: #1a3fb3;">
+                        <i class="fa-solid fa-check"></i> পাবলিশ করুন
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    <div id="auth-msg">যাচাই করা হচ্ছে...</div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const user = tg.initDataUnsafe.user;
-        const ADMIN_ID = 8144639897; 
+        tg.expand(); // অ্যাপ ফুল স্ক্রিন করা
 
-        if (user && user.id === ADMIN_ID) {
-            document.getElementById('admin-content').style.display = 'block';
-            document.getElementById('auth-msg').style.display = 'none';
-            loadPendingTasks();
-        } else {
-            document.getElementById('auth-msg').innerText = "অ্যাক্সেস রিফিউজড! আপনি অ্যাডমিন নন।";
+        const user = tg.initDataUnsafe.user;
+        const ADMIN_ID = 8144639897; // আপনার আইডি
+
+        // সিকিউরিটি চেক
+        function checkAccess() {
+            if (user) {
+                if (user.id === ADMIN_ID) {
+                    document.getElementById('admin-content').style.display = 'block';
+                    document.getElementById('auth-msg').style.display = 'none';
+                    loadPendingTasks();
+                } else {
+                    document.getElementById('status-text').innerText = "অ্যাক্সেস রিফিউজড!";
+                    document.getElementById('status-desc').innerText = "আপনার আইডি ("+user.id+") অ্যাডমিন হিসেবে রেজিস্টার্ড নয়।";
+                }
+            } else {
+                document.getElementById('status-text').innerText = "টেলিগ্রাম দরকার!";
+                document.getElementById('status-desc').innerText = "সিকিউরিটির কারণে এটি সরাসরি ব্রাউজারে চলবে না। টেলিগ্রাম বট থেকে ওপেন করুন।";
+            }
         }
 
         async function switchTab(type, btn) {
@@ -110,66 +143,67 @@
 
         async function loadPendingTasks() {
             const container = document.getElementById('list-container');
-            container.innerHTML = "<p style='text-align:center;'><i class='fa-solid fa-spinner fa-spin'></i> লোডিং...</p>";
+            container.innerHTML = "<p style='text-align:center; padding:20px;'><i class='fa-solid fa-spinner fa-spin'></i> লোড হচ্ছে...</p>";
             try {
                 const res = await fetch('/api/admin/pending-tasks');
                 const tasks = await res.json();
-                container.innerHTML = tasks.length ? '' : '<p style="text-align:center; color:#999;">কোন পেন্ডিং কাজ নেই।</p>';
+                container.innerHTML = tasks.length ? '' : '<div class="card" style="text-align:center; color:#999;">কোন পেন্ডিং টাস্ক নেই</div>';
                 
                 tasks.forEach(t => {
                     container.innerHTML += `
                     <div class="card">
                         <h4>${t.task_name}</h4>
-                        <p><strong>ইউজার:</strong> ${t.profiles?.username || t.user_id}</p>
-                        <p><strong>টাকা:</strong> ৳${t.amount}</p>
-                        <p><strong>প্রুফ:</strong> ${t.proof_url.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">` : t.proof_url}</p>
+                        <p><strong>ইউজার:</strong> ${t.profiles?.username || 'ID: '+t.user_id}</p>
+                        <p><strong>রিওয়ার্ড:</strong> ৳${t.amount}</p>
+                        <p><strong>প্রুফ:</strong> ${t.proof_url.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">` : `<span style="color:#1a3fb3; font-weight:bold;">${t.proof_url}</span>`}</p>
                         <div class="btn-group">
-                            <button class="btn btn-approve" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')">Approve</button>
-                            <button class="btn btn-reject" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')">Reject</button>
+                            <button class="btn btn-approve" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')"><i class="fa-solid fa-check"></i> Approve</button>
+                            <button class="btn btn-reject" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')"><i class="fa-solid fa-xmark"></i> Reject</button>
                         </div>
                     </div>`;
                 });
-            } catch(e) { container.innerHTML = "Error loading tasks."; }
-        }
-
-        async function actionTask(taskId, userId, amount, type) {
-            const endpoint = type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task';
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ taskId, userId, amount })
-            });
-            const result = await res.json();
-            if(result.success) loadPendingTasks();
-            else alert("Error occurred!");
+            } catch(e) { container.innerHTML = "Error!"; }
         }
 
         async function loadPendingWithdrawals() {
             const container = document.getElementById('list-container');
-            container.innerHTML = "<p style='text-align:center;'><i class='fa-solid fa-spinner fa-spin'></i> লোডিং...</p>";
+            container.innerHTML = "<p style='text-align:center; padding:20px;'><i class='fa-solid fa-spinner fa-spin'></i> লোড হচ্ছে...</p>";
             try {
                 const res = await fetch('/api/admin/pending-withdrawals');
                 const withdraws = await res.json();
-                container.innerHTML = withdraws.length ? '' : '<p style="text-align:center; color:#999;">কোন উইথড্র রিকোয়েস্ট নেই।</p>';
+                container.innerHTML = withdraws.length ? '' : '<div class="card" style="text-align:center; color:#999;">কোন পেন্ডিং উইথড্র নেই</div>';
 
                 withdraws.forEach(w => {
                     container.innerHTML += `
                     <div class="card">
-                        <h4>উইথড্র রিকোয়েস্ট (${w.profiles?.username || w.user_id})</h4>
-                        <p><strong>পদ্ধতি:</strong> ${w.method.toUpperCase()}</p>
+                        <h4 style="color:#e67e22;">Withdraw Request</h4>
+                        <p><strong>ইউজার:</strong> ${w.profiles?.username || 'ID: '+w.user_id}</p>
+                        <p><strong>মেথড:</strong> ${w.method.toUpperCase()}</p>
                         <p><strong>নম্বর:</strong> ${w.account_no}</p>
                         <p><strong>পরিমাণ:</strong> ৳${w.amount}</p>
                         <div class="btn-group">
-                            <button class="btn btn-approve" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', ${w.amount})">Paid (Approve)</button>
-                            <button class="btn btn-reject" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', ${w.amount})">Cancel (Refund)</button>
+                            <button class="btn btn-approve" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', ${w.amount})">Paid</button>
+                            <button class="btn btn-reject" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', ${w.amount})">Refund</button>
                         </div>
                     </div>`;
                 });
-            } catch(e) { container.innerHTML = "Error loading withdrawals."; }
+            } catch(e) { container.innerHTML = "Error!"; }
+        }
+
+        async function actionTask(taskId, userId, amount, type) {
+            if(!confirm("Are you sure?")) return;
+            const endpoint = type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task';
+            await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId, userId, amount })
+            });
+            loadPendingTasks();
         }
 
         async function actionWithdraw(id, type, userId, amount) {
-            const res = await fetch('/api/admin/action-withdraw', {
+            if(!confirm("Are you sure?")) return;
+            await fetch('/api/admin/action-withdraw', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ id, type, userId, amount })
@@ -177,32 +211,28 @@
             loadPendingWithdrawals();
         }
 
-        // Add New Admin Task Logic
         async function addNewTask() {
             const title = document.getElementById('taskTitle').value;
             const reward = document.getElementById('taskReward').value;
             const category = document.getElementById('taskCategory').value;
             const pass = document.getElementById('taskPass').value;
 
-            if(!title || !reward) return alert("শিরোনাম এবং রিওয়ার্ড অবশ্যই দিতে হবে!");
+            if(!title || !reward) return alert("Fill required fields!");
 
-            try {
-                const res = await fetch('/api/admin/add-task', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ title, reward, category, pass })
-                });
-                const result = await res.json();
-                if(result.success) {
-                    alert("কাজটি সফলভাবে যোগ করা হয়েছে!");
-                    document.getElementById('taskTitle').value = "";
-                    document.getElementById('taskReward').value = "";
-                    document.getElementById('taskPass').value = "";
-                } else {
-                    alert("ব্যর্থ হয়েছে!");
-                }
-            } catch(e) { alert("সার্ভার ত্রুটি!"); }
+            const res = await fetch('/api/admin/add-task', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, reward, category, pass })
+            });
+            const result = await res.json();
+            if(result.success) {
+                alert("পাবলিশ হয়েছে!");
+                location.reload();
+            }
         }
+
+        // রান করা
+        checkAccess();
     </script>
 </body>
-                                                   </html>
+    </html>
