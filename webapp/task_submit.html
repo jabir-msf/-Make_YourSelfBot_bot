@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Task - Make Your Self</title>
     
-    <!-- Telegram SDK -->
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <link rel="stylesheet" href="page5.css">
+    <!-- Google Fonts for Bengali -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* নতুন কার্ড দুটির ডিজাইন */
+        /* Stats Card Styles for Ad/Video */
         .stats-row {
-            display: none; /* ডিফল্টভাবে হাইড থাকবে */
+            display: none;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-bottom: 15px;
@@ -34,18 +36,21 @@
 
         .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .loader { display: none; text-align: center; margin-top: 10px; color: #1a3fb3; font-weight: bold; }
-        .instruction-text { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 15px; background: #fff9e6; padding: 10px; border-radius: 10px; border-left: 4px solid #f39c12; }
+        .instruction-box { font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 15px; background: #fff9e6; padding: 12px; border-radius: 10px; border-left: 4px solid #f39c12; }
     </style>
 </head>
 <body style="background: #f4f7ff;">
     <div class="app-container">
+        <!-- Header -->
         <header class="page-header">
-            <button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i></button>
-            <div class="header-title" id="pageTitle">কাজ জমা দিন</div>
+            <button class="back-btn" onclick="history.back()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="header-title">টাস্ক সাবমিট</div>
         </header>
 
         <main class="content">
-            <!-- কাজের লিমিট এবং পেন্ডিং ব্যালেন্স কার্ড (ভিডিও ও অ্যাডের জন্য) -->
+            <!-- Limit & Pending Stats (For Ad/Video) -->
             <div id="earningStats" class="stats-row">
                 <div class="stat-card-mini">
                     <p>কাজের লিমিট</p>
@@ -57,18 +62,19 @@
                 </div>
             </div>
 
+            <!-- Current Task Info -->
             <div class="balance-card">
-                <p style="color: rgba(255,255,255,0.8); font-size: 13px;">নির্বাচিত কাজ</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 13px;">নির্বাচিত কাজ</p>
                 <h3 id="tNameDisplay" style="color: white; margin: 5px 0;">Loading...</h3>
                 <h1 id="tAmountDisplay" style="font-size: 32px; color: #ffeb3b;">৳০.০০</h1>
             </div>
 
             <div class="form-card">
-                <div class="instruction-text" id="instructions">
-                    নির্দেশনা: নিচের বাটনে ক্লিক করে কাজটি সম্পূর্ণ করুন এবং ফিরে এসে জমা দিন।
+                <div class="instruction-box">
+                    <i class="fa-solid fa-circle-info"></i> নিচের 'কাজে যান' বাটনে ক্লিক করে কাজ সম্পন্ন করুন। ফিরে এসে 'কাজ জমা দিন' বাটনে ক্লিক করুন।
                 </div>
 
-                <!-- মাইক্রো টাস্কের জন্য স্ক্রিনশট সেকশন -->
+                <!-- Screenshot Section (Hidden for Ad/Video) -->
                 <div id="ssUploadSection" style="margin-bottom: 20px; display: none;">
                     <label style="display: block; font-weight: 600; margin-bottom: 10px; font-size: 14px;">
                         <i class="fa-solid fa-camera"></i> কাজের স্ক্রিনশট দিন:
@@ -77,15 +83,16 @@
                     <img id="imagePreview" class="preview-img">
                 </div>
 
+                <!-- Action Buttons -->
                 <button class="submit-btn" id="goLinkBtn" style="background: #1a3fb3; margin-bottom: 15px;">
-                    <i class="fa-solid fa-up-right-from-square"></i> কাজে যান (লিঙ্ক)
+                    <i class="fa-solid fa-up-right-from-square"></i> কাজে যান (Link)
                 </button>
 
-                <div id="loaderMsg" class="loader">
+                <div id="processingMsg" class="loader">
                     <i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...
                 </div>
 
-                <button class="submit-btn" id="submitBtn">
+                <button class="submit-btn" id="finalSubmitBtn">
                     <i class="fa-solid fa-circle-check"></i> কাজ জমা দিন
                 </button>
             </div>
@@ -104,24 +111,35 @@
         document.getElementById('tNameDisplay').innerText = tName;
         document.getElementById('tAmountDisplay').innerText = `৳${tAmount}`;
 
-        // পেজ লোড লজিক
+        // ১. পেজ ইনিশিয়ালাইজেশন
         async function initPage() {
-            // ১. যদি ভিডিও বা অ্যাড হয় তবে কার্ড দেখাবে এবং স্ক্রিনশট হাইড করবে
+            if (!user) return;
+
+            // যদি অ্যাড বা ভিডিও হয় তবে লিমিট এবং পেন্ডিং কার্ড দেখাবে
             if (tCat === 'ad' || tCat === 'video') {
                 document.getElementById('earningStats').style.display = 'grid';
-                document.getElementById('ssUploadSection').style.display = 'none';
+                document.getElementById('ssUploadSection').style.display = 'none'; // SS লাগবে না
                 
-                // সার্ভার থেকে লিমিট ও পেন্ডিং ডাটা আনা
-                const res = await fetch('/api/earn/limit-check', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ userId: user.id, type: tCat })
-                });
-                const data = await res.json();
-                document.getElementById('limitDisplay').innerText = `${data.count}/${data.limit}`;
-                document.getElementById('pendingDisplay').innerText = `৳${data.pending}`;
+                try {
+                    const res = await fetch('/api/earn/limit-check', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId: user.id, type: tCat })
+                    });
+                    const data = await res.json();
+                    document.getElementById('limitDisplay').innerText = `${data.count}/${data.limit}`;
+                    document.getElementById('pendingDisplay').innerText = `৳${data.pending}`;
+                    
+                    // যদি আগেই লিমিট শেষ হয়ে থাকে তবে বাটন ইনএক্টিভ করা যেতে পারে
+                    if (!data.success && data.count >= data.limit) {
+                        const btn = document.getElementById('finalSubmitBtn');
+                        btn.disabled = true;
+                        btn.style.background = "#ccc";
+                        btn.innerText = "লিমিট শেষ";
+                    }
+                } catch(e) { console.error(e); }
             } else {
-                // ২. মাইক্রো টাস্ক বা অন্য কিছু হলে স্ক্রিনশট দেখাবে
+                // মাইক্রো টাস্ক বা সেলিং এর জন্য স্ক্রিনশট লাগবে
                 document.getElementById('ssUploadSection').style.display = 'block';
                 document.getElementById('earningStats').style.display = 'none';
             }
@@ -141,27 +159,44 @@
             }
         }
 
+        // কাজের লিঙ্ক (এখানে টেলিগ্রাম চ্যানেলের লিঙ্ক দেওয়া আছে)
         document.getElementById('goLinkBtn').onclick = () => tg.openLink('https://t.me/EarnBD_Pro');
 
-        // সাবমিট বাটন লজিক
-        document.getElementById('submitBtn').onclick = async () => {
-            const btn = document.getElementById('submitBtn');
-            const loader = document.getElementById('loaderMsg');
+        // ২. মেইন সাবমিট লজিক (Strict Limit Check সহ)
+        document.getElementById('finalSubmitBtn').onclick = async () => {
+            const btn = document.getElementById('finalSubmitBtn');
+            const loader = document.getElementById('processingMsg');
             
             btn.disabled = true;
             loader.style.display = 'block';
-            btn.innerText = "অপেক্ষা করুন...";
-
-            let finalProofUrl = "Auto Submit (No SS Required)";
+            btn.innerText = "যাচাই হচ্ছে...";
 
             try {
-                // ১. যদি মাইক্রো টাস্ক হয় তবে আগে ইমেজে আপলোড করবে
+                // ক. সাবমিট করার ঠিক আগে লিমিট চেক (১৬তম টাস্ক ঠেকানোর জন্য)
+                if (tCat === 'ad' || tCat === 'video') {
+                    const checkRes = await fetch('/api/earn/limit-check', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId: user.id, type: tCat })
+                    });
+                    const checkData = await checkRes.json();
+                    if (!checkData.success) {
+                        tg.showAlert(checkData.message);
+                        location.reload(); // পেজ রিফ্রেশ করে বাটন লক করা
+                        return;
+                    }
+                }
+
+                btn.innerText = "জমা হচ্ছে...";
+                let proofUrl = "Auto Submit (No SS Required)";
+
+                // খ. মাইক্রো টাস্কের জন্য ImgBB তে আপলোড
                 if (tCat !== 'ad' && tCat !== 'video') {
                     const fileInput = document.getElementById('screenshotInput');
                     if (fileInput.files.length === 0) {
                         loader.style.display = 'none';
                         btn.disabled = false;
-                        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> কাজ জমা দিন';
+                        btn.innerText = "কাজ জমা দিন";
                         return tg.showAlert("অনুগ্রহ করে একটি স্ক্রিনশট দিন!");
                     }
 
@@ -172,10 +207,11 @@
                         body: formData
                     });
                     const imgData = await imgRes.json();
-                    finalProofUrl = imgData.data.url;
+                    if(!imgData.success) throw new Error("Image Upload Failed");
+                    proofUrl = imgData.data.url;
                 }
 
-                // ২. সার্ভারে টাস্ক সাবমিট
+                // গ. ডাটাবেসে টাস্ক সেভ করা
                 const res = await fetch('/api/tasks/submit', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -184,11 +220,11 @@
                         taskName: tName,
                         amount: tAmount,
                         category: tCat,
-                        proofUrl: finalProofUrl
+                        proofUrl: proofUrl
                     })
                 });
 
-                // ৩. যদি ভিডিও বা অ্যাড হয় তবে কাউন্ট বাড়ানো
+                // ঘ. যদি অ্যাড/ভিডিও হয় তবে কাউন্ট বাড়ানো (Increment)
                 if (tCat === 'ad' || tCat === 'video') {
                     await fetch('/api/earn/increment', {
                         method: 'POST',
@@ -200,21 +236,23 @@
                 const result = await res.json();
                 tg.showAlert(result.message);
                 
-                // পেজ রিফ্রেশ বা ব্যাক করা যাতে কার্ড আপডেট হয়
+                // ঙ. পেজ আপডেট
                 if (tCat === 'ad' || tCat === 'video') {
-                    location.reload(); 
+                    location.reload(); // লিমিট কার্ড আপডেট করার জন্য রিফ্রেশ
                 } else {
-                    window.location.href = 'page7.html';
+                    window.location.href = 'page7.html'; // ইতিহাস পেজে যাওয়া
                 }
 
             } catch (err) {
-                tg.showAlert("দুঃখিত, আবার চেষ্টা করুন।");
+                console.error(err);
+                tg.showAlert("দুঃখিত, প্রযুক্তিগত ত্রুটি হয়েছে। আবার চেষ্টা করুন।");
                 btn.disabled = false;
                 loader.style.display = 'none';
+                btn.innerText = "কাজ জমা দিন";
             }
         };
 
         initPage();
     </script>
 </body>
-                    </html>
+    </html>
