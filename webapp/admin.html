@@ -3,199 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Control - Make Your Self</title>
-    
-    <!-- Telegram SDK -->
+    <title>Master Admin - Make Your Self</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        header { background: #0d1b4d; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; cursor: pointer; font-weight: bold; color: #555; font-size: 13px; transition: 0.3s; }
-        .tab-btn.active { color: #1a3fb3; border-bottom: 3px solid #1a3fb3; background: #f8faff; }
+        :root { --primary: #0d1b4d; --secondary: #1a3fb3; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; --light: #f8faff; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #333; }
         
-        .container { padding: 15px; max-width: 600px; margin: auto; }
+        header { background: var(--primary); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        
+        .tabs { display: flex; background: white; overflow-x: auto; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-btn { flex: 1; padding: 15px 10px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; font-size: 12px; transition: 0.3s; min-width: 80px; }
+        .tab-btn.active { color: var(--secondary); border-bottom: 3px solid var(--secondary); background: var(--light); }
+        
+        .container { padding: 15px; max-width: 700px; margin: auto; padding-bottom: 50px; }
         .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .card h4 { margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; }
-        .card p { margin: 6px 0; font-size: 13px; color: #444; line-height: 1.5; }
         
-        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn:active { transform: scale(0.95); }
-        .btn-approve { background: #27ae60; color: white; }
-        .btn-reject { background: #e74c3c; color: white; }
-        
-        .proof-img { width: 100%; max-height: 250px; object-fit: contain; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; background: #fafafa; cursor: pointer;}
-        
-        .admin-input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; outline: none; background: #fdfdfd; box-sizing: border-box;}
-        label { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 5px; display: block; margin-left: 5px; }
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: white; padding: 15px; border-radius: 10px; text-align: center; border-bottom: 4px solid var(--secondary); }
+        .stat-box h2 { margin: 5px 0; color: var(--primary); font-size: 20px; }
+        .stat-box p { margin: 0; font-size: 11px; color: #777; font-weight: bold; text-transform: uppercase; }
 
-        #auth-msg { text-align: center; padding: 50px 20px; }
-        .error-box { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 5px solid #e74c3c; }
+        /* General UI */
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
+        .btn-blue { background: var(--secondary); color: white; }
+        .btn-green { background: var(--success); color: white; }
+        .btn-red { background: var(--danger); color: white; }
+        .btn-orange { background: var(--warning); color: white; }
+
+        .proof-img { width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; margin-top: 10px; background: #fafafa; }
+        
+        /* Search Box */
+        .search-row { display: flex; gap: 5px; margin-bottom: 15px; }
+        .search-row input { flex: 1; margin-bottom: 0; }
+        .search-row button { width: 60px; margin-bottom: 0; }
+
+        #auth-msg { text-align: center; padding: 100px 20px; }
     </style>
 </head>
 <body>
 
     <div id="auth-msg">
-        <div class="container">
-            <div class="error-box">
-                <i class="fa-solid fa-shield-halved" style="font-size: 50px; color: #e74c3c; margin-bottom: 15px;"></i>
-                <h2 id="status-text">যাচাই করা হচ্ছে...</h2>
-                <p id="status-desc">অনুগ্রহ করে টেলিগ্রাম অ্যাপ থেকে প্রবেশ করুন।</p>
-            </div>
+        <div class="card">
+            <i class="fa-solid fa-shield-halved" style="font-size: 50px; color: var(--danger);"></i>
+            <h2 id="status-text">Security Check...</h2>
+            <p id="status-desc">Please open from Telegram App.</p>
         </div>
     </div>
 
     <div id="admin-content" style="display: none;">
         <header>
-            <h2 style="margin: 0; font-size: 20px;">Make Your Self Admin</h2>
+            <h2 style="margin: 0; font-size: 18px;">EarnBD Control Center</h2>
         </header>
 
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tasks', this)"><i class="fa-solid fa-list-check"></i> টাস্ক</button>
-            <button class="tab-btn" onclick="switchTab('withdraws', this)"><i class="fa-solid fa-money-bill-transfer"></i> উইথড্র</button>
-            <button class="tab-btn" onclick="switchTab('manage', this)"><i class="fa-solid fa-plus-circle"></i> নতুন কাজ</button>
+            <button class="tab-btn active" onclick="switchTab('stats', this)">Stats</button>
+            <button class="tab-btn" onclick="switchTab('tasks', this)">Tasks</button>
+            <button class="tab-btn" onclick="switchTab('withdraws', this)">Paid</button>
+            <button class="tab-btn" onclick="switchTab('users', this)">Users</button>
+            <button class="tab-btn" onclick="switchTab('config', this)">Settings</button>
+            <button class="tab-btn" onclick="switchTab('msg', this)">Notice</button>
         </div>
-        
-        <div class="container">
-            <div id="list-container"></div>
 
-            <div id="manage-section" style="display: none;">
+        <div class="container">
+            
+            <!-- 1. Statistics Tab -->
+            <div id="tab-stats">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <p>Total Users</p>
+                        <h2 id="stat-users">0</h2>
+                    </div>
+                    <div class="stat-box">
+                        <p>Total Balance</p>
+                        <h2 id="stat-balance">৳0</h2>
+                    </div>
+                    <div class="stat-box">
+                        <p>Pending Tasks</p>
+                        <h2 id="stat-tasks">0</h2>
+                    </div>
+                    <div class="stat-box">
+                        <p>Pending Withdraw</p>
+                        <h2 id="stat-withdraw">0</h2>
+                    </div>
+                </div>
+                <button class="btn btn-blue" onclick="loadStats()"><i class="fa-solid fa-rotate"></i> Refresh Stats</button>
+            </div>
+
+            <!-- 2. Pending Tasks/Withdraws (Common Container) -->
+            <div id="tab-list" style="display: none;"></div>
+
+            <!-- 3. User Management Tab -->
+            <div id="tab-users" style="display: none;">
+                <div class="search-row">
+                    <input type="text" id="userSearchInput" class="admin-input" placeholder="User ID or Username">
+                    <button class="btn btn-blue" onclick="searchUser()"><i class="fa-solid fa-search"></i></button>
+                </div>
+                <div id="search-result"></div>
+            </div>
+
+            <!-- 4. Global Settings Tab -->
+            <div id="tab-config" style="display: none;">
                 <div class="card">
-                    <h4 style="color: #1a3fb3;"><i class="fa-solid fa-plus"></i> নতুন কাজ যোগ করুন</h4>
-                    <label>কাজের নাম (Title)</label>
-                    <input type="text" id="taskTitle" placeholder="YouTube Subscribe" class="admin-input">
-                    <label>পারিশ্রমিক (৳)</label>
-                    <input type="number" id="taskReward" placeholder="5.00" class="admin-input">
-                    <label>ক্যাটাগরি</label>
-                    <select id="taskCategory" class="admin-input">
-                        <option value="micro">মাইক্রো টাস্ক (Micro)</option>
-                        <option value="gmail_sell">জিমেইল সেল (Selling)</option>
-                        <option value="fb_sell">ফেসবুক সেল (Selling)</option>
-                        <option value="insta_sell">ইনস্টাগ্রাম সেল (Selling)</option>
+                    <h4>Global Configuration</h4>
+                    <label style="font-size: 11px;">Min Withdraw (৳)</label>
+                    <input type="number" id="cfg-min" class="admin-input" placeholder="100">
+                    
+                    <label style="font-size: 11px;">Ref Bonus (৳)</label>
+                    <input type="number" id="cfg-ref" class="admin-input" placeholder="20">
+                    
+                    <label style="font-size: 11px;">Daily Notice</label>
+                    <textarea id="cfg-notice" class="admin-input" style="height: 80px;"></textarea>
+                    
+                    <button class="btn btn-green" onclick="saveSettings()">Update Settings</button>
+                </div>
+                
+                <!-- Add Task Form inside Settings for Convenience -->
+                <div class="card">
+                    <h4>Add New Task</h4>
+                    <input type="text" id="newTaskTitle" class="admin-input" placeholder="Title">
+                    <input type="number" id="newTaskReward" class="admin-input" placeholder="Amount (৳)">
+                    <select id="newTaskCat" class="admin-input">
+                        <option value="micro">Micro Task</option>
+                        <option value="gmail_sell">Gmail Sell</option>
+                        <option value="fb_sell">Facebook Sell</option>
                     </select>
-                    <label>পাসওয়ার্ড (Optional)</label>
-                    <input type="text" id="taskPass" placeholder="যদি প্রয়োজন হয়" class="admin-input">
-                    <button class="btn btn-approve" onclick="addNewTask()" style="width: 100%; background: #1a3fb3;">
-                        <i class="fa-solid fa-check"></i> পাবলিশ করুন
-                    </button>
+                    <button class="btn btn-blue" onclick="addNewTask()">Add Task</button>
                 </div>
             </div>
+
+            <!-- 5. Broadcast Tab -->
+            <div id="tab-msg" style="display: none;">
+                <div class="card">
+                    <h4>Broadcast Message</h4>
+                    <p style="font-size: 11px;">এই মেসেজটি সব ইউজারের টেলিগ্রাম বটে চলে যাবে।</p>
+                    <textarea id="broadcastMsg" class="admin-input" style="height: 120px;" placeholder="সবাইকে স্বাগতম..."></textarea>
+                    <button class="btn btn-orange" onclick="sendBroadcast()"><i class="fa-solid fa-paper-plane"></i> Send to All Users</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-
         const user = tg.initDataUnsafe.user;
-        const ADMIN_ID = 8144639897;
+        const ADMIN_ID = 8144639897; 
 
         function checkAccess() {
             if (user && user.id === ADMIN_ID) {
                 document.getElementById('admin-content').style.display = 'block';
                 document.getElementById('auth-msg').style.display = 'none';
-                loadPendingTasks();
-            } else if (user) {
-                document.getElementById('status-text').innerText = "অ্যাক্সেস রিফিউজড!";
-                document.getElementById('status-desc').innerText = "আপনার আইডি ("+user.id+") অ্যাডমিন নয়।";
+                loadStats();
             } else {
-                document.getElementById('status-text').innerText = "টেলিগ্রাম দরকার!";
-                document.getElementById('status-desc').innerText = "সিকিউরিটির কারণে এটি সরাসরি ব্রাউজারে চলবে না।";
+                document.getElementById('status-text').innerText = "Denied!";
+                document.getElementById('status-desc').innerText = user ? "You are not admin." : "Open in Telegram.";
             }
         }
 
-        async function switchTab(type, btn) {
+        function switchTab(tab, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const listContainer = document.getElementById('list-container');
-            const manageSection = document.getElementById('manage-section');
-            if(type === 'manage') {
-                listContainer.style.display = 'none';
-                manageSection.style.display = 'block';
-            } else {
-                listContainer.style.display = 'block';
-                manageSection.style.display = 'none';
-                if(type === 'tasks') loadPendingTasks();
-                else loadPendingWithdrawals();
+            
+            // Hide all tabs
+            ['tab-stats', 'tab-list', 'tab-users', 'tab-config', 'tab-msg'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+
+            if(tab === 'stats') {
+                document.getElementById('tab-stats').style.display = 'block';
+                loadStats();
+            } else if(tab === 'tasks') {
+                document.getElementById('tab-list').style.display = 'block';
+                loadPendingTasks();
+            } else if(tab === 'withdraws') {
+                document.getElementById('tab-list').style.display = 'block';
+                loadPendingWithdrawals();
+            } else if(tab === 'users') {
+                document.getElementById('tab-users').style.display = 'block';
+            } else if(tab === 'config') {
+                document.getElementById('tab-config').style.display = 'block';
+                loadSettings();
+            } else if(tab === 'msg') {
+                document.getElementById('tab-msg').style.display = 'block';
             }
         }
 
-        async function loadPendingTasks() {
-            const container = document.getElementById('list-container');
-            container.innerHTML = "<p style='text-align:center; padding:20px;'><i class='fa-solid fa-spinner fa-spin'></i> লোড হচ্ছে...</p>";
+        // 1. Stats Loading
+        async function loadStats() {
             try {
-                const res = await fetch('/api/admin/pending-tasks');
-                const tasks = await res.json();
-                
-                if (!res.ok) throw new Error(tasks.error || "Failed to load tasks");
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+                document.getElementById('stat-users').innerText = data.totalUsers;
+                document.getElementById('stat-balance').innerText = '৳' + data.totalBalance.toFixed(0);
+                document.getElementById('stat-tasks').innerText = data.pendingTasks;
+                document.getElementById('stat-withdraw').innerText = data.pendingWithdrawals;
+            } catch(e) { console.error(e); }
+        }
 
-                container.innerHTML = tasks.length ? '' : '<div class="card" style="text-align:center; color:#999;">কোন পেন্ডিং টাস্ক নেই</div>';
-                
-                tasks.forEach(t => {
-                    const uName = t.profiles ? t.profiles.username : 'ID: ' + t.user_id;
-
-                    // প্রুফ ইউআরএল নাল (Null) কি না চেক করা
-                    let proofDisplay = "";
-                    if (t.proof_url) {
-                        if (t.proof_url.startsWith('http')) {
-                            proofDisplay = `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">`;
-                        } else {
-                            proofDisplay = `<span style="color:#1a3fb3; font-weight:bold;">${t.proof_url}</span>`;
-                        }
-                    } else {
-                        proofDisplay = `<span style="color:red; font-weight:bold;">কোন প্রুফ নেই</span>`;
-                    }
-
-                    container.innerHTML += `
-                    <div class="card">
-                        <h4>${t.task_name}</h4>
-                        <p><strong>ইউজার:</strong> ${uName}</p>
-                        <p><strong>রিওয়ার্ড:</strong> ৳${t.amount}</p>
-                        <p><strong>প্রুফ:</strong> ${proofDisplay}</p>
-                        <div class="btn-group">
-                            <button class="btn btn-approve" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')">Approve</button>
-                            <button class="btn btn-reject" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')">Reject</button>
-                        </div>
-                    </div>`;
-                });
-            } catch(e) { 
-                container.innerHTML = `<div class='card' style='color:red; text-align:center; font-weight:bold;'>Error: ${e.message}</div>`;
-            }
+        // 2. Pending Tasks (Old Logic Fix)
+        async function loadPendingTasks() {
+            const container = document.getElementById('tab-list');
+            container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+            const res = await fetch('/api/admin/pending-tasks');
+            const tasks = await res.json();
+            container.innerHTML = tasks.length ? '' : '<div class="card" style="text-align:center;">No Tasks</div>';
+            tasks.forEach(t => {
+                const proof = t.proof_url?.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">` : `<b>${t.proof_url}</b>`;
+                container.innerHTML += `<div class="card">
+                    <h4>${t.task_name}</h4>
+                    <p>User: ${t.profiles?.username || t.user_id}</p>
+                    <p>Reward: ৳${t.amount}</p>
+                    <p>Proof: ${proof}</p>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-green" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')">Approve</button>
+                        <button class="btn btn-red" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')">Reject</button>
+                    </div>
+                </div>`;
+            });
         }
 
         async function loadPendingWithdrawals() {
-            const container = document.getElementById('list-container');
-            container.innerHTML = "<p style='text-align:center; padding:20px;'><i class='fa-solid fa-spinner fa-spin'></i> লোড হচ্ছে...</p>";
-            try {
-                const res = await fetch('/api/admin/pending-withdrawals');
-                const withdraws = await res.json();
-                container.innerHTML = withdraws.length ? '' : '<div class="card" style="text-align:center; color:#999;">কোন পেন্ডিং উইথড্র নেই</div>';
-
-                withdraws.forEach(w => {
-                    const uName = w.profiles ? w.profiles.username : 'ID: ' + w.user_id;
-                    container.innerHTML += `
-                    <div class="card">
-                        <h4 style="color:#e67e22;">Withdraw Request</h4>
-                        <p><strong>ইউজার:</strong> ${uName}</p>
-                        <p><strong>মেথড:</strong> ${w.method.toUpperCase()}</p>
-                        <p><strong>নম্বর:</strong> ${w.account_no}</p>
-                        <p><strong>পরিমাণ:</strong> ৳${w.amount}</p>
-                        <div class="btn-group">
-                            <button class="btn btn-approve" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', ${w.amount})">Paid</button>
-                            <button class="btn btn-reject" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', ${w.amount})">Refund</button>
-                        </div>
-                    </div>`;
-                });
-            } catch(e) { container.innerHTML = "Error loading withdrawals."; }
+            const container = document.getElementById('tab-list');
+            container.innerHTML = "<p style='text-align:center;'>Loading...</p>";
+            const res = await fetch('/api/admin/pending-withdrawals');
+            const data = await res.json();
+            container.innerHTML = data.length ? '' : '<div class="card" style="text-align:center;">No Withdrawals</div>';
+            data.forEach(w => {
+                container.innerHTML += `<div class="card">
+                    <h4>Withdraw: ${w.method.toUpperCase()}</h4>
+                    <p>User: ${w.profiles?.username || w.user_id}</p>
+                    <p>Number: ${w.account_no}</p>
+                    <p>Amount: ৳${w.amount}</p>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-green" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', ${w.amount})">Paid</button>
+                        <button class="btn btn-red" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', ${w.amount})">Refund</button>
+                    </div>
+                </div>`;
+            });
         }
 
+        // 3. User Management
+        async function searchUser() {
+            const query = document.getElementById('userSearchInput').value;
+            const res = await fetch(`/api/admin/user-search/${query}`);
+            const users = await res.json();
+            const container = document.getElementById('search-result');
+            container.innerHTML = users.length ? '' : '<p>No user found.</p>';
+            users.forEach(u => {
+                container.innerHTML += `<div class="card">
+                    <h4>${u.username} (ID: ${u.id})</h4>
+                    <p>Balance: <b>৳${u.balance}</b></p>
+                    <p>Ref ID: ${u.referrer_id || 'None'}</p>
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn btn-blue" onclick="editBalance('${u.id}', ${u.balance})">Edit Balance</button>
+                        <button class="btn btn-red" onclick="banUser('${u.id}')">Ban</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        async function editBalance(id, old) {
+            const amount = prompt("New Balance?", old);
+            if(amount === null) return;
+            const res = await fetch('/api/admin/update-balance', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userId: id, amount })
+            });
+            if((await res.json()).success) searchUser();
+        }
+
+        // 4. Settings
+        async function loadSettings() {
+            const res = await fetch('/api/admin/get-settings');
+            const data = await res.json();
+            document.getElementById('cfg-min').value = data.min_withdraw;
+            document.getElementById('cfg-ref').value = data.ref_bonus;
+            document.getElementById('cfg-notice').value = data.app_notice;
+        }
+
+        async function saveSettings() {
+            const res = await fetch('/api/admin/update-settings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    min: document.getElementById('cfg-min').value,
+                    ref: document.getElementById('cfg-ref').value,
+                    notice: document.getElementById('cfg-notice').value
+                })
+            });
+            if((await res.json()).success) alert("Settings Saved!");
+        }
+
+        // 5. Broadcast
+        async function sendBroadcast() {
+            const msg = document.getElementById('broadcastMsg').value;
+            if(!msg) return;
+            if(!confirm("Are you sure to send to ALL users?")) return;
+            const res = await fetch('/api/admin/broadcast', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: msg })
+            });
+            if((await res.json()).success) alert("Sent successfully!");
+        }
+
+        // Core Actions (Tasks/Withdraw)
         async function actionTask(taskId, userId, amount, type) {
-            if(!confirm("Are you sure?")) return;
-            const endpoint = type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task';
-            await fetch(endpoint, {
+            await fetch(type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ taskId, userId, amount })
@@ -204,31 +323,12 @@
         }
 
         async function actionWithdraw(id, type, userId, amount) {
-            if(!confirm("Are you sure?")) return;
             await fetch('/api/admin/action-withdraw', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ id, type, userId, amount })
             });
             loadPendingWithdrawals();
-        }
-
-        async function addNewTask() {
-            const title = document.getElementById('taskTitle').value;
-            const reward = document.getElementById('taskReward').value;
-            const category = document.getElementById('taskCategory').value;
-            const pass = document.getElementById('taskPass').value;
-            if(!title || !reward) return alert("Fill required fields!");
-            const res = await fetch('/api/admin/add-task', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ title, reward, category, pass })
-            });
-            const result = await res.json();
-            if(result.success) {
-                alert("পাবলিশ হয়েছে!");
-                location.reload();
-            }
         }
 
         checkAccess();
