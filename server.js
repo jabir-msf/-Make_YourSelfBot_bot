@@ -505,3 +505,253 @@ app.get("/api/user-stats/:userId/:cat", async (req, res) => {
         res.json({ totalSold: approved ? approved.length : 0, totalEarned: totalEarned.toFixed(2) });
     } catch (err) { res.json({ totalSold: 0, totalEarned: 0 }); }
 });
+
+// --- ADD MONEY (DEPOSIT) API ---
+app.post("/api/add-money", async (req, res) => {
+    const { userId, amount, transactionId, method } = req.body;
+    try {
+        const { error } = await supabase.from('deposits').insert({
+            user_id: userId,
+            amount: parseFloat(amount),
+            transaction_id: transactionId,
+            method: method,
+            status: 'pending'
+        });
+        if (error) throw error;
+        res.json({ success: true, message: "রিকোয়েস্ট জমা হয়েছে। এডমিন চেক করে ব্যালেন্স অ্যাড করে দিবে।" });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// --- ADMIN: PENDING DEPOSITS ---
+app.get("/api/admin/pending-deposits", async (req, res) => {
+    try {
+        const { data } = await supabase.from('deposits').select('*, profiles:user_id(username)').eq('status', 'pending');
+        // Map transaction_id to trxid for frontend compatibility
+        const mappedData = data ? data.map(d => ({
+            ...d,
+            trxid: d.transaction_id || d.trxid
+        })) : [];
+        res.json(mappedData);
+    } catch (err) { res.status(500).json([]); }
+});
+
+app.post("/api/admin/deposit-status", async (req, res) => {
+    const { id, status } = req.body;
+    try {
+        if (status === 'approve') {
+            const { data: deposit, error: err1 } = await supabase.from('deposits').select('*').eq('id', id).single();
+            if (err1 || !deposit) return res.status(404).json({ success: false });
+            
+            const { data: user, error: err2 } = await supabase.from('profiles').select('balance').eq('id', deposit.user_id).single();
+            if (err2 || !user) return res.status(404).json({ success: false });
+            
+            const newBalance = parseFloat(user.balance || 0) + parseFloat(deposit.amount);
+            await supabase.from('profiles').update({ balance: newBalance }).eq('id', deposit.user_id);
+            await supabase.from('deposits').update({ status: 'approved' }).eq('id', id);
+        } else {
+            await supabase.from('deposits').update({ status: 'rejected' }).eq('id', id);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// --- PRODUCT SELLING (ACCOUNTS BUY) APIs ---
+app.post("/api/admin/add-product", async (req, res) => {
+    const { category, title, details, price } = req.body;
+    try {
+        const { error } = await supabase.from('products').insert({
+            category: category.toLowerCase(),
+            title: title,
+            details: details,
+            price: parseFloat(price),
+            status: 'available'
+        });
+        if (error) throw error;
+        res.json({ success: true, message: "পণ্য সফলভাবে যোগ করা হয়েছে!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "পণ্য যোগ করতে ব্যর্থ হয়েছে।" });
+    }
+});
+
+app.get("/api/products/:category", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('category', req.params.category.toLowerCase())
+            .eq('status', 'available');
+            
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+app.get("/api/orders/:userId", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('user_id', req.params.userId)
+            .order('created_at', { ascending: false });
+            
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+app.post("/api/buy-product", async (req, res) => {
+    const { userId, productId, paymentMethod } = req.body;
+    try {
+        const { data: product, error: err1 } = await supabase.from('products').select('*').eq('id', productId).single();
+        if (err1 || !product) return res.status(404).json({ success: false, message: "পণ্যটি খুঁজে পাওয়া যায়নি।" });
+        if (product.status !== 'available') return res.json({ success: false, message: "পণ্যটি ইতিমধ্যে বিক্রি হয়ে গেছে।" });
+        
+        const price = parseFloat(product.price);
+        let orderStatus = 'pending';
+        let userBalance = 0;
+        
+        if (paymentMethod === 'balance') {
+            const { data: user, error: err2 } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+            if (err2 || !user) return res.status(404).json({ success: false, message: "ইউজার খুঁজে পাওয়া যায়নি।" });
+            
+            userBalance = parseFloat(user.balance || 0);
+            if (userBalance < price) {
+                return res.json({ success: false, message: "আপনার ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই।" });
+            }
+            
+            const newBalance = userBalance - price;
+            await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
+            
+            orderStatus = 'approved';
+            await supabase.from('products').update({ status: 'sold' }).eq('id', productId);
+        }
+        
+        const { error: err3 } = await supabase.from('orders').insert({
+            user_id: userId,
+            product_id: productId,
+            title: product.title,
+            price: price,
+            payment_method: paymentMethod,
+            status: orderStatus,
+            details: orderStatus === 'approved' ? product.details : 'পেন্ডিং পেমেন্ট'
+        });
+        
+        if (err3) throw err3;
+        
+        const responseMessage = paymentMethod === 'balance' 
+            ? "ক্রয় সফল হয়েছে! ওয়ালেট ব্যালেন্স কাটা হয়েছে এবং বিবরণ 'ক্রয়কৃত একাউন্টস' ট্যাবে দেওয়া হয়েছে।" 
+            : "ক্রয় অনুরোধ পেন্ডিং রয়েছে। অনুগ্রহ করে এডমিনের যাচাইকরণের জন্য অপেক্ষা করুন।";
+            
+        res.json({ success: true, message: responseMessage });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "ক্রয় প্রক্রিয়া সম্পন্ন করতে সমস্যা হয়েছে।" });
+    }
+});
+
+app.get("/api/admin/orders", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .select(`*, profiles:user_id (username)`)
+            .order('created_at', { ascending: true });
+            
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+app.post("/api/admin/action-order", async (req, res) => {
+    const { id, status } = req.body;
+    try {
+        const { data: order, error: err1 } = await supabase.from('orders').select('*').eq('id', id).single();
+        if (err1 || !order) return res.status(404).json({ success: false, message: "অর্ডার খুঁজে পাওয়া যায়নি।" });
+        
+        if (status === 'approve') {
+            const { data: product } = await supabase.from('products').select('details').eq('id', order.product_id).single();
+            const productDetails = product ? product.details : "অনুমোদিত হয়েছে";
+            
+            await supabase.from('orders').update({ status: 'approved', details: productDetails }).eq('id', id);
+            await supabase.from('products').update({ status: 'sold' }).eq('id', order.product_id);
+        } else {
+            await supabase.from('orders').update({ status: 'rejected' }).eq('id', id);
+            if (order.payment_method === 'balance') {
+                const { data: user } = await supabase.from('profiles').select('balance').eq('id', order.user_id).single();
+                if (user) {
+                    const newBalance = parseFloat(user.balance || 0) + parseFloat(order.price);
+                    await supabase.from('profiles').update({ balance: newBalance }).eq('id', order.user_id);
+                }
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+app.get("/api/admin/all-products", async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+// --- PACKAGES ENDPOINTS ---
+app.post("/api/admin/add-package", async (req, res) => {
+    const { name, price, desc } = req.body;
+    try {
+        const { error } = await supabase.from('packages').insert({
+            name: name,
+            price: parseFloat(price),
+            description: desc
+        });
+        if (error) throw error;
+        res.json({ success: true, message: "প্যাকেজ সফলভাবে যোগ করা হয়েছে!" });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+app.get("/api/admin/packages", async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('packages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+// --- RECHARGE API ---
+app.post("/api/recharge", async (req, res) => {
+    const { userId, operator, number, amount } = req.body;
+    try {
+        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        if(user.balance < amount) return res.json({success: false, message: "পর্যাপ্ত ব্যালেন্স নেই"});
+
+        await supabase.from('profiles').update({ balance: user.balance - amount }).eq('id', userId);
+        await supabase.from('withdrawals').insert({
+            user_id: userId, amount, method: `Recharge (${operator})`, account_no: number, status: 'pending'
+        });
+        res.json({ success: true, message: "রিচার্জ রিকোয়েস্ট সফল! ১ ঘণ্টার মধ্যে টাকা পাবেন।" });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
+// Root & Health Check
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
+app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🌐 Server running on port ${PORT}`);
+});
