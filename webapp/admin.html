@@ -112,9 +112,11 @@
 </head>
 <body>
 
+    <!-- This message shows if you are not the admin -->
     <div id="auth-msg">
         <div class="card" style="text-align: center; margin-top: 50px;">
             <h3>Security Check...</h3>
+            <p id="debug-info" style="font-size: 12px; color: gray;"></p>
         </div>
     </div>
 
@@ -135,7 +137,7 @@
 
         <div class="container">
             
-            <!-- 1. OverView -->
+            <!-- 1. OverView with 3 New Profit Cards -->
             <div id="tab-stats" class="tab-content">
                 <div class="stats-grid">
                     <div class="stat-box"><i class="fa-solid fa-users"></i><h2 id="stat-users">0</h2><p>মোট ইউজার</p></div>
@@ -143,6 +145,7 @@
                     <div class="stat-box"><i class="fa-solid fa-hand-holding-dollar"></i><h2 id="stat-withdraw">0</h2><p>পেন্ডিং উইথড্র</p></div>
                     <div class="stat-box"><i class="fa-solid fa-piggy-bank"></i><h2 id="stat-deposit">0</h2><p>পেন্ডিং ডিপোজিট</p></div>
                     
+                    <!-- Performance stats -->
                     <div class="stat-box"><i class="fa-solid fa-file-invoice-dollar"></i><h2 id="stat-total-paid">৳0</h2><p>মোট কাজের পেমেন্ট</p></div>
                     <div class="stat-box"><i class="fa-solid fa-wallet"></i><h2 id="stat-total-withdraw">৳0</h2><p>মোট উইথড্র</p></div>
                     <div class="stat-box stat-profit" style="grid-column: span 2; border: 1.5px solid var(--success);">
@@ -172,19 +175,19 @@
                 <div id="withdraw-list"></div>
             </div>
 
-            <!-- 4. Packages -->
+            <!-- 4. Packages (Dynamic Description) -->
             <div id="tab-packages" class="tab-content" style="display: none;">
                 <div class="card">
                     <h4>নতুন প্যাকেজ</h4>
                     <input type="text" id="p-name" class="admin-input" placeholder="প্যাকেজ নাম">
                     <input type="number" id="p-price" class="admin-input" placeholder="প্যাকেজ মূল্য">
-                    <textarea id="p-desc" class="admin-input" placeholder="বিবরণ (কমা দিয়ে লিখুন)"></textarea>
+                    <textarea id="p-desc" class="admin-input" placeholder="বিবরণ (কমা দিয়ে লিখুন যেমন: ডেইলি ২ কাজ, ৫ লেভেল বোনাস, ইনস্ট্যান্ট পেমেন্ট)"></textarea>
                     <button class="btn btn-green" onclick="savePackage()">প্যাকেজ অ্যাড করুন</button>
                 </div>
                 <div id="packages-list"></div>
             </div>
 
-            <!-- 5. Digital Products Sell (NEW) -->
+            <!-- 5. Products Sell (Add IDs/Pass for sale) -->
             <div id="tab-products" class="tab-content" style="display: none;">
                 <div class="card">
                     <h4>নতুন পণ্য বিক্রির জন্য পোস্ট করুন</h4>
@@ -194,7 +197,7 @@
                         <option value="Instagram">Instagram Account</option>
                         <option value="Other">Other ID/Pass</option>
                     </select>
-                    <input type="text" id="prod-title" class="admin-input" placeholder="পণ্যের নাম (যেমন: High Quality Gmail)">
+                    <input type="text" id="prod-title" class="admin-input" placeholder="পণ্যের নাম">
                     <textarea id="prod-details" class="admin-input" placeholder="আইডি এবং পাসওয়ার্ড এখানে দিন (গোপন থাকবে)" style="height: 80px;"></textarea>
                     <input type="number" id="prod-price" class="admin-input" placeholder="বিক্রয় মূল্য (৳)">
                     <button class="btn btn-green" onclick="saveProduct()"><i class="fa-solid fa-cart-plus"></i> শপে পণ্য যুক্ত করুন</button>
@@ -211,7 +214,7 @@
                 <div id="user-result"></div>
             </div>
 
-            <!-- 7. Settings & Task Add -->
+            <!-- 7. Settings with Ad Income field -->
             <div id="tab-settings" class="tab-content" style="display: none;">
                 <div class="card">
                     <h4>নতুন টাস্ক পাবলিশ করুন</h4>
@@ -220,7 +223,6 @@
                         <option value="video">Video Earning</option>
                         <option value="gmail_sell">Gmail Selling</option>
                         <option value="fb_sell">Facebook Sell</option>
-                        <option value="insta_sell">Instagram Sell</option>
                     </select>
                     <input type="text" id="task-title" class="admin-input" placeholder="টাস্কের নাম">
                     
@@ -230,9 +232,7 @@
                     </div>
 
                     <input type="text" id="task-link" class="admin-input" placeholder="কাজের লিঙ্ক">
-                    
-                    <label style="font-size: 13px; font-weight: bold;">ডেইলি পাসওয়ার্ড (শুধু সেলিং কাজের জন্য):</label>
-                    <input type="text" id="task-daily-pass" class="admin-input" placeholder="যেমন: BD780">
+                    <input type="text" id="task-daily-pass" class="admin-input" placeholder="ডেইলি পাসওয়ার্ড">
                     
                     <button class="btn btn-blue" onclick="addTask()">টাস্ক পাবলিশ করুন</button>
                 </div>
@@ -244,14 +244,22 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+
+        // [গুরুত্বপূর্ণ] এখানে আপনার নিজের টেলিগ্রাম আইডি দিন
         const ADMIN_ID = 8144639897; 
+
         const user = tg.initDataUnsafe.user;
 
         function checkAccess() {
+            // যদি আইডি মিলে যায় তবে এডমিন প্যানেল দেখাবে
             if (user && user.id === ADMIN_ID) {
                 document.getElementById('admin-content').style.display = 'block';
                 document.getElementById('auth-msg').style.display = 'none';
                 loadStats();
+            } else {
+                // আইডি না মিললে এখানে ইউজারকে তার আইডি দেখাবে যাতে সে কোডে আপডেট করতে পারে
+                let currentId = user ? user.id : "Unknown";
+                document.getElementById('debug-info').innerText = "আপনার আইডি: " + currentId + ". এটি কোডে ADMIN_ID হিসেবে ব্যবহার করুন।";
             }
         }
 
@@ -267,6 +275,7 @@
             if(tab === 'products') loadProducts();
         }
 
+        // Stats loading
         async function loadStats() {
             const res = await fetch('/api/admin/stats');
             const d = await res.json();
@@ -282,7 +291,7 @@
             document.getElementById('stat-profit').innerText = '৳' + (totalPaid - totalWithdrawn);
         }
 
-        // --- Digital Products Shop Logic ---
+        // Products Shop Logic
         async function saveProduct() {
             const data = {
                 category: document.getElementById('prod-cat').value,
@@ -290,19 +299,15 @@
                 details: document.getElementById('prod-details').value,
                 price: document.getElementById('prod-price').value
             };
-            if(!data.title || !data.details || !data.price) return alert("সব তথ্য পূরণ করুন!");
+            if(!data.title || !data.details || !data.price) return alert("সব তথ্য দিন!");
 
             await fetch('/api/admin/add-product', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
-            alert("পণ্যটি বিক্রির জন্য সফলভাবে শপে যুক্ত হয়েছে!");
+            alert("পণ্যটি শপে যুক্ত হয়েছে!");
             loadProducts();
-            // Clear inputs
-            document.getElementById('prod-title').value = '';
-            document.getElementById('prod-details').value = '';
-            document.getElementById('prod-price').value = '';
         }
 
         async function loadProducts() {
@@ -310,66 +315,13 @@
             container.innerHTML = "লোডিং...";
             const res = await fetch('/api/admin/get-products');
             const list = await res.json();
-            container.innerHTML = '<h4>শপে থাকা পণ্যসমূহ:</h4>';
+            container.innerHTML = '<h4>বর্তমান পণ্যসমূহ:</h4>';
             list.forEach(p => {
-                container.innerHTML += `
-                <div class="card">
-                    <span class="badge" style="background:var(--accent); color:white;">${p.category}</span>
-                    <b>${p.title}</b>
-                    <p style="margin:5px 0;">মূল্য: <b>৳${p.price}</b></p>
-                    <small style="color:var(--text-muted); display:block; background:#f1f5f9; padding:5px; border-radius:5px;">Data: ${p.details}</small>
-                    <button class="btn btn-red" style="padding:5px; height:30px; margin-top:10px;" onclick="deleteProduct('${p.id}')">মুছে ফেলুন</button>
-                </div>`;
+                container.innerHTML += `<div class="card"><b>${p.title}</b> (৳${p.price})<br><small>${p.category}</small><br><button class="btn btn-red" style="padding:5px; height:25px; margin-top:5px;" onclick="deleteProduct('${p.id}')">মুছুন</button></div>`;
             });
         }
 
-        async function deleteProduct(id) {
-            if(!confirm("আপনি কি নিশ্চিত এটি মুছতে চান?")) return;
-            await fetch(`/api/admin/delete-product/${id}`, { method: 'DELETE' });
-            loadProducts();
-        }
-
-        // --- Other Existing Logic ---
-        async function loadWithdrawals() {
-            const container = document.getElementById('withdraw-list');
-            container.innerHTML = "লোডিং...";
-            const res = await fetch('/api/admin/pending-withdraws');
-            const list = await res.json();
-            container.innerHTML = list.length ? '' : '<p>কোন পেন্ডিং উইথড্র নেই।</p>';
-            list.forEach(w => {
-                container.innerHTML += `
-                <div class="card withdraw-card">
-                    <span class="badge" style="background:var(--warning); color:white;">PENDING</span>
-                    <b>ইউজার: ${w.username} (${w.user_id})</b>
-                    <p style="margin: 5px 0;">পরিমাণ: <b style="color:var(--success);">৳${w.amount}</b> | মেথড: ${w.method}</p>
-                    <p style="font-size:12px; color:var(--text-muted);">নম্বর: ${w.number}</p>
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button class="btn btn-green" style="height:35px;" onclick="actionWithdraw('${w.id}', 'approve')">Approve</button>
-                        <button class="btn btn-red" style="height:35px;" onclick="actionWithdraw('${w.id}', 'reject')">Reject</button>
-                    </div>
-                </div>`;
-            });
-        }
-
-        async function loadReviewTasks() {
-            const ssDiv = document.getElementById('review-ss-list');
-            const sellDiv = document.getElementById('review-sell-list');
-            const fileDiv = document.getElementById('review-file-list');
-            [ssDiv, sellDiv, fileDiv].forEach(d => d.innerHTML = "লোডিং...");
-            const res = await fetch('/api/admin/pending-tasks');
-            const tasks = await res.json();
-            [ssDiv, sellDiv, fileDiv].forEach(d => d.innerHTML = "");
-            tasks.forEach(t => {
-                let html = `<div class="item-list"><b>${t.task_name}</b> <br><small>User: ${t.user_id} | Reward: ৳${t.amount}</small>
-                    ${t.proof_url.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img">` : `<div style="background:#fff3cd; padding:10px; margin:10px 0; border-radius:8px; font-family:monospace;">${t.proof_url}</div>`}
-                    <div style="display:flex; gap:10px;"><button class="btn btn-green" onclick="actionTask('${t.id}', 'approve')">Approve</button>
-                    <button class="btn btn-red" onclick="actionTask('${t.id}', 'reject')">Reject</button></div></div>`;
-                if(t.category === 'micro' || t.category === 'video') ssDiv.innerHTML += html;
-                else if(t.category.includes('sell')) sellDiv.innerHTML += html;
-                else fileDiv.innerHTML += html;
-            });
-        }
-
+        // Basic functions
         async function addTask() {
             const data = {
                 category: document.getElementById('task-cat').value,
@@ -383,4 +335,11 @@
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
-            }
+            });
+            alert("টাস্ক পাবলিশ হয়েছে!");
+        }
+
+        checkAccess();
+    </script>
+</body>
+                        </html>
