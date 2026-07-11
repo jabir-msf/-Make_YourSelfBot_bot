@@ -361,10 +361,10 @@
     <!-- স্ক্রিপ্ট লোড -->
     <script src="page3dashboard.js"></script>
 
-    <!-- একাউন্ট ক্রয় ফিচারের লজিক স্ক্রিপ্ট -->
+    <!-- একাউন্ট ক্রয় ফিচারের লজিক স্ক্রিপ্ট (ES5 সামঞ্জস্যপূর্ণ) -->
     <script>
-        // একাউন্ট লিস্টের ডামি ডেটা (প্রয়োজন অনুযায়ী পরিবর্তন করে নিতে পারবেন)
-        const accountsData = {
+        // ES5 সমর্থিত ভেরিয়েবল ও অবজেক্ট ডিফাইন
+        var accountsData = {
             gmail: [
                 { id: "G-101", name: "Gmail - পুরাতন সচল একাউন্ট (2021)", price: "৫০ ৳" },
                 { id: "G-102", name: "Gmail - ভেরিফাইড নতুন একাউন্ট", price: "৩০ ৳" }
@@ -388,14 +388,12 @@
             ]
         };
 
-        // ব্যবহারকারীর ক্রয়কৃত একাউন্টের ডামি ডেটা (উদাহরণস্বরূপ)
-        const purchasedAccounts = [
+        var purchasedAccounts = [
             { id: "G-101", name: "Gmail - পুরাতন সচল একাউন্ট (2021)", price: "৫০ ৳", status: "Approved", password: "GmailPassword123" },
             { id: "T-201", name: "Tiktok - 1K অর্গানিক ফলোয়ার", price: "৩০০ ৳", status: "Pending", password: "অনুমোদনের পর দেখা যাবে" }
         ];
 
-        // ক্যাটাগরি অনুযায়ী একাউন্টের নাম বাংলা করার ম্যাপিং
-        const categoryNames = {
+        var categoryNames = {
             gmail: "Gmail",
             tiktok: "Tiktok",
             fb: "Facebook",
@@ -404,45 +402,52 @@
             whatsapp: "WhatsApp"
         };
 
-        let selectedAccount = null;
+        var selectedAccount = null;
 
         // একাউন্ট তালিকা প্রদর্শন
         function showAccounts(category, event) {
             if (event) {
                 event.stopPropagation();
-                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
 
-            const listContainer = document.getElementById('accountListContainer');
-            const titleElement = document.getElementById('modalCategoryTitle');
+            var listContainer = document.getElementById('accountListContainer');
+            var titleElement = document.getElementById('modalCategoryTitle');
             
-            titleElement.innerText = `${categoryNames[category]} একাউন্ট তালিকা`;
+            var categoryName = categoryNames[category] || category;
+            titleElement.innerText = categoryName + " একাউন্ট তালিকা";
             listContainer.innerHTML = '';
 
-            const list = accountsData[category] || [];
+            var list = accountsData[category] || [];
 
-            if(list.length === 0) {
+            if (list.length === 0) {
                 listContainer.innerHTML = '<p style="text-align:center; padding: 20px; color: #888;">কোনো একাউন্ট উপলব্ধ নেই</p>';
             } else {
-                list.forEach(acc => {
-                    const item = document.createElement('div');
-                    item.className = 'acc-item';
-                    item.onclick = function(e) {
-                        if (e) {
-                            e.stopPropagation();
-                            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                        }
-                        openBuyInterface(acc);
-                    };
-                    item.innerHTML = `
-                        <div class="acc-info">
-                            <h4>${acc.name}</h4>
-                            <p>আইডি: ${acc.id} | পাসওয়ার্ড: ••••••••</p>
-                        </div>
-                        <div class="acc-price">${acc.price}</div>
-                    `;
-                    listContainer.appendChild(item);
-                });
+                // ES5 closure ব্যবহার করে লুপ চালানো যাতে সঠিক ডাটা এসাইন হয়
+                for (var i = 0; i < list.length; i++) {
+                    (function() {
+                        var acc = list[i];
+                        var item = document.createElement('div');
+                        item.className = 'acc-item';
+                        item.onclick = function(e) {
+                            if (e) {
+                                e.stopPropagation();
+                                if (e.stopImmediatePropagation) {
+                                    e.stopImmediatePropagation();
+                                }
+                            }
+                            openBuyInterface(acc);
+                        };
+                        item.innerHTML = '<div class="acc-info">' +
+                            '<h4>' + acc.name + '</h4>' +
+                            '<p>আইডি: ' + acc.id + ' | পাসওয়ার্ড: ••••••••</p>' +
+                            '</div>' +
+                            '<div class="acc-price">' + acc.price + '</div>';
+                        listContainer.appendChild(item);
+                    })();
+                }
             }
 
             document.getElementById('accountListModal').style.display = 'flex';
@@ -452,14 +457,10 @@
         function showPurchasedAccounts(event) {
             if (event) {
                 event.stopPropagation();
-                if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
 
-            const listContainer = document.getElementById('accountListContainer');
-            const titleElement = document.getElementById('modalCategoryTitle');
-            
-            titleElement.innerText = "আপনার ক্রয়কৃত একাউন্টস";
-            listContainer.innerHTML = '';
-
-            if(purchasedAccounts.length === 0) {
-                listContainer.innerHTML = '<p style="tex
+            var listContainer = document.getElementById('accountListContainer');
+            var
