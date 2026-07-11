@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Premium Plans</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; text-align: center; }
+        .p-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-top: 5px solid #FFD700; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .price { font-size: 28px; font-weight: bold; color: #1a3fb3; margin: 10px 0; }
+        .buy-btn { width: 100%; padding: 12px; background: #1a3fb3; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2 style="color: #1a3fb3;">প্রিমিয়াম মেম্বারশিপ</h2>
+    <div class="p-card">
+        <h3>GOLD PLAN</h3>
+        <div class="price">৳৫০০ / মাস</div>
+        <p>দ্বিগুণ আয় এবং দ্রুত পেমেন্ট সুবিধা।</p>
+        <button class="buy-btn" onclick="buy('Gold', 500)">কিনুন</button>
+    </div>
+    <div class="p-card" style="border-top-color: #00E5FF;">
+        <h3>DIAMOND PLAN</h3>
+        <div class="price">৳১০০০ / মাস</div>
+        <p>ভিআইপি সাপোর্ট এবং আনলিমিটেড কাজের সুবিধা।</p>
+        <button class="buy-btn" onclick="buy('Diamond', 1000)">কিনুন</button>
+    </div>
+    <script>
+        async function buy(p, amt) {
+            if(confirm(`৳${amt} দিয়ে ${p} মেম্বারশিপ কিনবেন?`)) {
+                const res = await fetch('/api/buy-premium', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ userId: window.Telegram.WebApp.initDataUnsafe.user.id, plan: p, price: amt }) });
+                const d = await res.json(); window.Telegram.WebApp.showAlert(d.message);
+            }
+        }
+    </script>
+</body>
+                       </html>
