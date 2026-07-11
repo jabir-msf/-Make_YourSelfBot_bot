@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -9,15 +10,311 @@
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center; }
-        .modal-card { background: white; width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; animation: slideUp 0.3s ease; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; }
-        .modal-body label { font-size: 13px; font-weight: bold; display: block; margin: 10px 0 5px; }
-        .modal-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .modal-btn { width: 100%; padding: 12px; background: #1a3fb3; color: white; border: none; border-radius: 8px; margin-top: 15px; font-weight: bold; cursor: pointer; }
-        .info-box { background: #f0f4ff; padding: 10px; border-radius: 8px; font-size: 13px; border-left: 4px solid #1a3fb3; margin-bottom: 10px; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* মূল পেজ লেআউট ও ফাঁকা অংশ দূর করার নিয়ম */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+
+        .main-wrapper {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-bottom: 10px !important; /* অতিরিক্ত ফাঁকা অংশ কমানো হলো */
+        }
+
+        .content-body {
+            flex-grow: 1;
+            padding: 0 15px;
+            margin-bottom: 20px;
+        }
+
+        /* ৩ ডট বা মেনু বাটনটি হাইড করার জন্য বিশেষ CSS (JS লজিক ভাঙবে না) */
+        #menuBtn {
+            display: none !important;
+        }
+
+        /* ইন্ট্রো সেকশনের আধুনিক রি-ডিজাইন */
+        .user-intro {
+            background: #ffffff;
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .intro-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .intro-text p {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .intro-text h1 {
+            margin: 4px 0 0 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #111;
+        }
+
+        /* অ্যাকাউন্টের ধরন ও স্ট্যাটাস ব্যাজ */
+        .account-badge-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+        }
+
+        .user-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tier-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            color: #3e2400;
+        }
+
+        .status-badge {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid rgba(46, 204, 113, 0.25);
+        }
+
+        /* সাইডবার ব্যাজ */
+        .sidebar-badge-wrap {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .mini-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        /* ওয়ালেট কার্ডকে আরও প্রিমিয়াম লুক দেওয়া */
+        .wallet-card {
+            background: linear-gradient(135deg, #1a3fb3 0%, #0d2673 100%);
+            border-radius: 20px;
+            padding: 22px;
+            margin: 0 15px 20px 15px;
+            box-shadow: 0 12px 25px rgba(26, 63, 179, 0.22);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 130px;
+            height: 130px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .wallet-btns {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .w-btn {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            color: white;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .w-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ডায়নামিক মডাল এবং ডিপোজিট/রিচার্জ সেকশন ডিজাইন */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 19, 43, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a3fb3;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: #f1f5f9;
+            border: none;
+            font-size: 18px;
+            color: #64748b;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-modal:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* ডিপোজিট ও রিচার্জ সংক্রান্ত নির্দেশনার গাইড বক্স */
+        .info-box {
+            background: linear-gradient(135deg, #f5f8ff 0%, #edf2ff 100%) !important;
+            padding: 16px !important;
+            border-radius: 14px !important;
+            font-size: 13.5px !important;
+            border-left: 5px solid #1a3fb3 !important;
+            margin-bottom: 15px !important;
+            box-shadow: 0 4px 15px rgba(26, 63, 179, 0.05) !important;
+            color: #2c3e50 !important;
+            line-height: 1.6 !important;
+        }
+
+        /* ইনপুট ফিল্ড ও ড্রপডাউন ডিজাইন */
+        #modalBody input, #modalBody select {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0 15px 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #f8fafc;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        #modalBody input:focus, #modalBody select:focus {
+            border-color: #1a3fb3;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(26, 63, 179, 0.15);
+            outline: none;
+        }
+
+        /* ট্রানজেকশন আইডির জন্য স্পেশাল ডিজাইন */
+        #modalBody input[placeholder*="Transaction ID"],
+        #modalBody input[placeholder*="ট্রানজেকশন আইডি"],
+        #modalBody input[placeholder*="TrxID"] {
+            border: 2px solid #27ae60 !important; /* সবুজ রঙের গ্লোয়িং থিম */
+            background-color: #f4fff8 !important;
+            color: #1e3a27 !important;
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.15) !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            text-align: center !important;
+            letter-spacing: 1px;
+        }
+
+        #modalBody input[placeholder*="Transaction ID"]:focus,
+        #modalBody input[placeholder*="ট্রানজেকশন আইডি"]:focus,
+        #modalBody input[placeholder*="TrxID"]:focus {
+            box-shadow: 0 0 18px rgba(46, 204, 113, 0.3) !important;
+            background-color: #ffffff !important;
+        }
+
+        /* সেন্ড মানি করার নম্বর হাইলাইট */
+        #modalBody strong, #modalBody b {
+            color: #1a3fb3;
+            background: rgba(26, 63, 179, 0.08);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        /* মডাল বাটন */
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1a3fb3 0%, #0d2673 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            margin-top: 5px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(26, 63, 179, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes slideUp { 
+            from { transform: translateY(20px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
     </style>
 </head>
 <body>
@@ -26,7 +323,14 @@
         <div class="sidebar-header">
             <div class="user-profile-box">
                 <div class="avatar-circle"><span id="sideInitial">U</span></div>
-                <div class="user-details"><h3 id="sideName">ইউজার</h3><p>Make Your Self</p></div>
+                <div class="user-details">
+                    <h3 id="sideName">ইউজার</h3>
+                    <p>Make Your Self</p>
+                    <div class="sidebar-badge-wrap">
+                        <span class="mini-badge tier-badge" id="sideUserTier"><i class="fa-solid fa-crown"></i> সিলভার</span>
+                        <span class="mini-badge status-badge" id="sideUserStatus"><i class="fa-solid fa-circle-check"></i> সক্রিয়</span>
+                    </div>
+                </div>
             </div>
             <div class="sidebar-balance-card"><div class="b-info"><p>ব্যালেন্স</p><h2 id="sideBalanceDisplay">৳০.০০</h2></div></div>
         </div>
@@ -42,7 +346,20 @@
             <h2 class="brand">Make Your Self</h2>
             <div class="nav-actions"><div class="balance-display"><span class="money" id="topBalance">৳০.০০</span></div></div>
         </nav>
-        <div class="user-intro"><p>সুপ্রভাত! 👋</p><h1 id="userFirstName">User</h1></div>
+        
+        <div class="user-intro">
+            <div class="intro-container">
+                <div class="intro-text">
+                    <p>সুপ্রভাত! 👋</p>
+                    <h1 id="userFirstName">User</h1>
+                </div>
+                <div class="account-badge-wrap">
+                    <span class="user-badge tier-badge" id="userTier"><i class="fa-solid fa-crown"></i> সিলভার</span>
+                    <span class="user-badge status-badge" id="userStatus"><i class="fa-solid fa-circle-check"></i> সক্রিয়</span>
+                </div>
+            </div>
+        </div>
+
         <div class="wallet-card">
             <div class="card-header"><div class="balance-box"><p>মোট ব্যালেন্স</p><h2 id="mainBalance">৳০.০০</h2></div></div>
             <div class="wallet-btns">
@@ -78,7 +395,15 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="actionModal"><div class="modal-card"><div class="modal-header"><h3 id="modalTitle"></h3><button class="close-modal" onclick="closeModal()">&times;</button></div><div id="modalBody"></div></div></div>
+    <div class="modal-overlay" id="actionModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
     <script src="dashboard.js"></script>
 </body>
-    </html>
+</html>
