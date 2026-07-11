@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Your Self - Services</title>
+    
+    <!-- Telegram SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <link rel="stylesheet" href="page3dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- একাউন্ট ক্রয় ফিচারের জন্য কাস্টম স্টাইল -->
+    <style>
+        .custom-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            font-family: 'Hind Siliguri', sans-serif;
+            position: relative;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+        .close-btn {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+        .acc-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .acc-item:hover {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+            transform: translateY(-2px);
+        }
+        .acc-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        .acc-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #777;
+        }
+        .acc-price {
+            color: #2ecc71;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .payment-alert {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 5px solid #ffc107;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .account-details-box {
+            background: #f4f6f8;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px dashed #ced4da;
+            margin-bottom: 15px;
+        }
+        .account-details-box p {
+            margin: 6px 0;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .modal-select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-family: 'Hind Siliguri', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        .buy-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Hind Siliguri', sans-serif;
+            transition: background 0.2s;
+        }
+        .buy-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-shell">
+        <!-- Top Blue Header Section -->
+        <div class="header-region">
+            <nav class="nav-bar">
+                <i class="fa-solid fa-arrow-left menu-icon" onclick="history.back()" style="cursor: pointer;"></i>
+                <h2 class="logo-text">Make Your Self</h2>
+                <div class="nav-right">
+                    <div class="balance-pill">
+                        <span class="p-label">ব্যালেন্স</span>
+                        <span class="p-amount" id="servicePageBalance">৳০.০০</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="quick-contact" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="q-card" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/Make_YourSelfBot_bot')" style="cursor: pointer;">পেমেন্ট প্রুফ</div>
+                <div class="q-card" onclick="window.location.href='page6.html'" style="cursor: pointer;">উত্তোলন ইতিহাস</div>
+                <div class="q-card" onclick="window.location.href='page7.html'" style="cursor: pointer;">কাজের বিবরণ</div>
+            </div>
+        </div>
+
+        <!-- Main Body Content (আমাদের সেবাসমূহ) -->
+        <main class="main-body">
+            <div class="section-head">
+                <span class="bar-orange"></span>
+                <h3>আমাদের সেবাসমূহ</h3>
+            </div>
+
+            <div class="services-grid">
+                <!-- Row 1 -->
+                <div class="service-item" onclick="startLimitedTask('video')">
+                    <span class="tag-hot">১০টি/ঘণ্টা</span>
+                    <div class="icon-bg"><i class="fa-solid fa-tv" style="color: #4a90e2;"></i></div>
+                    <p>ভিডিও ইনকাম</p>
+                </div>
+                <!-- কুইজ ইনকাম সাময়িকভাবে অফ করা হয়েছে -->
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-brain" style="color: #ff6b6b;"></i></div>
+                    <p>কুইজ ইনকাম</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-keyboard" style="color: #34495e;"></i></div>
+                    <p>টাইপিং জব</p>
+                </div>
+                <!-- Micro Task List -->
+                <div class="service-item" onclick="window.location.href='micro_tasks.html'">
+                    <span class="tag-new">Admin</span>
+                    <div class="icon-bg"><i class="fa-solid fa-bullseye" style="color: #e74c3c;"></i></div>
+                    <p>মাইক্রো টাস্ক</p>
+                </div>
+
+                <!-- Row 2 -->
+                <div class="service-item" onclick="startLimitedTask('ad')">
+                    <span class="tag-new">২০টি/ঘণ্টা</span>
+                    <div class="icon-bg"><i class="fa-solid fa-sack-dollar" style="color: #f1c40f;"></i></div>
+                    <p>অ্যাড আর্নিং</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-mobile-screen-button" style="color: #2c3e50;"></i></div>
+                    <p>মোবাইল রিচার্জ</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-briefcase" style="color: #8d6e63;"></i></div>
+                    <p>জব পোস্ট</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-cart-shopping" style="color: #90a4ae;"></i></div>
+                    <p>রেসেলিং</p>
+                </div>
+
+                <!-- Row 3: Selling Tasks -->
+                <div class="service-item" onclick="window.location.href='sell_tasks.html?cat=gmail_sell'">
+                    <span class="tag-new">SELL</span>
+                    <div class="icon-bg"><i class="fa-solid fa-envelope" style="color: #ea4335;"></i></div>
+                    <p>Gmail সেল</p>
+                </div>
+                <div class="service-item" onclick="window.location.href='sell_tasks.html?cat=fb_sell'">
+                    <div class="icon-bg"><i class="fa-brands fa-facebook" style="color: #1877f2;"></i></div>
+                    <p>Facebook সেল</p>
+                </div>
+                <div class="service-item" onclick="window.location.href='sell_tasks.html?cat=insta_sell'">
+                    <div class="icon-bg"><i class="fa-brands fa-instagram" style="color: #e4405f;"></i></div>
+                    <p>Insta সেল</p>
+                </div>
+                <div class="service-item" onclick="window.location.href='sell_tasks.html?cat=tiktok_sell'">
+                    <div class="icon-bg"><i class="fa-brands fa-tiktok" style="color: #000;"></i></div>
+                    <p>Tiktok সেল</p>
+                </div>
+
+                <!-- Row 4 -->
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-money-bill-1-wave" style="color: #2ecc71;"></i></div>
+                    <p>মাসিক বেতন</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-trophy" style="color: #f39c12;"></i></div>
+                    <p>লিডারশিপ</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-star" style="color: #f1c40f;"></i></div>
+                    <p>টার্গেট বোনাস</p>
+                </div>
+                <div class="service-item" onclick="comingSoon()">
+                    <div class="icon-bg"><i class="fa-solid fa-handshake" style="color: #27ae60;"></i></div>
+                    <p>পার্টনারশিপ</p>
+                </div>
+            </div>
+
+            <!-- নতুন ক্যাটাগরি: একাউন্ট ক্রয় -->
+            <div class="section-head" style="margin-top: 25px;">
+                <span class="bar-orange"></span>
+                <h3>একাউন্ট ক্রয়</h3>
+            </div>
+
+            <div class="services-grid">
+                <!-- Gmail ক্রয় -->
+                <div class="service-item" onclick="showAccounts('gmail', event)">
+                    <div class="icon-bg"><i class="fa-solid fa-envelope" style="color: #ea4335;"></i></div>
+                    <p>Gmail</p>
+                </div>
+                <!-- Tiktok ক্রয় -->
+                <div class="service-item" onclick="showAccounts('tiktok', event)">
+                    <div class="icon-bg"><i class="fa-brands fa-tiktok" style="color: #000;"></i></div>
+                    <p>Tiktok</p>
+                </div>
+                <!-- FB ক্রয় -->
+                <div class="service-item" onclick="showAccounts('fb', event)">
+                    <div class="icon-bg"><i class="fa-brands fa-facebook" style="color: #1877f2;"></i></div>
+                    <p>Facebook</p>
+                </div>
+                <!-- Insta ক্রয় -->
+                <div class="service-item" onclick="showAccounts('insta', event)">
+                    <div class="icon-bg"><i class="fa-brands fa-instagram" style="color: #e4405f;"></i></div>
+                    <p>Instagram</p>
+                </div>
+                <!-- Telegram ক্রয় -->
+                <div class="service-item" onclick="showAccounts('telegram', event)">
+                    <div class="icon-bg"><i class="fa-brands fa-telegram" style="color: #0088cc;"></i></div>
+                    <p>Telegram</p>
+                </div>
+                <!-- Whatsapp ক্রয় -->
+                <div class="service-item" onclick="showAccounts('whatsapp', event)">
+                    <div class="icon-bg"><i class="fa-brands fa-whatsapp" style="color: #25d366;"></i></div>
+                    <p>WhatsApp</p>
+                </div>
+                <!-- আপনার ক্রয়কৃত একাউন্টস কার্ড -->
+                <div class="service-item" onclick="showPurchasedAccounts(event)">
+                    <span class="tag-new">HISTORY</span>
+                    <div class="icon-bg"><i class="fa-solid fa-key" style="color: #9b59b6;"></i></div>
+                    <p>ক্রয়কৃত একাউন্টস</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- মডাল ১: নির্দিষ্ট ক্যাটাগরির একাউন্ট তালিকা / ক্রয়কৃত তালিকা -->
+    <div id="accountListModal" class="custom-modal" onclick="closeCustomModal('accountListModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalCategoryTitle">একাউন্ট তালিকা</h3>
+                <span class="close-btn" onclick="closeCustomModal('accountListModal')">&times;</span>
+            </div>
+            <div id="accountListContainer" style="max-height: 300px; overflow-y: auto;">
+            </div>
+        </div>
+    </div>
+
+    <!-- মডাল ২: একাউন্ট ক্রয় এবং পেমেন্ট ইন্টারফেস -->
+    <div id="accountBuyModal" class="custom-modal" onclick="closeCustomModal('accountBuyModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>একাউন্ট ক্রয় করুন</h3>
+                <span class="close-btn" onclick="closeCustomModal('accountBuyModal')">&times;</span>
+            </div>
+            <div>
+                <!-- পাসওয়ার্ড সতর্কবার্তা -->
+                <div class="payment-alert">
+                    পাসওয়ার্ড দেখতে হলে আগে পেমেন্ট করুন
+                </div>
+                
+                <div class="account-details-box">
+                    <p><strong>আইডি:</strong> <span id="buyAccId"></span></p>
+                    <p><strong>বিবরণ:</strong> <span id="buyAccName"></span></p>
+                    <p><strong>মূল্য:</strong> <span id="buyAccPrice" style="color: #2ecc71; font-weight: bold;"></span></p>
+                    <p><strong>পাসওয়ার্ড:</strong> <span style="letter-spacing: 2px;">•••••••• (সুরক্ষিত)</span></p>
+                </div>
+
+                <!-- পেমেন্ট ড্রপডাউন বক্স -->
+                <div style="margin-bottom: 15px;">
+                    <label for="paymentMethod" style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; color: #333;">পেমেন্ট পদ্ধতি নির্বাচন করুন:</label>
+                    <select id="paymentMethod" class="modal-select">
+                        <option value="">-- নির্বাচন করুন --</option>
+                        <option value="bkash">বিকাশ (bKash)</option>
+                        <option value="nagad">নগদ (Nagad)</option>
+                        <option value="rocket">রকেট (Rocket)</option>
+                        <option value="balance">ব্যালেন্স থেকে কাটুন</option>
+                    </select>
+                </div>
+
+                <button class="buy-btn" onclick="confirmPurchase(event)">ক্রয় সম্পন্ন করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- স্ক্রিপ্ট লোড -->
+    <script src="page3dashboard.js"></script>
+    <script src="account_buy.js"></script>
+</body>
+</html>
