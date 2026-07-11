@@ -509,7 +509,7 @@ app.post("/api/withdraw", async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `সফল! ৳${charge.toFixed(2)} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
+            message: `সফল! ৳${charge.toFixed(2)} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে। বিঃদ্রঃ আমাদের পেমেন্ট সিস্টেম ১-২৪ ঘণ্টার ভিতরে পেমেন্ট করে থাকে। এই সময়ের মধ্যে না পেলে এডমিন সাপোর্ট না গ্রুপ এ যোগাযোগ করুন। ধন্যবাদ।।` 
         });
 
     } catch (err) { 
@@ -564,7 +564,7 @@ app.post("/api/add-money", async (req, res) => {
             status: 'pending'
         });
         if (error) throw error;
-        res.json({ success: true, message: "রিকোয়েস্ট জমা হয়েছে। এডমিন চেক করে ব্যালেন্স অ্যাড করে দিবে।" });
+        res.json({ success: true, message: "রিকোয়েস্ট জমা হয়েছে। এডমিন চেক করে ব্যালেন্স অ্যাড করে দিবে। বিঃদ্রঃ আপনার টাকা ১ ঘণ্টার মধ্যে অ্যাকাউন্ট এ যোগ না হলে এডমিন সাপোর্ট এ মেসেজ দিন!" });
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
@@ -614,7 +614,7 @@ app.post("/api/admin/add-product", async (req, res) => {
             status: 'available'
         });
         if (error) throw error;
-        res.json({ success: true, message: "পণ্য সফলভাবে যোগ করা হয়েছে!" });
+        res.json({ success: true, message: "পণ্য সফলভাবে যোগ করা হয়েছে! দয়া করে অ্যাকাউন্ট হিস্ট্রি অপশন চেক করুন" });
     } catch (err) {
         res.status(500).json({ success: false, message: "পণ্য যোগ করতে ব্যর্থ হয়েছে।" });
     }
@@ -798,7 +798,7 @@ app.post("/api/recharge", async (req, res) => {
         await supabase.from('withdrawals').insert({
             user_id: userId, amount, method: `Recharge (${operator})`, account_no: number, status: 'pending'
         });
-        res.json({ success: true, message: "রিচার্জ রিকোয়েস্ট সফল! ১ ঘণ্টার মধ্যে টাকা পাবেন।" });
+        res.json({ success: true, message: "রিচার্জ রিকোয়েস্ট সফল! ১০ মিনিট এর মধ্যে টাকা পাবেন।" });
     } catch (err) { res.status(500).json({ success: false }); }
 });
 
