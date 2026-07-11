@@ -3,321 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Admin - Premium Dashboard</title>
+    <title>Master Admin - EarnBD Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #f4f7fe; --primary: #1a3fb3; --sidebar: #0d1b4d; --white: #ffffff; --text: #334155; }
-        body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); margin: 0; display: flex; color: var(--text); }
+        :root { --primary: #0d1b4d; --secondary: #1a3fb3; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; --light: #f8faff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; color: #333; }
         
-        /* Layout */
-        .sidebar { width: 260px; background: var(--sidebar); height: 100vh; position: fixed; color: white; padding: 20px; box-sizing: border-box; }
-        .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 30px; min-height: 100vh; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         
-        .nav-item { padding: 12px 15px; margin: 8px 0; border-radius: 10px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; }
-        .nav-item:hover, .nav-item.active { background: var(--primary); }
+        /* তড়িৎ ন্যাভিগেশন ট্যাব */
+        .tabs { display: flex; background: white; overflow-x: auto; sticky; top: 55px; z-index: 999; box-shadow: 0 2px 5px rgba(0,0,0,0.1); scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { flex: 1; padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #666; font-size: 13px; transition: 0.3s; min-width: 100px; white-space: nowrap; }
+        .tab-btn.active { color: var(--secondary); border-bottom: 3px solid var(--secondary); background: var(--light); }
         
-        .glass-card { background: var(--white); border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.3); margin-bottom: 25px; }
+        .container { padding: 15px; max-width: 800px; margin: auto; padding-bottom: 80px; }
+        .card { background: white; padding: 18px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee; }
         
-        /* Stats */
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        .stat-card { background: white; padding: 20px; border-radius: 15px; border-bottom: 5px solid var(--primary); }
-        .stat-card h3 { margin: 0; font-size: 24px; color: var(--sidebar); }
-        .stat-card p { margin: 5px 0 0; font-size: 14px; color: #64748b; }
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .stat-box { background: white; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--secondary); transition: 0.3s; }
+        .stat-box h2 { margin: 5px 0; color: var(--primary); font-size: 22px; }
+        .stat-box p { margin: 0; font-size: 11px; color: #777; font-weight: bold; text-transform: uppercase; }
 
-        /* Tables & Lists */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; padding: 12px; background: #f8fafc; color: #64748b; font-size: 13px; }
-        td { padding: 15px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        /* UI Elements */
+        .admin-input, select, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+        .btn-blue { background: var(--secondary); color: white; }
+        .btn-green { background: var(--success); color: white; }
+        .btn-red { background: var(--danger); color: white; }
         
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .badge-micro { background: #e0f2fe; color: #0369a1; }
-        .badge-sell { background: #fef3c7; color: #92400e; }
+        /* Task & User List Design */
+        .list-item { border-left: 5px solid var(--secondary); padding: 12px; margin-bottom: 10px; background: #fafafa; border-radius: 8px; position: relative; }
+        .badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; color: white; font-weight: bold; position: absolute; top: 10px; right: 10px; }
+        .proof-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; }
+        .sell-data { background: #fff3cd; padding: 10px; border-radius: 8px; border-left: 4px solid #ffc107; font-family: monospace; font-size: 13px; }
 
-        /* Form Controls */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; }
-        .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        
-        /* Filter Tabs */
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-        .filter-btn { padding: 8px 18px; background: white; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; white-space: nowrap; }
-        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .ref-list { margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 10px; font-size: 13px; }
-        
-        #auth-denied { text-align: center; width: 100%; padding-top: 100px; }
+        #auth-msg { text-align: center; padding: 100px 20px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-denied" style="display:none;">
-        <h1 style="color:red;">Access Denied!</h1>
-        <p>You are not authorized as Admin.</p>
+    <div id="auth-msg">
+        <div class="card">
+            <i class="fa-solid fa-lock" style="font-size: 40px; color: var(--danger);"></i>
+            <h2 id="status-text">Security Check...</h2>
+            <p id="status-desc">Please open from authorized Telegram ID.</p>
+        </div>
     </div>
 
-    <div id="admin-app" style="display:none; width: 100%; display: flex;">
-        <aside class="sidebar">
-            <h2 style="font-size: 20px; margin-bottom: 30px;"><i class="fa-solid fa-gauge-high"></i> Master Admin</h2>
-            <div class="nav-item active" onclick="showSection('dashboard')"><i class="fa-solid fa-chart-pie"></i> ড্যাশবোর্ড</div>
-            <div class="nav-item" onclick="showSection('task-review')"><i class="fa-solid fa-list-check"></i> টাস্ক রিভিউ</div>
-            <div class="nav-item" onclick="showSection('user-manager')"><i class="fa-solid fa-users"></i> ইউজার ম্যানেজমেন্ট</div>
-            <div class="nav-item" onclick="showSection('package-manager')"><i class="fa-solid fa-crown"></i> প্রিমিয়াম প্যাকেজ</div>
-            <div class="nav-item" onclick="showSection('settings')"><i class="fa-solid fa-gear"></i> সেটিংস ও টাস্ক অ্যাড</div>
-        </aside>
+    <div id="admin-content" style="display: none;">
+        <header>
+            <h2 style="margin: 0; font-size: 18px;">Master Admin Dashboard</h2>
+        </header>
 
-        <main class="main-content">
-            <!-- Dashboard -->
-            <section id="dashboard" class="section">
-                <div class="grid-4">
-                    <div class="stat-card"><h3>৳<span id="stat-balance">0</span></h3><p>মোট ইউজার ব্যালেন্স</p></div>
-                    <div class="stat-card"><h3><span id="stat-users">0</span></h3><p>মোট ইউজার</p></div>
-                    <div class="stat-card"><h3><span id="stat-tasks">0</span></h3><p>পেন্ডিং টাস্ক</p></div>
-                    <div class="stat-card"><h3><span id="stat-withdraw">0</span></h3><p>পেন্ডিং উইথড্র</p></div>
-                </div>
-            </section>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('stats', this)">পরিসংখ্যান</button>
+            <button class="tab-btn" onclick="switchTab('tasks', this)">টাস্ক রিভিউ</button>
+            <button class="tab-btn" onclick="switchTab('users', this)">ইউজার</button>
+            <button class="tab-btn" onclick="switchTab('packages', this)">প্যাকেজ</button>
+            <button class="tab-btn" onclick="switchTab('withdraws', this)">উত্তোলন</button>
+            <button class="tab-btn" onclick="switchTab('settings', this)">সেটিংস</button>
+        </div>
 
-            <!-- Task Review -->
-            <section id="task-review" class="section" style="display:none;">
-                <div class="glass-card">
-                    <h3>টাস্ক যাচাইকরণ</h3>
-                    <div class="filter-bar">
-                        <button class="filter-btn active" onclick="loadTasks('all')">সবগুলো</button>
-                        <button class="filter-btn" onclick="loadTasks('micro')">Micro Tasks</button>
-                        <button class="filter-btn" onclick="loadTasks('gmail_sell')">Gmail Sell</button>
-                        <button class="filter-btn" onclick="loadTasks('fb_sell')">FB Sell</button>
-                    </div>
-                    <div id="task-list-container">
-                        <!-- Tasks will load here -->
-                    </div>
+        <div class="container">
+            
+            <!-- 1. Stats -->
+            <div id="tab-stats">
+                <div class="stats-grid">
+                    <div class="stat-box"><p>মোট ইউজার</p><h2 id="stat-users">0</h2></div>
+                    <div class="stat-box"><p>মোট ব্যালেন্স</p><h2 id="stat-balance">৳0</h2></div>
+                    <div class="stat-box"><p>পেন্ডিং টাস্ক</p><h2 id="stat-tasks">0</h2></div>
+                    <div class="stat-box"><p>পেন্ডিং উত্তোলন</p><h2 id="stat-withdraw">0</h2></div>
                 </div>
-            </section>
+                <button class="btn btn-blue" onclick="loadStats()"><i class="fa-solid fa-rotate"></i> ডাটা রিফ্রেশ করুন</button>
+            </div>
 
-            <!-- User Manager -->
-            <section id="user-manager" class="section" style="display:none;">
-                <div class="glass-card">
-                    <h3>ইউজার লিস্ট ও রেফারাল</h3>
-                    <div style="display: flex; gap:10px; margin-bottom: 20px;">
-                        <input type="text" id="userSearch" placeholder="Search by ID or Username...">
-                        <button class="btn-prime" onclick="searchUsers()">Search</button>
-                    </div>
-                    <table id="userTable">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Balance</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-list-body"></tbody>
-                    </table>
-                </div>
-            </section>
+            <!-- 2. Task Review (Improved with Category wise separation) -->
+            <div id="tab-tasks" style="display: none;">
+                <select id="taskFilter" onchange="loadPendingTasks()" class="admin-input">
+                    <option value="all">সবগুলো টাস্ক</option>
+                    <option value="micro">Micro Tasks (SS)</option>
+                    <option value="sell">Selling Tasks (ID/Pass)</option>
+                </select>
+                <div id="tasks-list"></div>
+            </div>
 
-            <!-- Package Manager -->
-            <section id="package-manager" class="section" style="display:none;">
-                <div class="glass-card">
-                    <h3>প্রিমিয়াম প্যাকেজ এডিট/অ্যাড</h3>
-                    <div class="grid-4" style="grid-template-columns: 1fr 2fr;">
-                        <div class="form-card">
-                            <input type="hidden" id="pkg-id">
-                            <div class="form-group"><label>প্যাকেজ নাম</label><input type="text" id="pkg-name" placeholder="Gold Plan"></div>
-                            <div class="form-group"><label>দাম (৳)</label><input type="number" id="pkg-price"></div>
-                            <div class="form-group"><label>বিবরণ</label><textarea id="pkg-desc"></textarea></div>
-                            <div class="form-group"><label>অফার শেষ তারিখ</label><input type="date" id="pkg-expiry"></div>
-                            <button class="btn-prime" onclick="savePackage()">সেভ করুন</button>
-                        </div>
-                        <div id="package-list">
-                            <!-- Dynamic Package List -->
-                        </div>
-                    </div>
+            <!-- 3. User Management (With Referrals) -->
+            <div id="tab-users" style="display: none;">
+                <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                    <input type="text" id="userSearchInput" class="admin-input" placeholder="User ID বা Username" style="margin-bottom: 0;">
+                    <button class="btn btn-blue" onclick="searchUser()" style="width: 60px; margin-bottom: 0;"><i class="fa-solid fa-search"></i></button>
                 </div>
-            </section>
+                <div id="user-result"></div>
+            </div>
 
-            <!-- Settings / Add Tasks -->
-            <section id="settings" class="section" style="display:none;">
-                <div class="glass-card">
-                    <h3>নতুন টাস্ক অ্যাড করুন</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                        <div>
-                            <div class="form-group"><label>টাস্ক টাইটেল</label><input type="text" id="task-title"></div>
-                            <div class="form-group"><label>পারিশ্রমিক (৳)</label><input type="number" step="0.01" id="task-reward"></div>
-                            <div class="form-group">
-                                <label>ক্যাটাগরি</label>
-                                <select id="task-cat">
-                                    <option value="micro">Micro Task</option>
-                                    <option value="video">Video Task</option>
-                                    <option value="ad">Ad Earning</option>
-                                    <option value="gmail_sell">Gmail Sell</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="form-group"><label>টাস্ক লিঙ্ক (Video/Ad এর জন্য)</label><input type="text" id="task-link"></div>
-                            <div class="form-group"><label>ডেইলি পাসওয়ার্ড (সেলিং টাস্কের জন্য)</label><input type="text" id="task-pass"></div>
-                            <button class="btn-prime" style="width:100%; margin-top:30px;" onclick="addTask()">টাস্ক পাবলিশ করুন</button>
-                        </div>
-                    </div>
+            <!-- 4. Premium Packages Management -->
+            <div id="tab-packages" style="display: none;">
+                <div class="card">
+                    <h4>নতুন প্যাকেজ অ্যাড করুন</h4>
+                    <input type="text" id="pkg-name" class="admin-input" placeholder="প্যাকেজ নাম (যেমন: GOLD)">
+                    <input type="number" id="pkg-price" class="admin-input" placeholder="দাম (৳)">
+                    <textarea id="pkg-desc" class="admin-input" placeholder="বিবরণ..."></textarea>
+                    <input type="text" id="pkg-expiry" class="admin-input" placeholder="অফার শেষ (যেমন: ২০ জুলাই)">
+                    <button class="btn btn-green" onclick="addPackage()">প্যাকেজ সেভ করুন</button>
                 </div>
-            </section>
-        </main>
+                <div id="packages-list"></div>
+            </div>
+
+            <!-- 5. Settings & Add Task (With Link option) -->
+            <div id="tab-settings" style="display: none;">
+                <div class="card">
+                    <h4>নতুন টাস্ক অ্যাড করুন</h4>
+                    <input type="text" id="t-title" class="admin-input" placeholder="টাস্ক টাইটেল">
+                    <input type="number" id="t-reward" class="admin-input" placeholder="পারিশ্রমিক (৳)">
+                    <select id="t-cat" class="admin-input">
+                        <option value="micro">Micro Task</option>
+                        <option value="video">Video Earning</option>
+                        <option value="ad">Ad Earning</option>
+                        <option value="gmail_sell">Gmail Selling</option>
+                    </select>
+                    <input type="text" id="t-link" class="admin-input" placeholder="কাজের লিঙ্ক (যদি থাকে)">
+                    <input type="text" id="t-pass" class="admin-input" placeholder="ডেইলি পাসওয়ার্ড (শুধু সেলিং এর জন্য)">
+                    <button class="btn btn-blue" onclick="saveNewTask()">টাস্ক পাবলিশ করুন</button>
+                </div>
+                <div class="card">
+                    <h4>গ্লোবাল সেটিংস</h4>
+                    <label>মিনিমাম উত্তোলন:</label>
+                    <input type="number" id="cfg-min" class="admin-input">
+                    <label>রেফার বোনাস:</label>
+                    <input type="number" id="cfg-ref" class="admin-input">
+                    <button class="btn btn-green" onclick="saveSettings()">সেটিংস আপডেট</button>
+                </div>
+            </div>
+
+            <!-- 6. Withdraw/Deposit List -->
+            <div id="tab-withdraws" style="display: none;">
+                <div id="withdraw-list"></div>
+            </div>
+
+        </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         const ADMIN_ID = 8144639897; 
+        const user = tg.initDataUnsafe.user;
 
         function checkAccess() {
-            if (tg.initDataUnsafe.user?.id === ADMIN_ID) {
-                document.getElementById('admin-app').style.display = 'flex';
-                loadDashboardStats();
-            } else {
-                document.getElementById('auth-denied').style.display = 'block';
+            if (user && user.id === ADMIN_ID) {
+                document.getElementById('admin-content').style.display = 'block';
+                document.getElementById('auth-msg').style.display = 'none';
+                loadStats();
             }
         }
 
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).style.display = 'block';
-            event.currentTarget.classList.add('active');
-            
-            if(id === 'task-review') loadTasks('all');
-            if(id === 'package-manager') loadPackages();
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ['tab-stats', 'tab-tasks', 'tab-users', 'tab-packages', 'tab-settings', 'tab-withdraws'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            document.getElementById('tab-' + tab).style.display = 'block';
+            if(tab === 'tasks') loadPendingTasks();
+            if(tab === 'withdraws') loadWithdrawals();
         }
 
-        async function loadDashboardStats() {
+        // --- Stats ---
+        async function loadStats() {
             const res = await fetch('/api/admin/stats');
-            const data = await res.json();
-            document.getElementById('stat-balance').innerText = data.totalBalance.toFixed(2);
-            document.getElementById('stat-users').innerText = data.totalUsers;
-            document.getElementById('stat-tasks').innerText = data.pendingTasks;
-            document.getElementById('stat-withdraw').innerText = data.pendingWithdrawals;
+            const d = await res.json();
+            document.getElementById('stat-users').innerText = d.totalUsers;
+            document.getElementById('stat-balance').innerText = '৳' + d.totalBalance.toFixed(0);
+            document.getElementById('stat-tasks').innerText = d.pendingTasks;
+            document.getElementById('stat-withdraw').innerText = d.pendingWithdrawals;
         }
 
-        // --- Task Review Logic ---
-        async function loadTasks(cat) {
-            const container = document.getElementById('task-list-container');
-            container.innerHTML = "Loading...";
+        // --- Task Review (Logic Updated) ---
+        async function loadPendingTasks() {
+            const filter = document.getElementById('taskFilter').value;
+            const container = document.getElementById('tasks-list');
+            container.innerHTML = "লোড হচ্ছে...";
             const res = await fetch('/api/admin/pending-tasks');
             let tasks = await res.json();
-            
-            if(cat !== 'all') tasks = tasks.filter(t => t.category === cat);
-            
-            container.innerHTML = tasks.length ? '' : 'No pending tasks found.';
-            tasks.forEach(t => {
-                let proofContent = '';
-                if(t.category.includes('sell')) {
-                    // সেলিং টাস্কের জন্য আলাদা ভিউ
-                    proofContent = `<div style="background:#fff4e6; padding:10px; border-radius:5px;"><b>Data:</b> ${t.proof_url}</div>`;
-                } else {
-                    // ইমেজ স্ক্রিনশট ভিউ
-                    proofContent = `<img src="${t.proof_url}" style="width:120px; border-radius:10px; cursor:pointer;" onclick="window.open('${t.proof_url}')">`;
-                }
 
+            if(filter === 'micro') tasks = tasks.filter(t => t.category === 'micro');
+            if(filter === 'sell') tasks = tasks.filter(t => t.category.includes('sell'));
+
+            container.innerHTML = tasks.length ? '' : '<p style="text-align:center;">কোন পেন্ডিং টাস্ক নেই।</p>';
+            tasks.forEach(t => {
+                let proofHTML = t.proof_url.startsWith('http') 
+                    ? `<img src="${t.proof_url}" class="proof-img" onclick="window.open('${t.proof_url}')">` 
+                    : `<div class="sell-data"><b>প্রমাণ:</b> ${t.proof_url}</div>`;
+                
                 container.innerHTML += `
-                <div class="glass-card" style="margin-bottom:15px; padding:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <span class="badge badge-micro">${t.category.toUpperCase()}</span>
-                        <h4 style="margin:5px 0;">${t.task_name}</h4>
-                        <p style="font-size:12px;">ইউজার: ${t.profiles?.username} (ID: ${t.user_id})</p>
-                        <p>Reward: <b>৳${t.amount}</b></p>
-                    </div>
-                    <div>${proofContent}</div>
-                    <div style="display:flex; flex-direction:column; gap:5px;">
-                        <button class="btn-prime" style="background:#27ae60;" onclick="approveTask('${t.id}', '${t.user_id}', ${t.amount})">Approve</button>
-                        <button class="btn-prime" style="background:#e74c3c;" onclick="rejectTask('${t.id}')">Reject</button>
+                <div class="card list-item">
+                    <span class="badge" style="background:var(--secondary)">${t.category.toUpperCase()}</span>
+                    <h4>${t.task_name}</h4>
+                    <p style="font-size:12px;">ইউজার: ${t.profiles?.username} (ID: ${t.user_id})</p>
+                    ${proofHTML}
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn btn-green" onclick="actionTask('${t.id}', '${t.user_id}', ${t.amount}, 'approve')">Approve</button>
+                        <button class="btn btn-red" onclick="actionTask('${t.id}', '${t.user_id}', 0, 'reject')">Reject</button>
                     </div>
                 </div>`;
             });
         }
 
-        // --- User & Referral Logic ---
-        async function searchUsers() {
-            const q = document.getElementById('userSearch').value;
+        // --- User & Referrals ---
+        async function searchUser() {
+            const q = document.getElementById('userSearchInput').value;
             const res = await fetch(`/api/admin/user-search/${q}`);
             const users = await res.json();
-            const body = document.getElementById('user-list-body');
-            body.innerHTML = '';
-            users.forEach(u => {
-                body.innerHTML += `
-                <tr>
-                    <td>${u.id}</td>
-                    <td style="cursor:pointer; color:blue;" onclick="showReferrals('${u.id}')"><b>${u.username}</b></td>
-                    <td>৳${u.balance}</td>
-                    <td>${u.is_banned ? 'Banned' : 'Active'}</td>
-                    <td>
-                        <button onclick="editBalance('${u.id}', ${u.balance})">Edit</button>
-                        <button onclick="toggleBan('${u.id}', ${u.is_banned})">${u.is_banned ? 'Unban' : 'Ban'}</button>
-                    </td>
-                </tr>
-                <tr id="ref-row-${u.id}" style="display:none;"><td colspan="5"><div class="ref-list" id="ref-box-${u.id}">Loading...</div></td></tr>`;
-            });
-        }
-
-        async function showReferrals(userId) {
-            const row = document.getElementById(`ref-row-${userId}`);
-            const box = document.getElementById(`ref-box-${userId}`);
-            if(row.style.display === 'table-row') {
-                row.style.display = 'none';
-                return;
-            }
-            row.style.display = 'table-row';
-            const res = await fetch(`/api/admin/referrals/${userId}`);
-            const refs = await res.json();
-            box.innerHTML = `<b>Referral Count: ${refs.length}</b><br>` + 
-                            refs.map(r => `${r.username} (ID: ${r.id})`).join(', ');
-        }
-
-        // --- Package Logic ---
-        async function loadPackages() {
-            const res = await fetch('/api/admin/packages');
-            const pkgs = await res.json();
-            const container = document.getElementById('package-list');
-            container.innerHTML = '';
-            pkgs.forEach(p => {
+            const container = document.getElementById('user-result');
+            container.innerHTML = users.length ? '' : '<p>ইউজার পাওয়া যায়নি।</p>';
+            
+            for(let u of users) {
+                // রেফারাল সংখ্যা লোড করা
+                const refRes = await fetch(`/api/admin/referrals/${u.id}`);
+                const refs = await refRes.json();
+                
                 container.innerHTML += `
-                <div class="glass-card">
-                    <h4>${p.name}</h4>
-                    <p>Price: ৳${p.price} | Expiry: ${p.expiry_date}</p>
-                    <button onclick="editPackage('${p.id}')">Edit</button>
+                <div class="card">
+                    <h4>${u.username} (ID: ${u.id})</h4>
+                    <p>ব্যালেন্স: <b>৳${u.balance}</b> | রেফার করেছে: <b>${refs.length} জন</b></p>
+                    <div id="ref-list-${u.id}" style="font-size:11px; color:#666; margin-top:5px; display:none;">
+                        রেফারাল আইডি সমূহ: ${refs.map(r => r.id).join(', ')}
+                    </div>
+                    <button class="btn btn-blue" style="font-size:11px; padding:5px;" onclick="document.getElementById('ref-list-${u.id}').style.display='block'">রেফারাল লিস্ট দেখুন</button>
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn btn-blue" onclick="editBalance('${u.id}', ${u.balance})">Edit Balance</button>
+                        <button class="btn btn-red" onclick="toggleBan('${u.id}', ${u.is_banned})">${u.is_banned ? 'Unban' : 'Ban'}</button>
+                    </div>
                 </div>`;
-            });
+            }
         }
 
-        async function savePackage() {
+        async function saveNewTask() {
             const data = {
-                name: document.getElementById('pkg-name').value,
-                price: document.getElementById('pkg-price').value,
-                desc: document.getElementById('pkg-desc').value,
-                expiry: document.getElementById('pkg-expiry').value
+                title: document.getElementById('t-title').value,
+                reward: document.getElementById('t-reward').value,
+                category: document.getElementById('t-cat').value,
+                link: document.getElementById('t-link').value,
+                pass: document.getElementById('t-pass').value
             };
-            await fetch('/api/admin/save-package', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify(data)
-            });
-            loadPackages();
-        }
-
-        async function addTask() {
-            const data = {
-                title: document.getElementById('task-title').value,
-                reward: document.getElementById('task-reward').value,
-                category: document.getElementById('task-cat').value,
-                link: document.getElementById('task-link').value,
-                pass: document.getElementById('task-pass').value
-            };
-            const res = await fetch('/api/admin/add-task', {
+            await fetch('/api/admin/add-task', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
-            if(result.success) alert("Task Added Successfully!");
+            alert("টাস্ক সফলভাবে যুক্ত হয়েছে!");
+        }
+
+        async function actionTask(taskId, userId, amount, type) {
+            await fetch(type === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ taskId, userId, amount })
+            });
+            loadPendingTasks();
         }
 
         checkAccess();
