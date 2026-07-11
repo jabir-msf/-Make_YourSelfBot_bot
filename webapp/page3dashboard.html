@@ -11,6 +11,145 @@
     <link rel="stylesheet" href="page3dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- একাউন্ট ক্রয় ফিচারের জন্য কাস্টম স্টাইল (যা মূল সিএসএস ফাইলে কোনো প্রভাব ফেলবে না) -->
+    <style>
+        .custom-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            font-family: 'Hind Siliguri', sans-serif;
+            position: relative;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+        .close-btn {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+        .acc-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .acc-item:hover {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+            transform: translateY(-2px);
+        }
+        .acc-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        .acc-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #777;
+        }
+        .acc-price {
+            color: #2ecc71;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .payment-alert {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 5px solid #ffc107;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .account-details-box {
+            background: #f4f6f8;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px dashed #ced4da;
+            margin-bottom: 15px;
+        }
+        .account-details-box p {
+            margin: 6px 0;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .modal-select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-family: 'Hind Siliguri', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+        .buy-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Hind Siliguri', sans-serif;
+            transition: background 0.2s;
+        }
+        .buy-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
 </head>
 <body>
 
@@ -120,12 +259,207 @@
                     <div class="icon-bg"><i class="fa-solid fa-handshake" style="color: #27ae60;"></i></div>
                     <p>পার্টনারশিপ</p>
                 </div>
+            </div>
 
+            <!-- নতুন ক্যাটাগরি: একাউন্ট ক্রয় -->
+            <div class="section-head" style="margin-top: 25px;">
+                <span class="bar-orange"></span>
+                <h3>একাউন্ট ক্রয়</h3>
+            </div>
+
+            <div class="services-grid">
+                <!-- Gmail ক্রয় -->
+                <div class="service-item" onclick="showAccounts('gmail')">
+                    <div class="icon-bg"><i class="fa-solid fa-envelope" style="color: #ea4335;"></i></div>
+                    <p>Gmail</p>
+                </div>
+                <!-- Tiktok ক্রয় -->
+                <div class="service-item" onclick="showAccounts('tiktok')">
+                    <div class="icon-bg"><i class="fa-brands fa-tiktok" style="color: #000;"></i></div>
+                    <p>Tiktok</p>
+                </div>
+                <!-- FB ক্রয় -->
+                <div class="service-item" onclick="showAccounts('fb')">
+                    <div class="icon-bg"><i class="fa-brands fa-facebook" style="color: #1877f2;"></i></div>
+                    <p>Facebook</p>
+                </div>
+                <!-- Insta ক্রয় -->
+                <div class="service-item" onclick="showAccounts('insta')">
+                    <div class="icon-bg"><i class="fa-brands fa-instagram" style="color: #e4405f;"></i></div>
+                    <p>Instagram</p>
+                </div>
+                <!-- Telegram ক্রয় -->
+                <div class="service-item" onclick="showAccounts('telegram')">
+                    <div class="icon-bg"><i class="fa-brands fa-telegram" style="color: #0088cc;"></i></div>
+                    <p>Telegram</p>
+                </div>
+                <!-- Whatsapp ক্রয় -->
+                <div class="service-item" onclick="showAccounts('whatsapp')">
+                    <div class="icon-bg"><i class="fa-brands fa-whatsapp" style="color: #25d366;"></i></div>
+                    <p>WhatsApp</p>
+                </div>
             </div>
         </main>
     </div>
 
+    <!-- মডাল ১: নির্দিষ্ট ক্যাটাগরির একাউন্ট তালিকা -->
+    <div id="accountListModal" class="custom-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalCategoryTitle">একাউন্ট তালিকা</h3>
+                <span class="close-btn" onclick="closeCustomModal('accountListModal')">&times;</span>
+            </div>
+            <div id="accountListContainer" style="max-height: 300px; overflow-y: auto;">
+                <!-- এখানে ডায়নামিক উপায়ে একাউন্টগুলো যুক্ত হবে -->
+            </div>
+        </div>
+    </div>
+
+    <!-- মডাল ২: একাউন্ট ক্রয় এবং পেমেন্ট ইন্টারফেস -->
+    <div id="accountBuyModal" class="custom-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>একাউন্ট ক্রয় করুন</h3>
+                <span class="close-btn" onclick="closeCustomModal('accountBuyModal')">&times;</span>
+            </div>
+            <div>
+                <!-- পাসওয়ার্ড সতর্কবার্তা -->
+                <div class="payment-alert">
+                    পাসওয়ার্ড দেখতে হলে আগে পেমেন্ট করুন
+                </div>
+                
+                <div class="account-details-box">
+                    <p><strong>আইডি:</strong> <span id="buyAccId"></span></p>
+                    <p><strong>বিবরণ:</strong> <span id="buyAccName"></span></p>
+                    <p><strong>মূল্য:</strong> <span id="buyAccPrice" style="color: #2ecc71; font-weight: bold;"></span></p>
+                    <p><strong>পাসওয়ার্ড:</strong> <span style="letter-spacing: 2px;">•••••••• (সুরক্ষিত)</span></p>
+                </div>
+
+                <!-- পেমেন্ট ড্রপডাউন বক্স -->
+                <div style="margin-bottom: 15px;">
+                    <label for="paymentMethod" style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; color: #333;">পেমেন্ট পদ্ধতি নির্বাচন করুন:</label>
+                    <select id="paymentMethod" class="modal-select">
+                        <option value="">-- নির্বাচন করুন --</option>
+                        <option value="bkash">বিকাশ (bKash)</option>
+                        <option value="nagad">নগদ (Nagad)</option>
+                        <option value="rocket">রকেট (Rocket)</option>
+                        <option value="balance">ব্যালেন্স থেকে কাটুন</option>
+                    </select>
+                </div>
+
+                <button class="buy-btn" onclick="confirmPurchase()">ক্রয় সম্পন্ন করুন</button>
+            </div>
+        </div>
+    </div>
+
     <!-- স্ক্রিপ্ট লোড -->
     <script src="page3dashboard.js"></script>
+
+    <!-- একাউন্ট ক্রয় ফিচারের লজিক স্ক্রিপ্ট -->
+    <script>
+        // একাউন্ট লিস্টের ডামি ডেটা (প্রয়োজন অনুযায়ী পরিবর্তন করে নিতে পারবেন)
+        const accountsData = {
+            gmail: [
+                { id: "G-101", name: "Gmail - পুরাতন সচল একাউন্ট (2021)", price: "৫০ ৳" },
+                { id: "G-102", name: "Gmail - ভেরিফাইড নতুন একাউন্ট", price: "৩০ ৳" }
+            ],
+            tiktok: [
+                { id: "T-201", name: "Tiktok - 1K অর্গানিক ফলোয়ার", price: "৩০০ ৳" },
+                { id: "T-202", name: "Tiktok - ফ্রেশ নতুন আইডি", price: "২০ ৳" }
+            ],
+            fb: [
+                { id: "F-301", name: "Facebook - ২-ফ্যাক্টর ভেরিফাইড", price: "৮০ ৳" },
+                { id: "F-302", name: "Facebook Page - ৫কে ফলোয়ার", price: "৮০০ ৳" }
+            ],
+            insta: [
+                { id: "I-401", name: "Instagram - পুরাতন একটিভ আইডি", price: "১৫০ ৳" }
+            ],
+            telegram: [
+                { id: "TL-501", name: "Telegram - ওল্ড অ্যাকাউন্ট", price: "৭০ ৳" }
+            ],
+            whatsapp: [
+                { id: "W-601", name: "WhatsApp - ইউএসএ ভার্চুয়াল নম্বর", price: "১২০ ৳" }
+            ]
+        };
+
+        // ক্যাটাগরি অনুযায়ী একাউন্টের নাম বাংলা করার ম্যাপিং
+        const categoryNames = {
+            gmail: "Gmail",
+            tiktok: "Tiktok",
+            fb: "Facebook",
+            insta: "Instagram",
+            telegram: "Telegram",
+            whatsapp: "WhatsApp"
+        };
+
+        let selectedAccount = null;
+
+        // একাউন্ট তালিকা প্রদর্শন
+        function showAccounts(category) {
+            const listContainer = document.getElementById('accountListContainer');
+            const titleElement = document.getElementById('modalCategoryTitle');
+            
+            titleElement.innerText = `${categoryNames[category]} একাউন্ট তালিকা`;
+            listContainer.innerHTML = '';
+
+            const list = accountsData[category] || [];
+
+            if(list.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; padding: 20px; color: #888;">কোনো একাউন্ট উপলব্ধ নেই</p>';
+            } else {
+                list.forEach(acc => {
+                    const item = document.createElement('div');
+                    item.className = 'acc-item';
+                    item.onclick = function() {
+                        openBuyInterface(acc);
+                    };
+                    item.innerHTML = `
+                        <div class="acc-info">
+                            <h4>${acc.name}</h4>
+                            <p>আইডি: ${acc.id} | পাসওয়ার্ড: ••••••••</p>
+                        </div>
+                        <div class="acc-price">${acc.price}</div>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+
+            document.getElementById('accountListModal').style.display = 'flex';
+        }
+
+        // ক্রয়ের জন্য ইন্টারফেস চালু করা
+        function openBuyInterface(acc) {
+            selectedAccount = acc;
+            
+            // পূর্বের তালিকা মডাল বন্ধ করা
+            closeCustomModal('accountListModal');
+
+            // নতুন ডাটা বসানো
+            document.getElementById('buyAccId').innerText = acc.id;
+            document.getElementById('buyAccName').innerText = acc.name;
+            document.getElementById('buyAccPrice').innerText = acc.price;
+            document.getElementById('paymentMethod').value = ""; // রিসেট
+
+            // ক্রয় মডাল দেখানো
+            document.getElementById('accountBuyModal').style.display = 'flex';
+        }
+
+        // মডাল বন্ধ করার ফাংশন
+        function closeCustomModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // ক্রয় প্রক্রিয়া সম্পন্ন করার বোতামের কাজ
+        function confirmPurchase() {
+            const method = document.getElementById('paymentMethod').value;
+            if(!method) {
+                alert("অনুগ্রহ করে একটি পেমেন্ট পদ্ধতি নির্বাচন করুন!");
+                return;
+            }
+            
+            alert(`ক্রয় অনুরোধ গ্রহণ করা হয়েছে। আপনার পেমেন্ট যাচাইকরণের পর ${selectedAccount.id} এর পাসওয়ার্ড প্রদর্শন করা হবে।`);
+            closeCustomModal('accountBuyModal');
+        }
+    </script>
 </body>
-                                                                                                      </html>
+    </html>
