@@ -114,14 +114,27 @@ app.post("/api/earn/increment", async (req, res) => {
 app.get("/api/admin/stats", async (req, res) => {
     try {
         const { count: totalUsers } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
-        const { data: balances } = await supabase.from('profiles').select('balance');
-        const totalBalance = balances.reduce((sum, b) => sum + parseFloat(b.balance || 0), 0);
-        
         const { count: pendingTasks } = await supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('status', 'pending');
         const { count: pendingWithdrawals } = await supabase.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        const { count: pendingDeposits } = await supabase.from('deposits').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        
+        const { data: approvedTasks } = await supabase.from('tasks').select('amount').eq('status', 'approved');
+        const totalTaskPaid = approvedTasks ? approvedTasks.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0) : 0;
+        
+        const { data: approvedWithdrawals } = await supabase.from('withdrawals').select('amount').eq('status', 'approved');
+        const totalWithdrawnAmount = approvedWithdrawals ? approvedWithdrawals.reduce((sum, w) => sum + parseFloat(w.amount || 0), 0) : 0;
 
-        res.json({ totalUsers, totalBalance, pendingTasks, pendingWithdrawals });
-    } catch (err) { res.status(500).json({ error: "Failed to fetch stats" }); }
+        res.json({ 
+            totalUsers: totalUsers || 0, 
+            pendingTasks: pendingTasks || 0, 
+            pendingWithdrawals: pendingWithdrawals || 0, 
+            pendingDeposits: pendingDeposits || 0,
+            totalTaskPaid: totalTaskPaid.toFixed(2),
+            totalWithdrawnAmount: totalWithdrawnAmount.toFixed(2)
+        });
+    } catch (err) { 
+        res.status(500).json({ error: "Failed to fetch stats" }); 
+    }
 });
 
 app.get("/api/admin/pending-tasks", async (req, res) => {
@@ -247,7 +260,174 @@ app.post("/api/admin/update-settings", async (req, res) => {
     } catch (err) { res.json({ success: false }); }
 });
 
-// --- UPDATED APIs (Withdraw 2 TK & Single Task Logic) ---
+// --- USER INCOME REPORT ---
+app.get("/api/user-income/:userId", async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('amount, created_at')
+            .eq('user_id', userId)
+            .eq('status', 'approved');
+            
+        if (error) throw error;
+        
+        let total = 0, today = 0, week = 0, month = 0, year = 0;
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        const startOfWeek = new Date(startOfToday);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        
+        if (data) {
+            data.forEach(task => {
+                const amt = parseFloat(task.amount || 0);
+                const date = new Date(task.created_at);
+                
+                total += amt;
+                if (date >= startOfToday) today += amt;
+                if (date >= startOfWeek) week += amt;
+                if (date >= startOfMonth) month += amt;
+                if (date >= startOfYear) year += amt;
+            });
+        }
+        
+        res.json({
+            total: total.toFixed(2),
+            today: today.toFixed(2),
+            week: week.toFixed(2),
+            month: month.toFixed(2),
+            year: year.toFixed(2)
+        });
+    } catch (err) {
+        res.json({ total: "0.00", today: "0.00", week: "0.00", month: "0.00", year: "0.00" });
+    }
+});
+
+// --- USER REFERRAL STATS ---
+app.get("/api/referrals/:userId", async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const { count: totalRefs, error: err1 } = await supabase
+            .from('profiles')
+            .select('id', { count: 'exact', head: true })
+            .eq('referrer_id', userId);
+            
+        if (err1) throw err1;
+        
+        const { data: profiles, error: err2 } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('referrer_id', userId);
+            
+        if (err2) throw err2;
+        
+        let successRefsCount = 0;
+        let refIncomeValue = 0;
+        
+        if (profiles && profiles.length > 0) {
+            const referredIds = profiles.map(p => p.id);
+            
+            const { data: withdrawals, error: err3 } = await supabase
+                .from('withdrawals')
+                .select('user_id')
+                .in('user_id', referredIds)
+                .eq('status', 'approved');
+                
+            if (!err3 && withdrawals) {
+                const successfulWithdrawingUserIds = new Set(withdrawals.map(w => w.user_id));
+                successRefsCount = successfulWithdrawingUserIds.size;
+            }
+            
+            const { data: settings } = await supabase.from('settings').select('ref_bonus').eq('id', 1).single();
+            const refBonus = settings ? parseFloat(settings.ref_bonus) : 20;
+            refIncomeValue = successRefsCount * refBonus;
+        }
+        
+        res.json({
+            total_refs: totalRefs || 0,
+            success_refs: successRefsCount,
+            ref_income: refIncomeValue.toFixed(2)
+        });
+    } catch (err) {
+        res.json({ total_refs: 0, success_refs: 0, ref_income: "0.00" });
+    }
+});
+
+app.get("/api/admin/user-referrals/:id", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .eq('referrer_id', req.params.id);
+            
+        if (error) throw error;
+        
+        const refsWithWithdraw = [];
+        if (data) {
+            for (let ref of data) {
+                const { data: withdrawals } = await supabase
+                    .from('withdrawals')
+                    .select('amount')
+                    .eq('user_id', ref.id)
+                    .eq('status', 'approved');
+                    
+                const totalWithdrawn = withdrawals ? withdrawals.reduce((sum, w) => sum + parseFloat(w.amount || 0), 0) : 0;
+                refsWithWithdraw.push({
+                    id: ref.id,
+                    username: ref.username,
+                    total_withdrawn: totalWithdrawn.toFixed(2)
+                });
+            }
+        }
+        res.json(refsWithWithdraw);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+// --- BUY PREMIUM PLAN ---
+app.post("/api/buy-premium", async (req, res) => {
+    const { userId, plan, price } = req.body;
+    try {
+        const { data: user, error: err1 } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        if (err1 || !user) return res.status(404).json({ success: false, message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি।" });
+        
+        const balance = parseFloat(user.balance || 0);
+        const planCost = parseFloat(price);
+        
+        if (balance < planCost) {
+            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
+        }
+        
+        const newBalance = balance - planCost;
+        
+        const { error: err2 } = await supabase
+            .from('profiles')
+            .update({ balance: newBalance, tier: plan })
+            .eq('id', userId);
+            
+        if (err2) throw err2;
+        
+        await supabase.from('tasks').insert({
+            user_id: userId,
+            task_name: `${plan} Plan Purchase`,
+            amount: -planCost,
+            category: 'premium',
+            proof_url: 'System Approved',
+            status: 'approved'
+        });
+        
+        res.json({ success: true, message: `অভিনন্দন! আপনি সফলভাবে ${plan} মেম্বারশিপ কিনেছেন।` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" });
+    }
+});
+
+// --- UPDATED APIs (Withdraw 2% and Multi-Task Support) ---
 
 app.post("/api/withdraw", async (req, res) => {
     const { userId, method, accountNo, amount } = req.body;
@@ -266,8 +446,8 @@ app.post("/api/withdraw", async (req, res) => {
             return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
         }
 
-        // লজিক পরিবর্তন: ২% এর বদলে ফিক্সড ২ টাকা চার্জ
-        const charge = 2; 
+        // লজিক: ২% সার্ভিস চার্জ
+        const charge = withdrawGrossAmount * 0.02; 
         const netAmount = withdrawGrossAmount - charge; 
 
         const newBalance = parseFloat(user.balance) - withdrawGrossAmount;
@@ -283,7 +463,7 @@ app.post("/api/withdraw", async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `সফল! ৳${charge} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
+            message: `সফল! ৳${charge.toFixed(2)} চার্জ কেটে আপনার ৳${netAmount.toFixed(2)} পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে।` 
         });
 
     } catch (err) { 
@@ -320,71 +500,8 @@ app.get("/api/tasks/history/:userId", async (req, res) => {
 
 app.get("/api/user-stats/:userId/:cat", async (req, res) => {
     try {
-        // এখানে শুধু approved বাটন দিলে ইউজারের জয়েনিং চেক করা সহজ হয়
         const { data: approved } = await supabase.from('tasks').select('amount').eq('user_id', req.params.userId).eq('category', req.params.cat).eq('status', 'approved');
         const totalEarned = approved ? approved.reduce((sum, t) => sum + parseFloat(t.amount), 0) : 0;
         res.json({ totalSold: approved ? approved.length : 0, totalEarned: totalEarned.toFixed(2) });
     } catch (err) { res.json({ totalSold: 0, totalEarned: 0 }); }
-});
-
-// --- ADD MONEY (DEPOSIT) API ---
-app.post("/api/add-money", async (req, res) => {
-    const { userId, amount, transactionId, method } = req.body;
-    try {
-        const { error } = await supabase.from('deposits').insert({
-            user_id: userId,
-            amount: parseFloat(amount),
-            transaction_id: transactionId,
-            method: method,
-            status: 'pending'
-        });
-        if (error) throw error;
-        res.json({ success: true, message: "রিকোয়েস্ট জমা হয়েছে। এডমিন চেক করে ব্যালেন্স অ্যাড করে দিবে।" });
-    } catch (err) { res.status(500).json({ success: false }); }
-});
-
-// --- ADMIN: PENDING DEPOSITS ---
-app.get("/api/admin/pending-deposits", async (req, res) => {
-    try {
-        const { data } = await supabase.from('deposits').select('*, profiles:user_id(username)').eq('status', 'pending');
-        res.json(data || []);
-    } catch (err) { res.status(500).json([]); }
-});
-
-// --- ADMIN: APPROVE DEPOSIT ---
-app.post("/api/admin/approve-deposit", async (req, res) => {
-    const { id, userId, amount } = req.body;
-    try {
-        // ১. ব্যালেন্স আপডেট
-        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
-        const newBalance = parseFloat(user.balance || 0) + parseFloat(amount);
-        await supabase.from('profiles').update({ balance: newBalance }).eq('id', userId);
-        
-        // ২. স্ট্যাটাস আপডেট
-        await supabase.from('deposits').update({ status: 'approved' }).eq('id', id);
-        res.json({ success: true });
-    } catch (err) { res.status(500).json({ success: false }); }
-});
-
-// --- RECHARGE API ---
-app.post("/api/recharge", async (req, res) => {
-    const { userId, operator, number, amount } = req.body;
-    try {
-        const { data: user } = await supabase.from('profiles').select('balance').eq('id', userId).single();
-        if(user.balance < amount) return res.json({success: false, message: "পর্যাপ্ত ব্যালেন্স নেই"});
-
-        await supabase.from('profiles').update({ balance: user.balance - amount }).eq('id', userId);
-        await supabase.from('withdrawals').insert({
-            user_id: userId, amount, method: `Recharge (${operator})`, account_no: number, status: 'pending'
-        });
-        res.json({ success: true, message: "রিচার্জ রিকোয়েস্ট সফল! ১ ঘণ্টার মধ্যে টাকা পাবেন।" });
-    } catch (err) { res.status(500).json({ success: false }); }
-});
-// Root & Health Check
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
-app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🌐 Server running on port ${PORT}`);
 });
