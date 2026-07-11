@@ -5,7 +5,6 @@ const botUsername = "makeyourself12_bot";
 async function loadReferralData() {
     if (!user) return;
 
-    // আপনার ইউজার আইডিই হবে রেফারেল কোড
     const refCode = user.id; 
     const refLink = `https://t.me/${botUsername}?start=${user.id}`;
 
@@ -19,16 +18,19 @@ async function loadReferralData() {
         const balance = parseFloat(userData.balance || 0);
         document.getElementById('refPageBalance').innerText = `৳${balance.toFixed(0)}`;
 
-        // রেফারেল সংখ্যা আপডেট
+        // রেফারেল সংখ্যা ও রিয়েলটাইম ইনকাম আপডেট
         const resRefs = await fetch(`/api/referrals/${user.id}`);
         const refStats = await resRefs.json();
-        document.getElementById('totalRefs').innerText = refStats.total_refs || 0;
         
-        // ইনকাম হিসাব (প্রতি সফল রেফারে ২০ টাকা হিসেবে ধরলে)
-        // document.getElementById('refIncome').innerText = `৳${refStats.total_refs * 20}`;
+        document.getElementById('totalRefs').innerText = refStats.total_refs || 0;
+        document.getElementById('successRefs').innerText = refStats.success_refs || 0;
+        document.getElementById('refIncome').innerText = `৳${parseFloat(refStats.ref_income || 0).toFixed(0)}`;
 
     } catch (err) {
         document.getElementById('refPageBalance').innerText = `৳০`;
+        document.getElementById('totalRefs').innerText = "0";
+        document.getElementById('successRefs').innerText = "0";
+        document.getElementById('refIncome').innerText = "৳০";
     }
 }
 
