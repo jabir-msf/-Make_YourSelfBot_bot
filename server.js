@@ -801,7 +801,45 @@ app.post("/api/recharge", async (req, res) => {
         res.json({ success: true, message: "রিচার্জ রিকোয়েস্ট সফল! ১০ মিনিট এর মধ্যে টাকা পাবেন।" });
     } catch (err) { res.status(500).json({ success: false }); }
 });
-
+// --- BUY SOCIAL MEDIA SERVICE API ---
+app.post("/api/buy-social-service", async (req, res) => {
+    const { userId, serviceName, link, quantity, price } = req.body;
+    try {
+        const { data: user, error: err1 } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        if (err1 || !user) return res.status(404).json({ success: false, message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি।" });
+        
+        const balance = parseFloat(user.balance || 0);
+        const totalCost = parseFloat(price);
+        
+        if (balance < totalCost) {
+            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
+        }
+        
+        const newBalance = balance - totalCost;
+        
+        const { error: err2 } = await supabase
+            .from('profiles')
+            .update({ balance: newBalance })
+            .eq('id', userId);
+            
+        if (err2) throw err2;
+        
+        // এটি ট্রানজেকশন এবং হিস্ট্রি ট্র্যাক করার জন্য tasks টেবিলে নেগেটিভ ব্যালেন্স দিয়ে পেন্ডিং অর্ডার তৈরি করবে
+        await supabase.from('tasks').insert({
+            user_id: userId,
+            task_name: `Social Service: ${serviceName} (${quantity} Qty)`,
+            amount: -totalCost,
+            category: 'social_service',
+            proof_url: link,
+            status: 'pending'
+        });
+        
+        res.json({ success: true, message: `সফলভাবে অর্ডার করা হয়েছে! আপনার ব্যালেন্স থেকে ৳${totalCost.toFixed(2)} কেটে নেওয়া হয়েছে।` });
+    } catch (err) {
+        console.error("Social Order Purchase Error:", err);
+        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" });
+    }
+});
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
