@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -207,10 +206,13 @@
                         <option value="Gmail">Gmail Account</option>
                         <option value="Facebook">Facebook Account</option>
                         <option value="Instagram">Instagram Account</option>
+                        <option value="Tiktok">TikTok Account</option>
+                        <option value="Telegram">Telegram Account</option>
+                        <option value="Whatsapp">WhatsApp Account</option>
                     </select>
                     <input type="text" id="prod-title" class="admin-input" placeholder="পণ্যের নাম">
                     <textarea id="prod-details" class="admin-input" placeholder="আইডি এবং পাসওয়ার্ড"></textarea>
-                    <input type="number" id="prod-price" class="admin-input" placeholder="বিক্রয় মূল্য (৳)">
+                    <input type="number" id="prod-price" class="admin-input" placeholder="বিক্রয় মূল্য (৳)"></input>
                     <button class="btn btn-blue" onclick="saveProduct()">পণ্য যুক্ত করুন</button>
                 </div>
                 <div id="products-list"></div>
@@ -286,11 +288,11 @@
             document.getElementById('stat-withdraw').innerText = d.pendingWithdrawals || 0;
             document.getElementById('stat-deposit').innerText = d.pendingDeposits || 0;
             
-            const tp = d.totalTaskPaid || 0;
-            const tw = d.totalWithdrawnAmount || 0;
-            document.getElementById('stat-total-paid').innerText = '৳'+tp;
-            document.getElementById('stat-total-withdraw').innerText = '৳'+tw;
-            document.getElementById('stat-profit').innerText = '৳'+(tp - tw);
+            const tp = parseFloat(d.totalTaskPaid || 0);
+            const tw = parseFloat(d.totalWithdrawnAmount || 0);
+            document.getElementById('stat-total-paid').innerText = '৳' + tp.toFixed(2);
+            document.getElementById('stat-total-withdraw').innerText = '৳' + tw.toFixed(2);
+            document.getElementById('stat-profit').innerText = '৳' + (tp - tw).toFixed(2);
         }
 
         // Deposits
@@ -303,7 +305,7 @@
             list.forEach(d => {
                 container.innerHTML += `
                 <div class="card deposit-card">
-                    <b>ইউজার আইডি: ${d.user_id}</b>
+                    <b>ইউজার আইডি: ${d.user_id} (${d.profiles ? d.profiles.username : 'Unknown'})</b>
                     <p style="margin:5px 0;">পরিমাণ: ৳${d.amount} | মেথড: ${d.method}</p>
                     <small>Transaction ID: ${d.trxid}</small>
                     <div style="display:flex; gap:10px; margin-top:10px;">
@@ -331,8 +333,8 @@
                     <small>User ID: ${t.user_id} | Reward: ৳${t.amount}</small>
                     ${t.proof_url.startsWith('http') ? `<img src="${t.proof_url}" class="proof-img">` : `<div style="background:#fff3cd; padding:10px; margin:10px 0; border-radius:8px; font-family:monospace;">${t.proof_url}</div>`}
                     <div style="display:flex; gap:10px;">
-                        <button class="btn btn-green" onclick="actionTask('${t.id}', 'approve')">Approve</button>
-                        <button class="btn btn-red" onclick="actionTask('${t.id}', 'reject')">Reject</button>
+                        <button class="btn btn-green" onclick="actionTask('${t.id}', 'approve', '${t.user_id}', '${t.amount}')">Approve</button>
+                        <button class="btn btn-red" onclick="actionTask('${t.id}', 'reject', '${t.user_id}', '${t.amount}')">Reject</button>
                     </div>
                 </div>`;
 
@@ -342,63 +344,49 @@
             });
         }
 
-        // User Search with dropdown info
-        async function searchUser() {
-            const q = document.getElementById('userSearch').value;
-            const res = await fetch(`/api/admin/user-search/${q}`);
-            const users = await res.json();
-            const container = document.getElementById('user-result');
-            container.innerHTML = '';
-            users.forEach(u => {
+        async function actionTask(taskId, action, userId, amount) {
+            const endpoint = action === 'approve' ? '/api/admin/approve-task' : '/api/admin/reject-task';
+            const body = action === 'approve' ? { taskId, userId, amount } : { taskId };
+            
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            const d = await res.json();
+            if(d.success) {
+                alert("সফল হয়েছে!");
+                loadReviewTasks(); loadStats();
+            } else {
+                alert("ব্যর্থ হয়েছে!");
+            }
+        }
+
+        // Withdrawals
+        async function loadWithdrawals() {
+            const container = document.getElementById('withdraw-list');
+            container.innerHTML = "লোডিং...";
+            const res = await fetch('/api/admin/pending-withdrawals');
+            const list = await res.json();
+            container.innerHTML = list.length ? '' : '<p>কোন পেন্ডিং উইথড্র নেই।</p>';
+            list.forEach(w => {
                 container.innerHTML += `
-                <div class="card" onclick="toggleUserRef('${u.id}')" style="cursor:pointer; border-left: 5px solid var(--accent);">
-                    <h4 style="margin-bottom:5px;">${u.username} <small>(ID: ${u.id})</small></h4>
-                    <p style="margin:0; font-size:13px;">ব্যালেন্স: <b>৳${u.balance}</b> | রেফারেল: ${u.ref_count || 0} জন</p>
-                    <div id="ref-details-${u.id}" class="ref-details">
-                        লোডিং তথ্য...
+                <div class="card withdraw-card">
+                    <b>ইউজার আইডি: ${w.user_id} (${w.profiles ? w.profiles.username : 'Unknown'})</b>
+                    <p style="margin:5px 0;">পরিমাণ: ৳${w.amount} | মেথড: ${w.method} | হিসাব নং: ${w.account_no}</p>
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="btn btn-green" style="height:35px;" onclick="actionWithdraw('${w.id}', 'approve', '${w.user_id}', '${w.amount}')">Approve</button>
+                        <button class="btn btn-red" style="height:35px;" onclick="actionWithdraw('${w.id}', 'reject', '${w.user_id}', '${w.amount}')">Reject</button>
                     </div>
                 </div>`;
             });
         }
 
-        async function toggleUserRef(id) {
-            const div = document.getElementById(`ref-details-${id}`);
-            if(div.style.display === 'block') { div.style.display = 'none'; return; }
-            div.style.display = 'block';
-            const res = await fetch(`/api/admin/user-referrals/${id}`);
-            const refs = await res.json();
-            div.innerHTML = refs.length ? '' : 'কোন রেফারেল নেই।';
-            refs.forEach(r => {
-                div.innerHTML += `<div style="border-bottom:1px solid #eee; padding:5px 0;"><b>${r.username}</b> (ID: ${r.id}) - Withdraw: ৳${r.total_withdrawn || 0}</div>`;
-            });
-        }
-
-        async function addTask() {
-            const data = {
-                category: document.getElementById('task-cat').value,
-                title: document.getElementById('task-title').value,
-                reward: document.getElementById('task-reward').value,
-                link: document.getElementById('task-link').value,
-                daily_pass: document.getElementById('task-daily-pass').value
-            };
-            await fetch('/api/admin/add-task', {
+        async function actionWithdraw(id, type, userId, amount) {
+            const res = await fetch('/api/admin/action-withdraw', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
+                body: JSON.stringify({ id, type, userId, amount })
             });
-            alert("টাস্ক সফলভাবে পাবলিশ হয়েছে!");
-        }
-
-        async function actionDeposit(id, status) {
-            await fetch('/api/admin/deposit-status', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id, status })
-            });
-            loadDeposits(); loadStats();
-        }
-checkAccess();
-    </script>
-</body>
-</html>
-    
+            
+      
