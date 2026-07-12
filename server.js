@@ -840,6 +840,113 @@ app.post("/api/buy-social-service", async (req, res) => {
         res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" });
     }
 });
+// --- ADMIN: DELETE PACKAGE ---
+app.post("/api/admin/delete-package", async (req, res) => {
+    const { id } = req.body;
+    try {
+        const { error } = await supabase.from('packages').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ success: true, message: "প্যাকেজ সফলভাবে মুছে ফেলা হয়েছে!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "প্যাকেজ মুছতে ব্যর্থ হয়েছে।" });
+    }
+});
+
+// --- ADMIN: SOCIAL MEDIA SERVICES CUSTOMIZATION ---
+app.post("/api/admin/add-social-service", async (req, res) => {
+    const { title, category, rate, minQty } = req.body;
+    try {
+        const { error } = await supabase.from('social_services').insert({
+            title: title,
+            category: category.toLowerCase(),
+            rate: parseFloat(rate),
+            min_qty: parseInt(minQty || 100)
+        });
+        if (error) throw error;
+        res.json({ success: true, message: "সোশ্যাল মিডিয়া সার্ভিস সফলভাবে যুক্ত হয়েছে!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "সার্ভিস যোগ করতে ব্যর্থ হয়েছে।" });
+    }
+});
+
+app.post("/api/admin/delete-social-service", async (req, res) => {
+    const { id } = req.body;
+    try {
+        const { error } = await supabase.from('social_services').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ success: true, message: "সোশ্যাল মিডিয়া সার্ভিস সফলভাবে মুছে ফেলা হয়েছে!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "সার্ভিস মুছতে ব্যর্থ হয়েছে।" });
+    }
+});
+
+// --- SOCIAL MEDIA SERVICES APIs (User Side) ---
+app.get("/api/social-services/:category", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('social_services')
+            .select('*')
+            .eq('category', req.params.category.toLowerCase())
+            .order('created_at', { ascending: true });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+app.post("/api/buy-social-service", async (req, res) => {
+    const { userId, serviceName, link, quantity, price } = req.body;
+    try {
+        const { data: user, error: err1 } = await supabase.from('profiles').select('balance').eq('id', userId).single();
+        if (err1 || !user) return res.status(404).json({ success: false, message: "ব্যবহারকারী খুঁজে পাওয়া যায়নি।" });
+        
+        const balance = parseFloat(user.balance || 0);
+        const totalCost = parseFloat(price);
+        
+        if (balance < totalCost) {
+            return res.json({ success: false, message: "আপনার পর্যাপ্ত ব্যালেন্স নেই।" });
+        }
+        
+        const newBalance = balance - totalCost;
+        
+        const { error: err2 } = await supabase
+            .from('profiles')
+            .update({ balance: newBalance })
+            .eq('id', userId);
+            
+        if (err2) throw err2;
+        
+        await supabase.from('tasks').insert({
+            user_id: userId,
+            task_name: `Social: ${serviceName} (${quantity} Qty)`,
+            amount: -totalCost,
+            category: 'social_service',
+            proof_url: link,
+            status: 'pending'
+        });
+        
+        res.json({ success: true, message: `সফলভাবে অর্ডার করা হয়েছে! আপনার ব্যালেন্স থেকে ৳${totalCost.toFixed(2)} কেটে নেওয়া হয়েছে।` });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "সার্ভারে সমস্যা হয়েছে।" });
+    }
+});
+
+app.get("/api/social-orders/:userId", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', req.params.userId)
+            .eq('category', 'social_service')
+            .order('created_at', { ascending: false });
+            
+        if (error) throw error;
+        res.json(data || []);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
 // Root & Health Check
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "webapp", "index.html")));
 app.get("/health", (req, res) => res.json({ status: "online", app: "EarnBD-Pro" }));
