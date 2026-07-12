@@ -215,7 +215,7 @@ app.post("/api/admin/action-withdraw", async (req, res) => {
                 // শুধুমাত্র প্রথম অনুমোদিত উত্তোলনের সময়ই বোনাস দেওয়া হবে
                 if (prevApproved === 1) {
                     const { data: settings } = await supabase.from('settings').select('ref_bonus').eq('id', 1).single();
-                    const refBonus = settings ? parseFloat(settings.ref_bonus) : 20;
+                    const refBonus = settings ? parseFloat(settings.ref_bonus) : 10;
                     
                     const { data: referrer } = await supabase.from('profiles').select('balance').eq('id', profile.referrer_id).single();
                     if (referrer) {
