@@ -645,7 +645,7 @@ app.get("/api/orders/:userId", async (req, res) => {
 });
 
 app.post("/api/buy-product", async (req, res) => {
-    const { userId, productId, paymentMethod } = req.body;
+    const { userId, productId, paymentMethod, transactionId } = req.body;
     try {
         const { data: product, error: err1 } = await supabase.from('products').select('*').eq('id', productId).single();
         if (err1 || !product) return res.status(404).json({ success: false, message: "পণ্যটি খুঁজে পাওয়া যায়নি।" });
@@ -671,6 +671,10 @@ app.post("/api/buy-product", async (req, res) => {
             await supabase.from('products').update({ status: 'sold' }).eq('id', productId);
         }
         
+        const orderDetails = orderStatus === 'approved' 
+            ? product.details 
+            : ('পেন্ডিং পেমেন্ট' + (transactionId ? ' (TrxID: ' + transactionId + ')' : ''));
+
         const { error: err3 } = await supabase.from('orders').insert({
             user_id: userId,
             product_id: productId,
@@ -678,7 +682,7 @@ app.post("/api/buy-product", async (req, res) => {
             price: price,
             payment_method: paymentMethod,
             status: orderStatus,
-            details: orderStatus === 'approved' ? product.details : 'পেন্ডিং পেমেন্ট'
+            details: orderDetails
         });
         
         if (err3) throw err3;
