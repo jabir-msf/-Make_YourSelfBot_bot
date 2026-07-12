@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Your Self Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* মূল পেজ লেআউট ও ফাঁকা অংশ দূর করার নিয়ম */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+
+        .main-wrapper {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-bottom: 10px !important;
+        }
+
+        .content-body {
+            flex-grow: 1;
+            padding: 0 15px;
+            margin-bottom: 20px;
+        }
+
+        /* ৩ ডট বা মেনু বাটনটি হাইড করার জন্য বিশেষ CSS */
+        #menuBtn {
+            display: none !important;
+        }
+
+        /* ইন্ট্রো সেকশনের আধুনিক রি-ডিজাইন */
+        .user-intro {
+            background: #ffffff;
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .intro-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .intro-text p {
+            margin: 0;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .intro-text h1 {
+            margin: 4px 0 0 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #111;
+        }
+
+        /* অ্যাকাউন্টের ধরন ও স্ট্যাটাস ব্যাজ */
+        .account-badge-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+        }
+
+        .user-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tier-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+            color: #3e2400;
+        }
+
+        .status-badge {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid rgba(46, 204, 113, 0.25);
+        }
+
+        /* সাইডবার ব্যাজ */
+        .sidebar-badge-wrap {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .mini-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        /* ওয়ালেট কার্ডকে আরও প্রিমিয়াম লুক দেওয়া */
+        .wallet-card {
+            background: linear-gradient(135deg, #1a3fb3 0%, #0d2673 100%);
+            border-radius: 20px;
+            padding: 22px;
+            margin: 0 15px 20px 15px;
+            box-shadow: 0 12px 25px rgba(26, 63, 179, 0.22);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 130px;
+            height: 130px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .wallet-btns {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .w-btn {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            color: white;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .w-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ডায়নামিক মডাল এবং ডিপোজিট/রিচার্জ সেকশন ডিজাইন */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 19, 43, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a3fb3;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: #f1f5f9;
+            border: none;
+            font-size: 18px;
+            color: #64748b;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-modal:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* গাইড বক্স */
+        .info-box {
+            background: linear-gradient(135deg, #f5f8ff 0%, #edf2ff 100%) !important;
+            padding: 16px !important;
+            border-radius: 14px !important;
+            font-size: 13.5px !important;
+            border-left: 5px solid #1a3fb3 !important;
+            margin-bottom: 15px !important;
+            box-shadow: 0 4px 15px rgba(26, 63, 179, 0.05) !important;
+            color: #2c3e50 !important;
+            line-height: 1.6 !important;
+        }
+
+        #modalBody input, #modalBody select {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0 15px 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #f8fafc;
+            color: #333;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        #modalBody input:focus, #modalBody select:focus {
+            border-color: #1a3fb3;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(26, 63, 179, 0.15);
+            outline: none;
+        }
+
+        #modalBody input[placeholder*="Transaction ID"],
+        #modalBody input[placeholder*="ট্রানজেকশন আইডি"],
+        #modalBody input[placeholder*="TrxID"] {
+            border: 2px solid #27ae60 !important;
+            background-color: #f4fff8 !important;
+            color: #1e3a27 !important;
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.15) !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            text-align: center !important;
+            letter-spacing: 1px;
+        }
+
+        #modalBody input[placeholder*="Transaction ID"]:focus,
+        #modalBody input[placeholder*="ট্রানজেকশন আইডি"]:focus,
+        #modalBody input[placeholder*="TrxID"]:focus {
+            box-shadow: 0 0 18px rgba(46, 204, 113, 0.3) !important;
+            background-color: #ffffff !important;
+        }
+
+        #modalBody strong, #modalBody b {
+            color: #1a3fb3;
+            background: rgba(26, 63, 179, 0.08);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #1a3fb3 0%, #0d2673 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            margin-top: 5px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(26, 63, 179, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes slideUp { 
+            from { transform: translateY(20px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="user-profile-box">
+                <div class="avatar-circle"><span id="sideInitial">U</span></div>
+                <div class="user-details">
+                    <h3 id="sideName">ইউজার</h3>
+                    <p>Make Your Self</p>
+                    <div class="sidebar-badge-wrap">
+                        <span class="mini-badge tier-badge" id="sideUserTier"><i class="fa-solid fa-crown"></i> সিলভার</span>
+                        <span class="mini-badge status-badge" id="sideUserStatus"><i class="fa-solid fa-circle-check"></i> সক্রিয়</span>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-balance-card"><div class="b-info"><p>ব্যালেন্স</p><h2 id="sideBalanceDisplay">৳০.০০</h2></div></div>
+        </div>
+        <div class="menu-items">
+            <div class="item" onclick="window.location.href='income.html'"><i class="fa-solid fa-chart-line"></i> ইনকাম রিপোর্ট</div>
+            <div class="item" onclick="window.location.href='premium.html'"><i class="fa-solid fa-crown"></i> প্রিমিয়াম কিনুন</div>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <nav class="top-nav">
+            <i class="fa-solid fa-bars menu-trigger" id="menuBtn"></i>
+            <h2 class="brand">Make Your Self</h2>
+            <!-- ব্যালেন্স শো করার ডান সাইডে স্পিন বাটন সাজানো হয়েছে -->
+            <div class="nav-actions" style="display: flex; align-items: center; gap: 8px;">
+                <div onclick="openSpinModal()" style="background: linear-gradient(135deg, #e74c3c, #f39c12); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.25);">
+                    <i class="fa-solid fa-spinner fa-spin"></i> স্পিন
+                </div>
+                <div class="balance-display"><span class="money" id="topBalance">৳০.০০</span></div>
+            </div>
+        </nav>
+        
+        <div class="user-intro">
+            <div class="intro-container">
+                <div class="intro-text">
+                    <p>সুপ্রভাত! 👋</p>
+                    <h1 id="userFirstName">User</h1>
+                </div>
+                <div class="account-badge-wrap">
+                    <span class="user-badge tier-badge" id="userTier"><i class="fa-solid fa-crown"></i> সিলভার</span>
+                    <span class="user-badge status-badge" id="userStatus"><i class="fa-solid fa-circle-check"></i> সক্রিয়</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="wallet-card">
+            <div class="card-header"><div class="balance-box"><p>মোট ব্যালেন্স</p><h2 id="mainBalance">৳০.০০</h2></div></div>
+            <div class="wallet-btns">
+                <div class="w-btn" onclick="openAddMoney()"><i class="fa-solid fa-credit-card"></i> <span>অ্যাড</span></div>
+                <div class="w-btn" onclick="window.location.href='page5.html'"><i class="fa-solid fa-circle-arrow-down"></i> <span>তোলা</span></div>
+                <div class="w-btn" onclick="openRecharge()"><i class="fa-solid fa-mobile-screen"></i> <span>রিচার্জ</span></div>
+                <div class="w-btn" onclick="window.location.href='page4.html'"><i class="fa-solid fa-link"></i> <span>রেফার</span></div>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <!-- কাজ শুরু করুন বাটন -->
+            <button onclick="window.location.href='page3dashboard.html'" style="width: 100%; padding: 18px; background: #27ae60; color: white; border: none; border-radius: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);">🚀 কাজ শুরু করুন</button>
+            
+            <div class="section-wrap">
+                <h3 class="section-header">দ্রুত অ্যাকশন</h3>
+                <div class="action-grid">
+                    <div class="action-box" onclick="window.location.href='page6.html'"><i class="fa-solid fa-file-invoice-dollar t-teal"></i><p>উত্তোলন বিবরণ</p></div>
+                    <div class="action-box" onclick="comingSoon()"><i class="fa-solid fa-book-bookmark t-red"></i><p>টিউটোরিয়াল</p></div>
+                    <div class="action-box" onclick="window.location.href='income.html'"><i class="fa-solid fa-sack-dollar t-orange"></i><p>আয় সমূহ</p></div>
+                    <div class="action-box" onclick="window.location.href='premium.html'"><i class="fa-solid fa-crown t-yellow"></i><p>প্রিমিয়াম</p></div>
+                </div>
+            </div>
+
+            <div class="section-wrap">
+                <h3 class="section-header">যোগাযোগ করুন</h3>
+                <div class="action-grid">
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/+NDaESCJEtiowN2Rl')"><i class="fa-solid fa-users-viewfinder t-blue"></i><p>গ্রুপ</p></div>
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://facebook.com/allaquariumyt')"><i class="fa-solid fa-book t-darkblue"></i><p>ফেসবুক</p></div>
+                    <div class="action-box" onclick="window.Telegram.WebApp.openTelegramLink('https://t.me/Make_YourSelfBot_bot')"><i class="fa-solid fa-paper-plane t-sky"></i><p>চ্যানেল</p></div>
+                    <div class="action-box" onclick="showAdmins()"><i class="fa-solid fa-headset t-blue"></i><p>এডমিনস</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- মডালসমূহ -->
+    <div class="modal-overlay" id="actionModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- স্পিন হুইল মডাল -->
+    <div class="modal-overlay" id="spinModal" style="display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.75);">
+        <div class="modal-card" style="text-align: center; max-width: 360px; border-radius: 24px;">
+            <div class="modal-header">
+                <h3>সাপ্তাহিক লাকি স্পিন</h3>
+                <button class="close-modal" onclick="closeSpinModal()">&times;</button>
+            </div>
+            <div class="info-box" style="font-size: 13px;">প্রতি সপ্তাহে একবার স্পিন করার সুযোগ পাবেন!</div>
+            
+            <div class="wheel-container" style="position: relative; margin: 15px auto; width: 250px; height: 250px;">
+                <canvas id="wheelCanvas" width="250" height="250" style="border-radius: 50%; box-shadow: 0 8px 20px rgba(0,0,0,0.15); transition: transform 4s cubic-bezier(0.15, 0.85, 0.3, 1.02);"></canvas>
+                <div class="wheel-pointer" style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 22px solid #e74c3c; z-index: 10;"></div>
+            </div>
+            
+            <button class="modal-btn" id="spinBtn" onclick="startSpin()" style="background: linear-gradient(135deg, #e74c3c, #f39c12); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);">স্পিন করুন</button>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+        let hasDrawn = false;
+        const segments = ["৳২", "৳২", "৳৫", "৳১০", "৳২০", "৳৫০", "৳১০০", "৳২০০", "খালি"];
+        const colors = ["#f1c40f", "#e67e22", "#e74c3c", "#9b59b6", "#3498db", "#2ecc71", "#1abc9c", "#34495e", "#95a5a6"];
+
+        function openSpinModal() {
+            document.getElementById("spinModal").style.display = "flex";
+            if (!hasDrawn) {
+                setTimeout(drawWheel, 100);
+                hasDrawn = true;
+            }
+        }
+
+        function closeSpinModal() {
+            document.getElementById("spinModal").style.display = "none";
+        }
+
+        function drawWheel() {
+            const canvas = document.getElementById("wheelCanvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            const radius = canvas.width / 2;
+            const arc = Math.PI * 2 / segments.length;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < segments.length; i++) {
+                const angle = i * arc;
+                ctx.fillStyle = colors[i];
+                ctx.beginPath();
+                ctx.arc(radius, radius, radius, angle, angle + arc, false);
+                ctx.lineTo(radius, radius);
+                ctx.fill();
+                
+                ctx.save();
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 12px 'Hind Siliguri', sans-serif";
+                ctx.translate(radius, radius);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillText(segments[i], radius - 15, 5);
+                ctx.restore();
+            }
+        }
+
+        let isSpinning = false;
+        async function startSpin() {
+            if (isSpinning) return;
+            
+            let userId = "";
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                userId = urlParams.get('userId') || localStorage.getItem('userId') || "12345678";
+            }
+
+            const spinBtn = document.getElementById("spinBtn");
+            spinBtn.disabled = true;
+            spinBtn.innerText = "অনুরোধ পাঠানো হচ্ছে...";
+
+            try {
+                const response = await fetch("/api/weekly-spin", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId })
+                });
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert(data.message);
+                    spinBtn.disabled = false;
+                    spinBtn.innerText = "স্পিন করুন";
+                    return;
+                }
+
+                isSpinning = true;
+                const targetIndex = data.winningIndex;
+                const degreesPerSegment = 360 / segments.length;
+                const centerOfSegment = targetIndex * degreesPerSegment + (degreesPerSegment / 2);
+                const targetDegree = 270 - centerOfSegment;
+                const finalSpinDegree = 3600 + targetDegree;
+
+                const canvas = document.getElementById("wheelCanvas");
+                canvas.style.transform = `rotate(${finalSpinDegree}deg)`;
+
+                setTimeout(() => {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    spinBtn.innerText = "স্পিন করুন";
+                    
+                    if (data.winAmount > 0) {
+                        alert(`অভিনন্দন! আপনি স্পিন করে ৳${data.winAmount} জিতেছেন!`);
+                    } else {
+                        alert("দুঃখিত, এবার আপনার ভাগ্য সহায় ছিল না! আগামী সপ্তাহে আবার চেষ্টা করুন।");
+                    }
+                    
+                    canvas.style.transition = "none";
+                    const normalizedAngle = finalSpinDegree % 360;
+                    canvas.style.transform = `rotate(${normalizedAngle}deg)`;
+                    canvas.offsetHeight;
+                    canvas.style.transition = "transform 4s cubic-bezier(0.15, 0.85, 0.3, 1.02)";
+                    
+                    if (typeof loadUserData === 'function') {
+                        loadUserData();
+                    } else {
+                        location.reload();
+                    }
+                }, 4000);
+
+            } catch (err) {
+                alert("কানেকশন সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+                spinBtn.disabled = false;
+                spinBtn.innerText = "স্পিন করুন";
+            }
+        }
+    </script>
+</body>
+</html>
