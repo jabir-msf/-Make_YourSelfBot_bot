@@ -19,8 +19,8 @@ app.use(express.static(path.join(__dirname, "webapp")));
 app.get("/api/settings", async (req, res) => {
     try {
         const { data } = await supabase.from('settings').select('*').eq('id', 1).single();
-        res.json(data || { min_withdraw: 100, ref_bonus: 20 });
-    } catch (e) { res.json({ min_withdraw: 100, ref_bonus: 20 }); }
+        res.json(data || { min_withdraw: 100, ref_bonus: 10 });
+    } catch (e) { res.json({ min_withdraw: 100, ref_bonus: 10 }); }
 });
 
 // --- PUBLIC USER API ---
