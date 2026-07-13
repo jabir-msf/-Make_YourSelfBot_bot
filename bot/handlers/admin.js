@@ -1,5 +1,5 @@
 const config = require("../config");
-const ADMIN_ID = 8144639897; // আপনার আইডি
+const ADMIN_IDS = [8144639897,8590950777]; // আপনার আইডি
 
 module.exports = (bot) => {
     bot.onText(/\/admin/, async (msg) => {
