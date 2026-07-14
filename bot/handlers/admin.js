@@ -6,8 +6,8 @@ module.exports = (bot) => {
     bot.onText(/\/admin/, async (msg) => {
         const chatId = msg.chat.id;
 
-        // chatId টি এডমিন অ্যারের অন্তর্ভুক্ত কি না তা নিখুঁতভাবে চেক করা হচ্ছে
-        if (!ADMIN_IDS.includes(chatId)) {
+        // chatId এবং এডমিন আইডি সমূহকে Number-এ কনভার্ট করে টাইপ-সেফ চেক করা হচ্ছে
+        if (!ADMIN_IDS.map(Number).includes(Number(chatId))) {
             return bot.sendMessage(chatId, "❌ আপনি এই কমান্ডটি ব্যবহারের অনুমতি নেই।");
         }
 
