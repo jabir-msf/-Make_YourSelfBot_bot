@@ -1,12 +1,13 @@
 const config = require("../config");
-const ADMIN_IDS = [8144639897,8590950777]; // আপনার আইডি
+// আপনার অনুমোদিত এডমিন আইডি সমূহ
+const ADMIN_IDS = [8144639897, 8590950777]; 
 
 module.exports = (bot) => {
     bot.onText(/\/admin/, async (msg) => {
         const chatId = msg.chat.id;
 
-        // চেক করা হচ্ছে আপনিই অ্যাডমিন কি না
-        if (chatId !== ADMIN_ID) {
+        // chatId টি এডমিন অ্যারের অন্তর্ভুক্ত কি না তা নিখুঁতভাবে চেক করা হচ্ছে
+        if (!ADMIN_IDS.includes(chatId)) {
             return bot.sendMessage(chatId, "❌ আপনি এই কমান্ডটি ব্যবহারের অনুমতি নেই।");
         }
 
