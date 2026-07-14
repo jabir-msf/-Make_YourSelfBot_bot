@@ -15,6 +15,16 @@ const bot = new TelegramBot(BOT_TOKEN, {
     polling: true
 });
 
+// --- ক্র্যাশ প্রটেকশন লিসেনার (এটি আপনার রেন্ডার ডেপ্লয়মেন্টকে ক্র্যাশ হতে রক্ষা করবে) ---
+bot.on("polling_error", (err) => {
+    // নেটওয়ার্ক কনফ্লিক্ট বা টাইমআউট এররগুলো এখানে হ্যান্ডেল হবে, প্রসেস ক্র্যাশ করবে না
+    console.warn("[Telegram Bot Polling Error Caught]:", err.message || err);
+});
+
+bot.on("error", (err) => {
+    console.error("[Telegram Bot General Error Caught]:", err.message || err);
+});
+
 // Register Handlers
 startHandler(bot);      // /start কমান্ড এবং রেফারেল হ্যান্ডেল করবে
 verifyHandler(bot);     // চ্যানেল জয়েন ভেরিফিকেশন হ্যান্ডেল করবে
