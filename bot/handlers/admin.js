@@ -1,6 +1,6 @@
 const config = require("../config");
 // আপনার অনুমোদিত এডমিন আইডি সমূহ
-const ADMIN_IDS = [8144639897, 8590950777]; 
+const ADMIN_IDS = [8144639897, 6483501212]; 
 
 module.exports = (bot) => {
     bot.onText(/\/admin/, async (msg) => {
